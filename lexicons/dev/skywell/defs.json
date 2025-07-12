@@ -1,0 +1,55 @@
+{
+  "lexicon": 1,
+  "id": "dev.skywell.defs",
+  "defs": {
+    "profileView": {
+      "type": "object",
+      "required": ["did", "handle"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "at-identifier"
+        },
+        "handle": {
+          "type": "string",
+          "format": "handle"
+        },
+        "displayName": {
+          "type": "string",
+          "maxGraphemes": 64,
+          "maxLength": 640
+        },
+        "avatar": {
+          "type": "string",
+          "format": "uri"
+        },
+        "fileCount": {
+          "type": "integer"
+        }
+      }
+    },
+    "fileView": {
+      "type": "object",
+      "required": ["blob", "createdAt", "name"],
+      "properties": {
+        "blob": {
+          "type": "blob"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "name": {
+          "type": "string",
+          "minGraphemes": 1,
+          "maxGraphemes": 80
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxGraphemes": 500
+        }
+      }
+    }
+  }
+}
