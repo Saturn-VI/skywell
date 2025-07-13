@@ -5,13 +5,13 @@ go 1.24
 toolchain go1.24.5
 
 require (
+	github.com/bluesky-social/indigo v0.0.0-20240905024844-a4f38639767f
 	github.com/bluesky-social/jetstream v0.0.0-20250414024304-d17bd81a945e
 	github.com/gorilla/websocket v1.5.3
 	github.com/klauspost/compress v1.17.9
 )
 
 require (
-	github.com/bluesky-social/indigo v0.0.0-20240905024844-a4f38639767f // indirect
 	github.com/carlmjohnson/versioninfo v0.22.5 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
