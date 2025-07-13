@@ -12,8 +12,9 @@ import (
 
 // GetActorFiles_Output is the output of a dev.skywell.getActorFiles call.
 type GetActorFiles_Output struct {
-	Cursor   *string          `json:"cursor,omitempty" cborgen:"cursor,omitempty"`
-	Profiles []*Defs_FileView `json:"profiles,omitempty" cborgen:"profiles,omitempty"`
+	Actor    *Defs_ProfileView `json:"actor" cborgen:"actor"`
+	Cursor   *string           `json:"cursor,omitempty" cborgen:"cursor,omitempty"`
+	Profiles []*Defs_FileView  `json:"profiles,omitempty" cborgen:"profiles,omitempty"`
 }
 
 // GetActorFiles calls the XRPC method "dev.skywell.getActorFiles".

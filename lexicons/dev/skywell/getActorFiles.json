@@ -29,7 +29,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["files"],
+          "required": ["files", "actor"],
           "properties": {
             "cursor": {
               "type": "string"
@@ -40,7 +40,11 @@
                 "type": "ref",
                 "ref": "dev.skywell.defs#fileView"
               }
-            }
+            },
+            "actor": {
+              "type": "ref",
+              "ref": "dev.skywell.defs#profileView"
+          }
           }
         }
       }
