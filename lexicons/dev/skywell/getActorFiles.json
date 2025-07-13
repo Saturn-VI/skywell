@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "dev.skywell.getActorProfile",
+  "id": "dev.skywell.getActorFiles",
   "defs": {
     "main": {
       "type": "query",
