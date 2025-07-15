@@ -67,6 +67,7 @@ func main() {
 
 	// returns GetActorFiles_Output
 	http.HandleFunc("/xrpc/dev.skywell.getActorFiles", func(w http.ResponseWriter, r *http.Request) {
+		// TODO implement
 	})
 
 	fmt.Println("Server started!")
