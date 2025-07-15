@@ -9,11 +9,11 @@ import (
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 
 	bsky "github.com/bluesky-social/indigo/api/bsky"
 	syntax "github.com/bluesky-social/indigo/atproto/syntax"
-	util "github.com/bluesky-social/indigo/lex/util"
 	xrpc "github.com/bluesky-social/indigo/xrpc"
 	jetstream "github.com/bluesky-social/jetstream/pkg/models"
 	skywell "github.com/saturn-vi/skywell/api/skywell"
@@ -26,9 +26,6 @@ type User struct {
 	Avatar      syntax.URI
 	DisplayName string
 }
-
-var r util.LexBlob
-var l util.LexLink
 
 type File struct {
 	gorm.Model
@@ -59,8 +56,8 @@ func initializeDB() (err error) {
 	db.AutoMigrate(&User{})
 
 	client = &xrpc.Client{
-		Client:   &http.Client{},
-		Host: "https://public.api.bsky.app",
+		Client:    &http.Client{},
+		Host:      "https://public.api.bsky.app",
 		UserAgent: userAgent(),
 	}
 	ctx = context.Background()
@@ -73,26 +70,15 @@ func updateIdentity(evt jetstream.Event) {
 		return
 	}
 
-	user := User{
-		DID: syntax.DID(evt.Did),
-	}
-	result := db.First(&user, "did = ?", evt.Did)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		// they haven't made any files
-		// we don't care about them
-		return
-	} else if result.Error != nil {
-		fmt.Println(fmt.Errorf("Failed to find user with DID %s: %w", evt.Did, result.Error))
-	}
-	handle, displayName, avatarURI, err := getUserData(syntax.DID(evt.Did))
+	did, err := syntax.ParseDID(evt.Did)
 	if err != nil {
-		fmt.Println(fmt.Errorf("Failed to get user data: %w", err))
+		fmt.Println(fmt.Errorf("Failed to parse DID: %w", err))
+		return
 	}
-	user.Handle = handle
-	user.DisplayName = displayName
-	user.Avatar = avatarURI
-	if err := db.Save(&user).Error; err != nil {
-		fmt.Println(fmt.Errorf("Failed to save user: %w", err))
+	err = updateUserProfile(did)
+	if err != nil {
+		fmt.Println(fmt.Errorf("Failed to update user profile: %w", err))
+		return
 	}
 }
 
@@ -152,6 +138,7 @@ func updateRecord(evt jetstream.Event) {
 		pt, err := syntax.ParseDatetime(r.CreatedAt)
 		if err != nil {
 			fmt.Println(fmt.Errorf("Failed to parse createdAt: %w", err))
+			return
 		}
 
 		pc, err := syntax.ParseCID(r.Blob.Ref.String())
@@ -166,17 +153,26 @@ func updateRecord(evt jetstream.Event) {
 			CreatedAt:   pt,
 			IndexedAt:   syntax.DatetimeNow(),
 			Name:        r.Name,
-			Description: *r.Description,
 			BlobRef:     pc,
 			MimeType:    r.Blob.MimeType,
 			Size:        r.Blob.Size,
 		}
 
+		if r.Description != nil {
+			file.Description = *r.Description
+		}
+
 		switch evt.Commit.Operation {
 		case jetstream.CommitOperationCreate, jetstream.CommitOperationUpdate:
-			db.Save(&file)
+			err := db.Clauses(clause.OnConflict{
+				Columns: []clause.Column{{Name: "uri"}},
+				DoUpdates: clause.AssignmentColumns([]string{"name", "description", "blob_ref", "mime_type", "size"}),
+			}).Create(&file).Error
+			if err != nil {
+				fmt.Println(fmt.Errorf("Failed to create or update file: %w", err))
+			}
 		case jetstream.CommitOperationDelete:
-			db.Delete(&File{}, "uri = ?", uri) // only need URI (primary key) to delete)
+			db.Delete(&File{}, "uri = ?", uri.String()) // only need URI (primary key) to delete)
 		default:
 			fmt.Println(fmt.Errorf("Unknown commit operation: %s", evt.Commit.Operation))
 		}
@@ -186,26 +182,15 @@ func updateRecord(evt jetstream.Event) {
 			return // no need to handle delete for profile
 		}
 
-		user := User{
-			DID: syntax.DID(evt.Did),
-		}
-		result := db.First(&user, "did = ?", evt.Did)
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			// they haven't made any files
-			// we don't care about them
-			return
-		} else if result.Error != nil {
-			fmt.Println(fmt.Errorf("Failed to find user with DID %s: %w", evt.Did, result.Error))
-		}
-		handle, displayName, avatarURI, err := getUserData(syntax.DID(evt.Did))
+		did, err := syntax.ParseDID(evt.Did)
 		if err != nil {
-			fmt.Println(fmt.Errorf("Failed to get user data: %w", err))
+			fmt.Println(fmt.Errorf("Failed to parse DID: %w", err))
+			return
 		}
-		user.Handle = handle
-		user.DisplayName = displayName
-		user.Avatar = avatarURI
-		if err := db.Save(&user).Error; err != nil {
-			fmt.Println(fmt.Errorf("Failed to save user: %w", err))
+		err = updateUserProfile(did)
+		if err != nil {
+			fmt.Println(fmt.Errorf("Failed to update user profile: %w", err))
+			return
 		}
 
 	default:
@@ -213,19 +198,69 @@ func updateRecord(evt jetstream.Event) {
 	}
 }
 
+func updateUserProfile(did syntax.DID) error {
+
+	user := User{
+		DID: did,
+	}
+	result := db.First(&user, "did = ?", did.String())
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		// they haven't made any files
+		// we don't care about them
+		return nil
+	} else if result.Error != nil {
+		return result.Error
+	}
+	handle, displayName, avatarURI, err := getUserData(did)
+	if err != nil {
+		return err
+	}
+	user.Handle = handle
+	user.DisplayName = displayName
+	user.Avatar = avatarURI
+	if err := db.Save(&user).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func getActorFileCount(did syntax.DID) (count int64, err error) {
+	user := User{}
+	result := db.First(&user, "did = ?", did.String())
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return 0, fmt.Errorf("user with DID %s not found", did)
+	} else if result.Error != nil {
+		return 0, fmt.Errorf("failed to find user with DID %s: %w", did, result.Error)
+	}
+	count = 0
+	result = db.Model(&File{}).Where("user_id = ?", user.ID).Count(&count)
+	if result.Error != nil {
+		return 0, fmt.Errorf("failed to count files for user with DID %s: %w", did, result.Error)
+	}
+	return count, nil
+}
+
 func getUserData(did syntax.DID) (handle syntax.Handle, displayName string, avatarURI syntax.URI, err error) {
 	r, err := bsky.ActorGetProfile(ctx, client, did.String())
 	if err != nil {
 		return "", "", "", fmt.Errorf("failed to get user profile: %w", err)
 	}
-	h, err := syntax.ParseHandle(r.Handle)
+	handle, err = syntax.ParseHandle(r.Handle)
 	if err != nil {
 		return "", "", "", fmt.Errorf("failed to parse handle: %w", err)
 	}
-	a, err := syntax.ParseURI(*r.Avatar)
-	if err != nil {
-		return "", "", "", fmt.Errorf("failed to parse avatar URI: %w", err)
-	}
-	return h, *r.DisplayName, a, nil
 
+	if r.Avatar != nil {
+		a, err := syntax.ParseURI(*r.Avatar)
+		if err == nil {
+			avatarURI = a
+		}
+	}
+
+	if r.DisplayName != nil {
+		displayName = *r.DisplayName
+	} else {
+		displayName = r.Handle
+	}
+	return handle, displayName, avatarURI, nil
 }
