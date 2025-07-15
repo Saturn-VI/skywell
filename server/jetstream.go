@@ -12,7 +12,8 @@ import (
 
 // todo maybe change to using real firehose in the future
 
-var jetstream_uri string = "wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=dev.skywell.file"
+var jetstream_uri string = "wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=dev.skywell.file&wantedCollections=app.bsky.actor.profile"
+
 // var jetstream_uri string = "wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=app.bsky.feed.like"
 
 func read() {
@@ -46,12 +47,12 @@ func read() {
 		}
 
 		switch evt.Kind {
-			case jetstream.EventKindIdentity:
-				updateIdentity(evt)
-			case jetstream.EventKindAccount:
-				updateAccount(evt)
-			case jetstream.EventKindCommit:
-				updateRecord(evt)
+		case jetstream.EventKindIdentity:
+			updateIdentity(evt)
+		case jetstream.EventKindAccount:
+			updateAccount(evt)
+		case jetstream.EventKindCommit:
+			updateRecord(evt)
 		}
 	}
 }

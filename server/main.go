@@ -8,7 +8,11 @@ import (
 )
 
 func main() {
-	fmt.Println("Server started!")
+	fmt.Println("Initializing database...")
+	err := initializeDB()
+	if err != nil {
+		panic("Failed to initialize database: " + err.Error())
+	}
 
 	go read()
 
@@ -20,5 +24,11 @@ func main() {
 	http.HandleFunc("/xrpc/dev.skywell.getActorFiles", func(w http.ResponseWriter, r *http.Request) {
 	})
 
+	fmt.Println("Server started!")
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func userAgent() *string {
+	str := "Skywell AppView v0.1.0"
+	return &str
 }
