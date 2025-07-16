@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,28 +16,30 @@ import (
 	identity "github.com/bluesky-social/indigo/atproto/identity"
 	syntax "github.com/bluesky-social/indigo/atproto/syntax"
 	"github.com/bluesky-social/indigo/lex/util"
-	"github.com/bluesky-social/indigo/xrpc"
 	"github.com/ipfs/go-cid"
 	skywell "github.com/saturn-vi/skywell/api/skywell"
 )
 
 func main() {
-	fmt.Println("Initializing database...")
+	slog.Info("Initializing database...")
 	db, client, ctx, err := initializeDB()
 	if err != nil {
 		panic("Failed to initialize database: " + err.Error())
 	}
 
+	slog.Info("Reading from Jetstream...")
 	go read(db, client, ctx)
 
 	// returns ProfileView
 	http.HandleFunc("/xrpc/dev.skywell.getActorProfile", func(w http.ResponseWriter, r *http.Request) {
-		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, client, ctx)
+		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
 		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err.Error()))
 			http.Error(w, fmt.Sprintf("Failed to generate profile view: %v", err.Error()), stat)
 		}
 		b, err := json.Marshal(pfv)
 		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to marshal profile: %v", err.Error()))
 			http.Error(w, fmt.Sprintf("Failed to marshal profile: %v", err.Error()), 500)
 			return
 		}
@@ -46,8 +49,9 @@ func main() {
 
 	// returns GetActorFiles_Output
 	http.HandleFunc("/xrpc/dev.skywell.getActorFiles", func(w http.ResponseWriter, r *http.Request) {
-		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, client, ctx)
+		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
 		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err))
 			http.Error(w, fmt.Sprintf("Failed to generate profile view: %v", err), stat)
 			return
 		}
@@ -61,6 +65,7 @@ func main() {
 		}
 		c, fl, stat, err := generateFileList(r.URL.Query().Get("cursor"), lim, did, db)
 		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to generate file list: %v", err))
 			http.Error(w, fmt.Sprintf("Failed to generate file list: %v", err), stat)
 			return
 		}
@@ -71,6 +76,7 @@ func main() {
 		}
 		b, err := json.Marshal(gaf_o)
 		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to marshal content: %v", err))
 			http.Error(w, fmt.Sprintf("Failed to marshal content: %v", err), 500)
 			return
 		}
@@ -78,11 +84,11 @@ func main() {
 		fmt.Fprintf(w, "%s", b)
 	})
 
-	fmt.Println("Server started!")
+	slog.Info("Server started!")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func generateProfileView(actor string, db *gorm.DB, client *xrpc.Client, ctx context.Context) (profileView *skywell.Defs_ProfileView, httpResponse int, err error) {
+func generateProfileView(actor string, db *gorm.DB, ctx context.Context) (profileView *skywell.Defs_ProfileView, httpResponse int, err error) {
 	if actor == "" {
 		return nil, 400, fmt.Errorf("Required parameter 'actor' missing")
 	}
@@ -162,7 +168,8 @@ func generateFileList(c string, limit int, a syntax.DID, db *gorm.DB) (cursor st
 	return cursor, fileviews, 200, nil
 }
 
+var ua string = "Skywell AppView v0.1.0"
+
 func userAgent() *string {
-	str := "Skywell AppView v0.1.0"
-	return &str
+	return &ua
 }

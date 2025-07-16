@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"gorm.io/driver/sqlite"
@@ -68,12 +69,12 @@ func updateIdentity(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx c
 
 	did, err := syntax.ParseDID(evt.Did)
 	if err != nil {
-		fmt.Println(fmt.Errorf("Failed to parse DID: %w", err))
+		slog.Error(fmt.Sprintf("Failed to parse DID: %v", err))
 		return
 	}
 	err = updateUserProfile(did, db, client, ctx)
 	if err != nil {
-		fmt.Println(fmt.Errorf("Failed to update user profile: %w", err))
+		slog.Error(fmt.Sprintf("Failed to update user profile: %v", err))
 		return
 	}
 }
@@ -98,12 +99,12 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 		var r skywell.File
 		err := json.Unmarshal(evt.Commit.Record, &r)
 		if err != nil {
-			fmt.Println(fmt.Errorf("Failed to unmarshal to file: %w", err))
+			slog.Error(fmt.Sprintf("Failed to unmarshal to file: %v", err))
 			return
 		}
 		uri, err := syntax.ParseURI(fmt.Sprintf("at://%s/%s/%s", evt.Did, evt.Commit.Collection, evt.Commit.RKey))
 		if err != nil {
-			fmt.Println(fmt.Errorf("Failed to parse URI: %w", err))
+			slog.Error(fmt.Sprintf("Failed to parse URI: %v", err))
 			return
 		}
 
@@ -112,10 +113,10 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 		result := db.First(&user, "did = ?", evt.Did)
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// user not found, create user
-			fmt.Printf("Failed to find user with DID %s, creating user\n", evt.Did)
+			slog.Info(fmt.Sprintf("Failed to find user with DID %s, creating user", evt.Did))
 			h, d, a, err := getUserData(syntax.DID(evt.Did), db, client, ctx)
 			if err != nil {
-				fmt.Println(fmt.Errorf("Failed to get user data: %w", err))
+				slog.Error(fmt.Sprintf("Failed to get user data: %v", err))
 				return
 			}
 			user = User{
@@ -126,20 +127,20 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			}
 
 			if err := db.Create(&user).Error; err != nil {
-				fmt.Println(fmt.Errorf("Failed to create user: %w", err))
+				slog.Error(fmt.Sprintf("Failed to create user: %v", err))
 				return
 			}
 		}
 
 		pt, err := syntax.ParseDatetime(r.CreatedAt)
 		if err != nil {
-			fmt.Println(fmt.Errorf("Failed to parse createdAt: %w", err))
+			slog.Error(fmt.Sprintf("Failed to parse createdAt: %v", err))
 			return
 		}
 
 		pc, err := syntax.ParseCID(r.Blob.Ref.String())
 		if err != nil {
-			fmt.Println(fmt.Errorf("Failed to parse blobRef: %w", err))
+			slog.Error(fmt.Sprintf("Failed to parse blobRef: %v", err))
 			return
 		}
 
@@ -165,12 +166,12 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 				DoUpdates: clause.AssignmentColumns([]string{"name", "description", "blob_ref", "mime_type", "size"}),
 			}).Create(&file).Error
 			if err != nil {
-				fmt.Println(fmt.Errorf("Failed to create or update file: %w", err))
+				slog.Error(fmt.Sprintf("Failed to create or update file: %v", err))
 			}
 		case jetstream.CommitOperationDelete:
 			db.Delete(&File{}, "uri = ?", uri.String()) // only need URI (primary key) to delete)
 		default:
-			fmt.Println(fmt.Errorf("Unknown commit operation: %s", evt.Commit.Operation))
+			slog.Error(fmt.Sprintf("Unknown commit operation: %s", evt.Commit.Operation))
 		}
 
 	case "app.bsky.actor.profile":
@@ -180,17 +181,17 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 
 		did, err := syntax.ParseDID(evt.Did)
 		if err != nil {
-			fmt.Println(fmt.Errorf("Failed to parse DID: %w", err))
+			slog.Debug(fmt.Sprintf("Failed to parse DID: %v", err))
 			return
 		}
 		err = updateUserProfile(did, db, client, ctx)
 		if err != nil {
-			fmt.Println(fmt.Errorf("Failed to update user profile: %w", err))
+			slog.Error(fmt.Sprintf("Failed to update user profile: %v", err))
 			return
 		}
 
 	default:
-		fmt.Println(fmt.Errorf("Unknown collection: %s", evt.Commit.Collection))
+		slog.Error(fmt.Sprintf("Unknown collection: %s", evt.Commit.Collection))
 	}
 }
 

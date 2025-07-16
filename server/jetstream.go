@@ -5,26 +5,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
+
+	"gorm.io/gorm"
 
 	"github.com/bluesky-social/indigo/xrpc"
 	jetstream "github.com/bluesky-social/jetstream/pkg/models"
 	websocket "github.com/gorilla/websocket"
-	"gorm.io/gorm"
 )
 
 // todo maybe change to using real firehose in the future
 
 var jetstream_uri string = "wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=dev.skywell.file&wantedCollections=app.bsky.actor.profile"
 
-// var jetstream_uri string = "wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=app.bsky.feed.like"
-
 func read(db *gorm.DB, client *xrpc.Client, ctx context.Context) {
-	fmt.Println("Reading from Jetstream...")
-
 	conn, res, err := websocket.DefaultDialer.Dial(jetstream_uri, http.Header{})
 	if err != nil {
-		fmt.Printf("%s: %d", res.Status, res.StatusCode)
+		slog.Error(fmt.Sprintf("Failed to connect to Jetstream (%d): %v", res.StatusCode, err))
 		panic(err)
 	}
 	defer conn.Close()
@@ -32,20 +30,20 @@ func read(db *gorm.DB, client *xrpc.Client, ctx context.Context) {
 	for {
 		_, r, err := conn.NextReader()
 		if err != nil {
-			fmt.Println(fmt.Errorf("Error reading from jetstream: %w", err))
+			slog.Error(fmt.Sprintf("Error reading from jetstream: %v", err))
 			continue
 		}
 
 		msg, err := io.ReadAll(r)
 		if err != nil {
-			fmt.Println(fmt.Errorf("Error reading message: %w", err))
+			slog.Error(fmt.Sprintf("Error reading message: %v", err))
 			continue
 		}
 
 		var evt jetstream.Event
 		err = json.Unmarshal(msg, &evt)
 		if err != nil {
-			fmt.Println(fmt.Errorf("Failed to unmarshal to event: %w", err))
+			slog.Error(fmt.Sprintf("Failed to unmarshal to event: %v", err))
 			continue
 		}
 
