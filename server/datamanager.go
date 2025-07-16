@@ -41,16 +41,12 @@ type File struct {
 	Size        int64
 }
 
-var db *gorm.DB
-var client *xrpc.Client
-var ctx context.Context
-
-func initializeDB() (err error) {
+func initializeDB() (db *gorm.DB, client *xrpc.Client, ctx context.Context, err error) {
 	db, err = gorm.Open(sqlite.Open("database.db"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent), // Disable GORM logging
 	})
 	if err != nil {
-		return err
+		return nil, nil, nil, err
 	}
 	db.AutoMigrate(&File{})
 	db.AutoMigrate(&User{})
@@ -61,10 +57,10 @@ func initializeDB() (err error) {
 		UserAgent: userAgent(),
 	}
 	ctx = context.Background()
-	return nil
+	return db, client, ctx, nil
 }
 
-func updateIdentity(evt jetstream.Event) {
+func updateIdentity(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx context.Context) {
 	// updateIdentity called when identity cache should be purged
 	if evt.Kind != jetstream.EventKindIdentity {
 		return
@@ -75,7 +71,7 @@ func updateIdentity(evt jetstream.Event) {
 		fmt.Println(fmt.Errorf("Failed to parse DID: %w", err))
 		return
 	}
-	err = updateUserProfile(did)
+	err = updateUserProfile(did, db, client, ctx)
 	if err != nil {
 		fmt.Println(fmt.Errorf("Failed to update user profile: %w", err))
 		return
@@ -91,7 +87,7 @@ func updateAccount(evt jetstream.Event) {
 	// we don't care about it yet though
 }
 
-func updateRecord(evt jetstream.Event) {
+func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx context.Context) {
 	// updateRecord called on commit to repo
 	if evt.Kind != jetstream.EventKindCommit {
 		return
@@ -117,7 +113,7 @@ func updateRecord(evt jetstream.Event) {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// user not found, create user
 			fmt.Printf("Failed to find user with DID %s, creating user\n", evt.Did)
-			h, d, a, err := getUserData(syntax.DID(evt.Did))
+			h, d, a, err := getUserData(syntax.DID(evt.Did), db, client, ctx)
 			if err != nil {
 				fmt.Println(fmt.Errorf("Failed to get user data: %w", err))
 				return
@@ -187,7 +183,7 @@ func updateRecord(evt jetstream.Event) {
 			fmt.Println(fmt.Errorf("Failed to parse DID: %w", err))
 			return
 		}
-		err = updateUserProfile(did)
+		err = updateUserProfile(did, db, client, ctx)
 		if err != nil {
 			fmt.Println(fmt.Errorf("Failed to update user profile: %w", err))
 			return
@@ -198,7 +194,7 @@ func updateRecord(evt jetstream.Event) {
 	}
 }
 
-func updateUserProfile(did syntax.DID) error {
+func updateUserProfile(did syntax.DID, db *gorm.DB, client *xrpc.Client, ctx context.Context) error {
 
 	user := User{
 		DID: did,
@@ -211,7 +207,7 @@ func updateUserProfile(did syntax.DID) error {
 	} else if result.Error != nil {
 		return result.Error
 	}
-	handle, displayName, avatarURI, err := getUserData(did)
+	handle, displayName, avatarURI, err := getUserData(did, db, client, ctx)
 	if err != nil {
 		return err
 	}
@@ -224,7 +220,7 @@ func updateUserProfile(did syntax.DID) error {
 	return nil
 }
 
-func getActorFileCount(did syntax.DID) (count int64, err error) {
+func getActorFileCount(did syntax.DID, db *gorm.DB) (count int64, err error) {
 	user := User{}
 	result := db.First(&user, "did = ?", did.String())
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -240,7 +236,7 @@ func getActorFileCount(did syntax.DID) (count int64, err error) {
 	return count, nil
 }
 
-func getUserData(did syntax.DID) (handle syntax.Handle, displayName string, avatarURI syntax.URI, err error) {
+func getUserData(did syntax.DID, db *gorm.DB, client *xrpc.Client, ctx context.Context) (handle syntax.Handle, displayName string, avatarURI syntax.URI, err error) {
 	r, err := bsky.ActorGetProfile(ctx, client, did.String())
 	if err != nil {
 		return "", "", "", fmt.Errorf("failed to get user profile: %w", err)

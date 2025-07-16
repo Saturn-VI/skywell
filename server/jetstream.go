@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/bluesky-social/indigo/xrpc"
 	jetstream "github.com/bluesky-social/jetstream/pkg/models"
 	websocket "github.com/gorilla/websocket"
+	"gorm.io/gorm"
 )
 
 // todo maybe change to using real firehose in the future
@@ -16,7 +19,7 @@ var jetstream_uri string = "wss://jetstream2.us-east.bsky.network/subscribe?want
 
 // var jetstream_uri string = "wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=app.bsky.feed.like"
 
-func read() {
+func read(db *gorm.DB, client *xrpc.Client, ctx context.Context) {
 	fmt.Println("Reading from Jetstream...")
 
 	conn, res, err := websocket.DefaultDialer.Dial(jetstream_uri, http.Header{})
@@ -48,11 +51,11 @@ func read() {
 
 		switch evt.Kind {
 		case jetstream.EventKindIdentity:
-			updateIdentity(evt)
+			updateIdentity(evt, db, client, ctx)
 		case jetstream.EventKindAccount:
 			updateAccount(evt)
 		case jetstream.EventKindCommit:
-			updateRecord(evt)
+			updateRecord(evt, db, client, ctx)
 		}
 	}
 }
