@@ -148,14 +148,14 @@ func updateRecord(evt jetstream.Event) {
 		}
 
 		file := File{
-			URI:         uri,
-			UserID:      user.ID,
-			CreatedAt:   pt,
-			IndexedAt:   syntax.DatetimeNow(),
-			Name:        r.Name,
-			BlobRef:     pc,
-			MimeType:    r.Blob.MimeType,
-			Size:        r.Blob.Size,
+			URI:       uri,
+			UserID:    user.ID,
+			CreatedAt: pt,
+			IndexedAt: syntax.DatetimeNow(),
+			Name:      r.Name,
+			BlobRef:   pc,
+			MimeType:  r.Blob.MimeType,
+			Size:      r.Blob.Size,
 		}
 
 		if r.Description != nil {
@@ -165,7 +165,7 @@ func updateRecord(evt jetstream.Event) {
 		switch evt.Commit.Operation {
 		case jetstream.CommitOperationCreate, jetstream.CommitOperationUpdate:
 			err := db.Clauses(clause.OnConflict{
-				Columns: []clause.Column{{Name: "uri"}},
+				Columns:   []clause.Column{{Name: "uri"}},
 				DoUpdates: clause.AssignmentColumns([]string{"name", "description", "blob_ref", "mime_type", "size"}),
 			}).Create(&file).Error
 			if err != nil {

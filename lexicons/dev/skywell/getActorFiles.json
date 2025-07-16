@@ -34,7 +34,7 @@
             "cursor": {
               "type": "string"
             },
-            "profiles": {
+            "files": {
               "type": "array",
               "items": {
                 "type": "ref",
