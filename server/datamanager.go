@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -33,7 +34,7 @@ type File struct {
 	UserID      uint
 	User        User `gorm:"foreignKey:UserID"`
 	CreatedAt   syntax.Datetime
-	IndexedAt   syntax.Datetime `gorm:"index"`
+	IndexedAt   int64 `gorm:"index"`
 	Name        string
 	Description string
 	BlobRef     syntax.CID
@@ -151,7 +152,7 @@ func updateRecord(evt jetstream.Event) {
 			URI:       uri,
 			UserID:    user.ID,
 			CreatedAt: pt,
-			IndexedAt: syntax.DatetimeNow(),
+			IndexedAt: syntax.DatetimeNow().Time().UnixNano(),
 			Name:      r.Name,
 			BlobRef:   pc,
 			MimeType:  r.Blob.MimeType,
