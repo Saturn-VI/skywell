@@ -8,6 +8,7 @@ require (
 	github.com/bluesky-social/indigo v0.0.0-20250714120356-edc81792ec9d
 	github.com/bluesky-social/jetstream v0.0.0-20250414024304-d17bd81a945e
 	github.com/gorilla/websocket v1.5.3
+	github.com/ipfs/go-cid v0.5.0
 	github.com/saturn-vi/skywell/api/skywell v0.1.5
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.0
@@ -29,7 +30,6 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/ipfs/bbloom v0.0.4 // indirect
 	github.com/ipfs/go-block-format v0.2.0 // indirect
-	github.com/ipfs/go-cid v0.5.0 // indirect
 	github.com/ipfs/go-datastore v0.6.0 // indirect
 	github.com/ipfs/go-ipfs-blockstore v1.3.1 // indirect
 	github.com/ipfs/go-ipfs-ds-help v1.1.1 // indirect
