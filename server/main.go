@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"gorm.io/gorm"
@@ -20,15 +22,48 @@ import (
 	skywell "github.com/saturn-vi/skywell/api/skywell"
 )
 
+var port string = ":8080"
+
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 	slog.Info("Initializing database...")
-	db, client, ctx, err := initializeDB()
+	db, client, err := initializeDB()
+
 	if err != nil {
 		panic("Failed to initialize database: " + err.Error())
 	}
 
+	slog.Info("Initializing HTTP server...")
+	initializeHandleFuncs(db, ctx)
+	server := &http.Server{Addr: port, Handler: http.DefaultServeMux}
+
 	slog.Info("Reading from Jetstream...")
 	go read(db, client, ctx)
+
+	go func() {
+		slog.Info(fmt.Sprintf("Server started on %s!", port))
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error(fmt.Sprintf("Server error: %v", err.Error()))
+		}
+	}()
+
+	<-ctx.Done()
+	slog.Info("Shutting down server...")
+
+	sCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(sCtx); err != nil {
+		slog.Error(fmt.Sprintf("Server failed to shutdown (???) %v", err.Error()))
+	} else {
+		slog.Info("Server shutdown gracefully.")
+	}
+}
+
+func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 
 	// returns ProfileView
 	http.HandleFunc("/xrpc/dev.skywell.getActorProfile", func(w http.ResponseWriter, r *http.Request) {
@@ -84,8 +119,6 @@ func main() {
 		fmt.Fprintf(w, "%s", b)
 	})
 
-	slog.Info("Server started!")
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func generateProfileView(actor string, db *gorm.DB, ctx context.Context) (profileView *skywell.Defs_ProfileView, httpResponse int, err error) {

@@ -42,12 +42,12 @@ type File struct {
 	Size        int64
 }
 
-func initializeDB() (db *gorm.DB, client *xrpc.Client, ctx context.Context, err error) {
+func initializeDB() (db *gorm.DB, client *xrpc.Client, err error) {
 	db, err = gorm.Open(sqlite.Open("database.db"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent), // Disable GORM logging
 	})
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	db.AutoMigrate(&File{})
 	db.AutoMigrate(&User{})
@@ -57,8 +57,7 @@ func initializeDB() (db *gorm.DB, client *xrpc.Client, ctx context.Context, err 
 		Host:      "https://public.api.bsky.app",
 		UserAgent: userAgent(),
 	}
-	ctx = context.Background()
-	return db, client, ctx, nil
+	return db, client, nil
 }
 
 func updateIdentity(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx context.Context) {
@@ -113,7 +112,7 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 		result := db.First(&user, "did = ?", evt.Did)
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// user not found, create user
-			slog.Info(fmt.Sprintf("Failed to find user with DID %s, creating user", evt.Did))
+			slog.Debug(fmt.Sprintf("Failed to find user with DID %s, creating user", evt.Did))
 			h, d, a, err := getUserData(syntax.DID(evt.Did), db, client, ctx)
 			if err != nil {
 				slog.Error(fmt.Sprintf("Failed to get user data: %v", err))
@@ -167,7 +166,9 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			}).Create(&file).Error
 			if err != nil {
 				slog.Error(fmt.Sprintf("Failed to create or update file: %v", err))
+				return
 			}
+			slog.Debug(fmt.Sprintf("Created file with name %s from DID %s", file.Name, evt.Did))
 		case jetstream.CommitOperationDelete:
 			db.Delete(&File{}, "uri = ?", uri.String()) // only need URI (primary key) to delete)
 		default:
