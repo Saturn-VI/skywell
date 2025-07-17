@@ -9,10 +9,11 @@
 ## server
 server doesn't need to do any auth for this usecase because PDS does creation/deletion of records
 - [x] scan jetstream
-- [ ] implement getActorProfile & getActorFiles
+- [x] implement getActorProfile & getActorFiles
 - [x] figure out database
   - go has a built in sql database interface
   - ended up using [gorm](https://gorm.io/) for database access
+- [ ] rate limiter
 
 ## client
 
