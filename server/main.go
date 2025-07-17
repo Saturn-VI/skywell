@@ -35,12 +35,12 @@ func main() {
 		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err.Error()))
-			http.Error(w, fmt.Sprintf("Failed to generate profile view: %v", err.Error()), stat)
+			http.Error(w, "Internal Server Error (profile view generation)", stat)
 		}
 		b, err := json.Marshal(pfv)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to marshal profile: %v", err.Error()))
-			http.Error(w, fmt.Sprintf("Failed to marshal profile: %v", err.Error()), 500)
+			http.Error(w, "Internal Server Error (marshaling content)", 500)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -52,21 +52,21 @@ func main() {
 		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err))
-			http.Error(w, fmt.Sprintf("Failed to generate profile view: %v", err), stat)
+			http.Error(w, "Internal Server Error (profile view generation)", stat)
 			return
 		}
 		did, err := syntax.ParseDID(pfv.Did)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Invalid 'actor' parameter: %v", err), 400)
+			http.Error(w, "Invalid 'actor' parameter", 400)
 		}
 		lim, err := strconv.Atoi(r.URL.Query().Get("limit"))
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Invalid 'limit' parameter: %v", err), 400)
+			http.Error(w, "Invalid 'limit' parameter", 400)
 		}
 		c, fl, stat, err := generateFileList(r.URL.Query().Get("cursor"), lim, did, db)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to generate file list: %v", err))
-			http.Error(w, fmt.Sprintf("Failed to generate file list: %v", err), stat)
+			http.Error(w, "Internal Server Error (file list generation)", stat)
 			return
 		}
 		gaf_o := skywell.GetActorFiles_Output{
@@ -77,7 +77,7 @@ func main() {
 		b, err := json.Marshal(gaf_o)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to marshal content: %v", err))
-			http.Error(w, fmt.Sprintf("Failed to marshal content: %v", err), 500)
+			http.Error(w, "Internal Server Error (marshaling content)", 500)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
