@@ -16,6 +16,8 @@
     "vite-plugin-solid": "^2.11.6"
   },
   "dependencies": {
+    "@atcute/client": "^4.0.3",
+    "skywell": "file:lex",
     "solid-js": "^1.9.5"
   }
 }

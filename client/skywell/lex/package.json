@@ -1,0 +1,19 @@
+{
+  "name": "skywell",
+  "version": "1.0.0",
+  "description": "type definitions for skywell lexicons",
+  "keywords": [
+    "atproto"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saturn-vi/skywell.git"
+  },
+  "license": "MIT",
+  "author": "saturn-vi",
+  "type": "commonjs",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

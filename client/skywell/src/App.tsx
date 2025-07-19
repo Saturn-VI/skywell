@@ -1,4 +1,5 @@
 import type { Component } from 'solid-js';
+import type { DevSkywellDefs, DevSkywellFile, DevSkywellGetActorFiles, DevSkywellGetActorProfile } from 'skywell';
 
 import logo from './logo.svg';
 import styles from './App.module.css';
