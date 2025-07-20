@@ -1,4 +1,4 @@
-import type { Component } from 'solid-js';
+import type { Component } from "solid-js";
 
 const Body: Component = () => {
   return (
@@ -7,9 +7,7 @@ const Body: Component = () => {
         {/* filename, author info, download button */}
         <div class="flex flex-col md:w-1/3 w-full h-full p-4">
           {/* filename + author info */}
-          <div class="text-4xl font-semibold">
-            filename.exe
-          </div>
+          <div class="text-4xl font-semibold">filename.exe</div>
         </div>
         <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2  text-white">
           {/* download button */}
@@ -18,11 +16,9 @@ const Body: Component = () => {
           </button>
         </div>
       </div>
-      <div class="flex w-full h-full">
-        {/* description */}
-      </div>
+      <div class="flex w-full h-full">{/* description */}</div>
     </div>
   );
-}
+};
 
 export default Body;

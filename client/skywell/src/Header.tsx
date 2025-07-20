@@ -1,4 +1,4 @@
-import type { Component } from 'solid-js';
+import type { Component } from "solid-js";
 
 const Header: Component = () => {
   return (
@@ -6,6 +6,6 @@ const Header: Component = () => {
       skywell
     </div>
   );
-}
+};
 
 export default Header;
