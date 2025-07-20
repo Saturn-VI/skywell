@@ -2,7 +2,7 @@ import type { Component } from 'solid-js';
 
 const Sidebar: Component = () => {
   return (
-    <div class="md:w-64 sm:w-0 h-full bg-gray-800 text-white p-4">
+    <div class="sm:w-fit sm:visible invisible w-0 h-full bg-gray-800 text-white sm:p-4 p-0">
       profile
     </div>
   );
