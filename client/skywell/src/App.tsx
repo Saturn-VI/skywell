@@ -4,23 +4,18 @@ import type { DevSkywellDefs, DevSkywellFile, DevSkywellGetActorFiles, DevSkywel
 import logo from './logo.svg';
 import styles from './App.module.css';
 
+import Header from './Header.tsx';
+import Sidebar from './Sidebar.tsx';
+import Body from './Body.tsx';
+
 const App: Component = () => {
   return (
-    <div class={styles.App}>
-      <header class={styles.header}>
-        <img src={logo} class={styles.logo} alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          class={styles.link}
-          href="https://github.com/solidjs/solid"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn Solid
-        </a>
-      </header>
+    <div class="flex flex-col h-screen">
+      <Header></Header>
+      <div class="flex flex-row h-full">
+        <Sidebar></Sidebar>
+        <Body></Body>
+      </div>
     </div>
   );
 };
