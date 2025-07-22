@@ -36,10 +36,17 @@ const Upload: Component = () => {
             {/* all the text inputs */}
             <div class="flex flex-col w-full h-full p-4">
               <div class="mb-4">
+                {/* file */}
+                <label for="fileUpload" class="block text-lg font-medium mb-2">Upload File</label>
+                <input type="file" id="fileUpload" class="block w-fit text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-gray-800 file:text-white hover:file:bg-gray-700" />
+              </div>
+              <div class="mb-4">
+                {/* file name */}
                 <label for="fileName" class="block text-lg font-medium mb-2">File Name</label>
                 <input type="text" id="fileName" class="lg:w-1/2 w-full p-2 bg-gray-800 text-white border border-gray-600" />
               </div>
               <div class="mb-4">
+                {/* description */}
                 <label for="description" class="block text-lg font-medium mb-2">Description</label>
                 <textarea id="description" rows="6" class="lg:w-3/4 w-full p-2 bg-gray-800 text-white border border-gray-600"></textarea>
               </div>
