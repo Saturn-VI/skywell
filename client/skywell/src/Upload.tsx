@@ -34,7 +34,7 @@ const Upload: Component = () => {
           </div>
           <div class="flex w-full h-full">
             {/* all the text inputs */}
-            <div class="flex flex-col w-full h-full p-4">
+            <div class="flex flex-col w-full h-full mt-4">
               <div class="mb-4">
                 {/* file */}
                 <label for="fileUpload" class="block text-lg font-medium mb-2">Upload File</label>

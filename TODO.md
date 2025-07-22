@@ -4,12 +4,12 @@
 - [x] write lexicons (can just use bluesky for most profile details)
   - [x] dev.skywell.file
   - [x] dev.skywell.getActorProfile
-  - [x] dev.skywell.getActorFiles
+  - [x] dev.skywell.getActorFiles (REMOVED)
 
 ## server
 server doesn't need to do any auth for this usecase because PDS does creation/deletion of records
 - [x] scan jetstream
-- [x] implement getActorProfile & getActorFiles
+- [x] implement getActorProfile & getActorFiles (REMOVED)
 - [x] figure out database
   - go has a built in sql database interface
   - ended up using [gorm](https://gorm.io/) for database access
@@ -20,7 +20,7 @@ server doesn't need to do any auth for this usecase because PDS does creation/de
 
 ### pages
 - [ ] home
-- [ ] upload
+- [x] upload
 - [ ] file
 - [ ] profile
 

@@ -19,7 +19,7 @@ const File: Component = () => {
       <div class="flex flex-row h-full">
         <Sidebar></Sidebar>
         <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
-          <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between">
+          <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between mb-4">
             {/* filename, author info, download button */}
             <div class="flex flex-col md:w-1/3 w-full h-full p-4 justify-center">
               {/* filename + author info */}
@@ -34,7 +34,23 @@ const File: Component = () => {
               </button>
             </div>
           </div>
-          <div class="flex w-full h-full">{/* description */}</div>
+          <div class="flex w-full h-full">
+            {/* description */}
+            <div class="flex flex-col w-full h-full">
+              <div class="mb-4">
+                {/* description */}
+                <textarea
+                  id="description"
+                  rows="6"
+                  class="lg:w-3/4 w-full p-2 bg-gray-800 text-white border border-gray-600 cursor-text"
+                  readonly
+                  disabled
+                >
+                  description
+                </textarea>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
