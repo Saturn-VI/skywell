@@ -18,10 +18,14 @@ server doesn't need to do any auth for this usecase because PDS does creation/de
 
 ## client
 
+### general
+- [ ] make an actually good color theme (catpuccin macchiato? that's boring though)
+
 ### pages
 - [ ] home
 - [x] upload
-- [ ] file
+- [x] file
+- [ ] login page
 - [ ] profile
 
 ### functionality
