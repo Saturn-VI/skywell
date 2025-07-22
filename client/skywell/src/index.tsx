@@ -18,5 +18,5 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 render(() => <Router>
   <Route path="/" component={Home}/>
   <Route path="/file/:slug" component={File}/>
-  <Route path="/upload" component={File}/>
+  <Route path="/upload" component={Upload}/>
 </Router>, root!);
