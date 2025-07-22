@@ -83,6 +83,8 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 	})
 
 	// returns GetActorFiles_Output
+	// removing because of legal liability I guess?
+	/*
 	http.HandleFunc("/xrpc/dev.skywell.getActorFiles", func(w http.ResponseWriter, r *http.Request) {
 		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
 		if err != nil {
@@ -118,7 +120,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, "%s", b)
 	})
-
+	*/
 }
 
 func generateProfileView(actor string, db *gorm.DB, ctx context.Context) (profileView *skywell.Defs_ProfileView, httpResponse int, err error) {
