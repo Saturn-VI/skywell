@@ -31,6 +31,15 @@ const Upload: Component = () => {
     setIsDragging(true);
   };
 
+  const handleDragLeave = (e: DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    // Only set to false if we're leaving the container entirely
+    if (!(e.currentTarget == (e.relatedTarget as Node))) {
+      setIsDragging(false);
+    }
+  };
+
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
   };
