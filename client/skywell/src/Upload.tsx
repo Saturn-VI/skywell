@@ -34,7 +34,6 @@ const Upload: Component = () => {
   const handleDragLeave = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    // Only set to false if we're leaving the container entirely
     if (!(e.currentTarget == (e.relatedTarget as Node))) {
       setIsDragging(false);
     }
@@ -133,7 +132,7 @@ const Upload: Component = () => {
           </div>
         </div>
       </div>
-      {/* Overlay appears when dragging files over - positioned at root level */}
+      {/* appears when dragging files - positioned at root level */}
       {isDragging() && (
         <div class="absolute inset-0 z-50 flex items-center justify-center bg-black/70 pointer-events-none">
           <div class="text-center opacity-100">
