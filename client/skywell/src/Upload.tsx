@@ -1,4 +1,5 @@
 import type { Component } from "solid-js";
+import { createSignal } from "solid-js";
 import type {
   DevSkywellDefs,
   DevSkywellFile,
@@ -11,22 +12,70 @@ import styles from "./App.module.css";
 
 import Header from "./Header.tsx";
 import Sidebar from "./Sidebar.tsx";
+import { createDropzone } from "@solid-primitives/upload";
 
 const Upload: Component = () => {
+  const [isDragging, setIsDragging] = createSignal(false);
+  const [currentFile, setCurrentFile] = createSignal<File | null>(null);
+  let fileInputRef: HTMLInputElement;
+
+  const { setRef: dropzoneRef, files: droppedFiles } = createDropzone({
+    onDrop: async files => {
+      setIsDragging(false);
+      files.forEach(f => console.log("dropped", f));
+    },
+  });
+
+  const handleDragEnter = (e: DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer?.files || []);
+    files.forEach(f => console.log("dropped", f));
+    if (files.length > 0) {
+      setCurrentFile(files[0]);
+    } else {
+      setCurrentFile(null);
+    }
+  };
+
+  const openFileBrowser = () => {
+    fileInputRef!.click();
+  };
+
+  const handleFileSelect = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    const files = Array.from(target.files || []);
+    files.forEach(f => console.log("selected", f));
+  };
+
   return (
-    <div class="flex flex-col h-screen">
-      <Header></Header>
+    <div
+      ref={dropzoneRef}
+      class="relative flex flex-col h-screen"
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      <Header />
       <div class="flex flex-row h-full">
-        <Sidebar></Sidebar>
+        <Sidebar />
         <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
           <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between">
             {/* text, upload button */}
             <div class="flex flex-col md:w-1/3 w-full h-full p-4 text-4xl font-semibold justify-center text-center md:text-left">
-              {/* text */}
               upload file
             </div>
-            <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2  text-white">
-              {/* publish button */}
+            <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2 text-white">
               <button class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-blue-600 hover:bg-blue-700 text-center lg:text-2xl text-xl">
                 publish
               </button>
@@ -38,22 +87,52 @@ const Upload: Component = () => {
               <div class="mb-4">
                 {/* file */}
                 <label class="block text-lg w-fit font-medium mb-2 cursor-text">Upload File</label>
-                <input type="file" id="fileUpload" class="block w-fit text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-gray-800 file:text-white hover:file:bg-gray-700" />
+                {/* hidden file input */}
+                <input
+                  ref={fileInputRef!}
+                  type="file"
+                  id="fileUpload"
+                  class="hidden"
+                  onChange={handleFileSelect}
+                />
+                {/* file browser button */}
+                <button
+                  onClick={openFileBrowser}
+                  class="block w-fit text-sm text-white bg-gray-800 hover:bg-gray-700 border border-gray-600 py-2 px-4 font-semibold"
+                >
+                  Choose File
+                </button>
+                <div>
+                  {currentFile() ? (
+                    <p class="mt-2 text-gray-300">Selected file: {currentFile()?.name}</p>
+                  ) : (
+                    <p class="mt-2 text-gray-500">No file selected</p>
+                  )}
+                </div>
               </div>
               <div class="mb-4">
                 {/* file name */}
                 <label class="block text-lg w-fit font-medium mb-2 cursor-text">File Name</label>
-                <input type="text" id="fileName" class="lg:w-1/2 w-full p-2 bg-gray-800 text-white border border-gray-600" />
+                <input maxlength="80" type="text" id="fileName" class="lg:w-1/2 w-full p-2 bg-gray-800 text-white border border-gray-600" />
               </div>
               <div class="mb-4">
                 {/* description */}
                 <label class="block text-lg w-fit font-medium mb-2 cursor-text">Description</label>
-                <textarea id="description" rows="6" class="lg:w-3/4 w-full p-2 bg-gray-800 text-white border border-gray-600"></textarea>
+                <textarea maxlength="500" id="description" rows="6" class="lg:w-3/4 w-full p-2 bg-gray-800 text-white border border-gray-600"></textarea>
               </div>
             </div>
           </div>
         </div>
       </div>
+      {/* Overlay appears when dragging files over - positioned at root level */}
+      {isDragging() && (
+        <div class="absolute inset-0 z-50 flex items-center justify-center bg-black/70 pointer-events-none">
+          <div class="text-center opacity-100">
+            <p class="text-white text-4xl font-bold mb-2">Drop files here</p>
+            <p class="text-gray-300 text-xl">Release to upload</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

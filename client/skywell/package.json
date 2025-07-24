@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@atcute/client": "^4.0.3",
+    "@solid-primitives/upload": "^0.1.3",
     "@solidjs/router": "^0.15.3",
     "@tailwindcss/vite": "^4.1.11",
     "skywell": "file:lex",

@@ -6,6 +6,7 @@ import "./index.css";
 import File from "./File.tsx";
 import Upload from "./Upload.tsx";
 import Home from "./Home.tsx";
+import Account from "./Account.tsx";
 
 const root = document.getElementById("root");
 
@@ -19,4 +20,7 @@ render(() => <Router>
   <Route path="/" component={Home}/>
   <Route path="/file/:slug" component={File}/>
   <Route path="/upload" component={Upload}/>
+  <Route path="/login" component={Account}/>
+  <Route path="/account" component={Account}/>
+  <Route path="/account/callback" component={Account}/>
 </Router>, root!);

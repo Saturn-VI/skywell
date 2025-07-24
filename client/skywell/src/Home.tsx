@@ -6,10 +6,15 @@ import Sidebar from "./Sidebar.tsx";
 const Home: Component = () => {
   return (
     <div class="flex flex-col h-screen">
-      <Header></Header>
+      <Header />
       <div class="flex flex-row h-full">
-        <Sidebar></Sidebar>
-        {/* <Body></Body> */}
+        <Sidebar />
+        <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
+          skywell
+          <a class="text-blue-400" href="/file/abcd">file test link</a>
+          <a class="text-blue-400" href="/upload">upload test link</a>
+          <a class="text-blue-400" href="/account">account test link</a>
+        </div>
       </div>
     </div>
   );
