@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "dev.skywell.getUriFromSlug",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Gets the URI, DID, and CID linked to a certain slug.",
+      "parameters": {
+        "type": "params",
+        "required": ["slug"],
+        "properties": {
+          "slug": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "Slug to convert to ATProto info."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid", "did"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "at-uri",
+              "description": "URI of the file record."
+            },
+            "cid": {
+              "type": "string",
+              "format": "cid",
+              "description": "CID of the file."
+            },
+            "did": {
+              "type": "string",
+              "format": "at-identifier",
+              "description": "DID of the account that owns the file."
+            }
+          }
+        }
+      }
+    }
+  }
+}

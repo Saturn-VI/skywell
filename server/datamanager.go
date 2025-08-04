@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
+	b64 "encoding/base64"
 	"log/slog"
 	"net/http"
 
@@ -28,6 +30,12 @@ type User struct {
 	DisplayName string
 }
 
+type FileKey struct {
+	gorm.Model
+	Key string `gorm:"uniqueIndex"`
+	File uint `gorm:"foreignKey:FileID"`
+}
+
 type File struct {
 	gorm.Model
 	URI         syntax.URI `gorm:"uniqueIndex"`
@@ -42,6 +50,8 @@ type File struct {
 	Size        int64
 }
 
+const SLUG_LENGTH int = 6 // enough entropy for anyone
+
 func initializeDB() (db *gorm.DB, client *xrpc.Client, err error) {
 	db, err = gorm.Open(sqlite.Open("database.db"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent), // Disable GORM logging
@@ -51,6 +61,7 @@ func initializeDB() (db *gorm.DB, client *xrpc.Client, err error) {
 	}
 	db.AutoMigrate(&File{})
 	db.AutoMigrate(&User{})
+	db.AutoMigrate(&FileKey{})
 
 	client = &xrpc.Client{
 		Client:    &http.Client{},
@@ -68,12 +79,12 @@ func updateIdentity(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx c
 
 	did, err := syntax.ParseDID(evt.Did)
 	if err != nil {
-		slog.Error(fmt.Sprintf("Failed to parse DID: %v", err))
+		slog.Error("Failed to parse DID", "error", err)
 		return
 	}
 	err = updateUserProfile(did, db, client, ctx)
 	if err != nil {
-		slog.Error(fmt.Sprintf("Failed to update user profile: %v", err))
+		slog.Error("Failed to update user profile", "error", err)
 		return
 	}
 }
@@ -98,12 +109,12 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 		var r skywell.File
 		err := json.Unmarshal(evt.Commit.Record, &r)
 		if err != nil {
-			slog.Error(fmt.Sprintf("Failed to unmarshal to file: %v", err))
+			slog.Error("Failed to unmarshal to file", "error", err)
 			return
 		}
 		uri, err := syntax.ParseURI(fmt.Sprintf("at://%s/%s/%s", evt.Did, evt.Commit.Collection, evt.Commit.RKey))
 		if err != nil {
-			slog.Error(fmt.Sprintf("Failed to parse URI: %v", err))
+			slog.Error("Failed to parse URI", "error", err)
 			return
 		}
 
@@ -113,9 +124,9 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// user not found, create user
 			slog.Debug(fmt.Sprintf("Failed to find user with DID %s, creating user", evt.Did))
-			h, d, a, err := getUserData(syntax.DID(evt.Did), db, client, ctx)
+			h, d, a, err := getUserData(syntax.DID(evt.Did), client, ctx)
 			if err != nil {
-				slog.Error(fmt.Sprintf("Failed to get user data: %v", err))
+				slog.Error("Failed to get user data", "error", err)
 				return
 			}
 			user = User{
@@ -126,20 +137,20 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			}
 
 			if err := db.Create(&user).Error; err != nil {
-				slog.Error(fmt.Sprintf("Failed to create user: %v", err))
+				slog.Error("Failed to create user", "error", err)
 				return
 			}
 		}
 
 		pt, err := syntax.ParseDatetime(r.CreatedAt)
 		if err != nil {
-			slog.Error(fmt.Sprintf("Failed to parse createdAt: %v", err))
+			slog.Error("Failed to parse createdAt", "err", err)
 			return
 		}
 
 		pc, err := syntax.ParseCID(r.Blob.Ref.String())
 		if err != nil {
-			slog.Error(fmt.Sprintf("Failed to parse blobRef: %v", err))
+			slog.Error("Failed to parse blobRef", "error", err)
 			return
 		}
 
@@ -158,6 +169,18 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			file.Description = *r.Description
 		}
 
+		fk, err := generateSlug(db, file.BlobRef, file.URI)
+
+		if err != nil {
+			slog.Error("Failed to generate slug", "error", err)
+			return
+		}
+
+		filekey := FileKey{
+			Key: fk,
+			File: file.ID,
+		}
+
 		switch evt.Commit.Operation {
 		case jetstream.CommitOperationCreate, jetstream.CommitOperationUpdate:
 			err := db.Clauses(clause.OnConflict{
@@ -165,12 +188,43 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 				DoUpdates: clause.AssignmentColumns([]string{"name", "description", "blob_ref", "mime_type", "size"}),
 			}).Create(&file).Error
 			if err != nil {
-				slog.Error(fmt.Sprintf("Failed to create or update file: %v", err))
+				slog.Error("Failed to create or update file", "error", err)
 				return
 			}
-			slog.Debug(fmt.Sprintf("Created file with name %s from DID %s", file.Name, evt.Did))
+			err = db.Create(&filekey).Error
+			if err != nil {
+				slog.Error(fmt.Sprintf("Failed to create file key: %v", err))
+				return
+			}
+			slog.Debug(fmt.Sprintf("Created file with name %s from DID %s and slug %s", file.Name, evt.Did, filekey.Key))
 		case jetstream.CommitOperationDelete:
-			db.Delete(&File{}, "uri = ?", uri.String()) // only need URI (primary key) to delete)
+
+			var fd File
+			if err := db.Where("uri = ?", uri.String()).First(&fd).Error; err != nil {
+	            if errors.Is(err, gorm.ErrRecordNotFound) {
+	                slog.Warn("Attempted to delete a file that does not exist in the DB", "uri", uri.String())
+	            } else {
+	                slog.Error("Failed to query file for deletion", "uri", uri.String(), "error", err)
+	            }
+	            return
+	        }
+
+			err = db.Transaction(func(tx *gorm.DB) error {
+				if err := tx.Where("file_id = ?", fd.ID).Delete(&FileKey{}).Error; err != nil {
+	                return err
+	            }
+				if err := tx.Delete(&fd).Error; err != nil {
+					return err
+				}
+				return nil
+			})
+
+			if err != nil {
+				slog.Error("Failed to delete file", "error", err)
+				return
+			}
+
+			slog.Debug(fmt.Sprintf("Deleted file with name %s from DID %s and slug %s", fd.Name, evt.Did, fk))
 		default:
 			slog.Error(fmt.Sprintf("Unknown commit operation: %s", evt.Commit.Operation))
 		}
@@ -187,12 +241,50 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 		}
 		err = updateUserProfile(did, db, client, ctx)
 		if err != nil {
-			slog.Error(fmt.Sprintf("Failed to update user profile: %v", err))
+			slog.Error("Failed to update user profile", "error", err)
 			return
 		}
 
 	default:
 		slog.Error(fmt.Sprintf("Unknown collection: %s", evt.Commit.Collection))
+	}
+}
+
+func generateSlug(db *gorm.DB, cid syntax.CID, uri syntax.URI) (slug string, err error) {
+	hasher := sha256.New()
+	hasher.Reset()
+
+	// slug comprised of blob CID and then the URI
+	// because hashes are more influenced by earlier bytes,
+	// we put the blob CID first
+	// because most files will probably be unique
+	// then the URI is after
+	// so basically, data in order is:
+	// cid (bunch of random data) + at:// + did (same sometimes, mostly unique) + collection (always same) + rkey (based on time, mostly unique)
+	hasher.Write([]byte(cid.String()))
+	hasher.Write([]byte(uri.String()))
+
+	b := b64.StdEncoding.EncodeToString(hasher.Sum(nil))
+	tb := b[:SLUG_LENGTH]
+
+	counter := 0
+	cb := tb
+
+	fk := FileKey{}
+
+	for {
+		err := db.First(&fk, "key = ?", string(cb)).Error
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return string(cb), nil // found a unique slug
+		}
+
+		if err != nil {
+			return "", err
+		}
+
+		counter++
+		cb = fmt.Sprintf("%s%d", string(cb), counter)
 	}
 }
 
@@ -209,7 +301,7 @@ func updateUserProfile(did syntax.DID, db *gorm.DB, client *xrpc.Client, ctx con
 	} else if result.Error != nil {
 		return result.Error
 	}
-	handle, displayName, avatarURI, err := getUserData(did, db, client, ctx)
+	handle, displayName, avatarURI, err := getUserData(did, client, ctx)
 	if err != nil {
 		return err
 	}
@@ -238,7 +330,7 @@ func getActorFileCount(did syntax.DID, db *gorm.DB) (count int64, err error) {
 	return count, nil
 }
 
-func getUserData(did syntax.DID, db *gorm.DB, client *xrpc.Client, ctx context.Context) (handle syntax.Handle, displayName string, avatarURI syntax.URI, err error) {
+func getUserData(did syntax.DID, client *xrpc.Client, ctx context.Context) (handle syntax.Handle, displayName string, avatarURI syntax.URI, err error) {
 	r, err := bsky.ActorGetProfile(ctx, client, did.String())
 	if err != nil {
 		return "", "", "", fmt.Errorf("failed to get user profile: %w", err)
