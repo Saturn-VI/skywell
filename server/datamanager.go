@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"crypto/sha256"
+	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	b64 "encoding/base64"
 	"log/slog"
 	"net/http"
 
@@ -32,22 +32,24 @@ type User struct {
 
 type FileKey struct {
 	gorm.Model
-	Key string `gorm:"uniqueIndex"`
-	File uint `gorm:"foreignKey:FileID"`
+	gorm.DeletedAt `gorm:"index"`
+	Key            string `gorm:"uniqueIndex"`
+	File           uint   `gorm:"uniqueIndex:idx_file_key"`
 }
 
 type File struct {
 	gorm.Model
-	URI         syntax.URI `gorm:"uniqueIndex"`
-	UserID      uint
-	User        User `gorm:"foreignKey:UserID"`
-	CreatedAt   syntax.Datetime
-	IndexedAt   int64 `gorm:"index"`
-	Name        string
-	Description string
-	BlobRef     syntax.CID
-	MimeType    string
-	Size        int64
+	gorm.DeletedAt `gorm:"index"`
+	URI            syntax.URI `gorm:"uniqueIndex"`
+	UserID         uint
+	User           User `gorm:"foreignKey:UserID"`
+	CreatedAt      syntax.Datetime
+	IndexedAt      int64 `gorm:"index"`
+	Name           string
+	Description    string
+	BlobRef        syntax.CID
+	MimeType       string
+	Size           int64
 }
 
 const SLUG_LENGTH int = 6 // enough entropy for anyone
@@ -177,7 +179,7 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 		}
 
 		filekey := FileKey{
-			Key: fk,
+			Key:  fk,
 			File: file.ID,
 		}
 
@@ -191,9 +193,12 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 				slog.Error("Failed to create or update file", "error", err)
 				return
 			}
-			err = db.Create(&filekey).Error
+			err = db.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "file"}},
+				DoNothing: true,
+			}).Create(&filekey).Error
 			if err != nil {
-				slog.Error(fmt.Sprintf("Failed to create file key: %v", err))
+				slog.Error("Failed to create file key", "error", err)
 				return
 			}
 			slog.Debug(fmt.Sprintf("Created file with name %s from DID %s and slug %s", file.Name, evt.Did, filekey.Key))
@@ -201,19 +206,28 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 
 			var fd File
 			if err := db.Where("uri = ?", uri.String()).First(&fd).Error; err != nil {
-	            if errors.Is(err, gorm.ErrRecordNotFound) {
-	                slog.Warn("Attempted to delete a file that does not exist in the DB", "uri", uri.String())
-	            } else {
-	                slog.Error("Failed to query file for deletion", "uri", uri.String(), "error", err)
-	            }
-	            return
-	        }
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					slog.Warn("Attempted to delete a file that does not exist in the DB", "uri", uri.String())
+				} else {
+					slog.Error("Failed to query file for deletion", "uri", uri.String(), "error", err)
+				}
+				return
+			}
+			var fk FileKey
+			if err := db.Where("file_id = ?", fd.ID).First(&fk).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					slog.Warn("Attempted to delete a file key that does not exist in the DB", "file_id", fd.ID)
+				} else {
+					slog.Error("Failed to query file key for deletion", "file_id", fd.ID, "error", err)
+				}
+				return
+			}
 
 			err = db.Transaction(func(tx *gorm.DB) error {
-				if err := tx.Where("file_id = ?", fd.ID).Delete(&FileKey{}).Error; err != nil {
-	                return err
-	            }
 				if err := tx.Delete(&fd).Error; err != nil {
+					return err
+				}
+				if err := tx.Delete(&fk).Error; err != nil {
 					return err
 				}
 				return nil
@@ -224,9 +238,9 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 				return
 			}
 
-			slog.Debug(fmt.Sprintf("Deleted file with name %s from DID %s and slug %s", fd.Name, evt.Did, fk))
+			slog.Debug(fmt.Sprintf("Deleted file with name %s from DID %s and slug %s", fd.Name, evt.Did, fk.Key))
 		default:
-			slog.Error(fmt.Sprintf("Unknown commit operation: %s", evt.Commit.Operation))
+			slog.Info(fmt.Sprintf("Unknown commit operation: %s", evt.Commit.Operation))
 		}
 
 	case "app.bsky.actor.profile":
@@ -246,7 +260,7 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 		}
 
 	default:
-		slog.Error(fmt.Sprintf("Unknown collection: %s", evt.Commit.Collection))
+		slog.Info(fmt.Sprintf("Unknown collection: %s", evt.Commit.Collection))
 	}
 }
 
@@ -284,7 +298,7 @@ func generateSlug(db *gorm.DB, cid syntax.CID, uri syntax.URI) (slug string, err
 		}
 
 		counter++
-		cb = fmt.Sprintf("%s%d", string(cb), counter)
+		cb = fmt.Sprintf("%s%d", string(tb), counter)
 	}
 }
 
