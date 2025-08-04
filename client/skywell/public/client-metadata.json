@@ -1,0 +1,11 @@
+{
+  "client_id": "http://localhost",
+  "client_name": "Dev client",
+  "application_type": "native",
+  "grant_types": ["authorization_code"],
+  "scope": "atproto transition:generic",
+  "response_types": ["code"],
+  "redirect_uris": ["http://127.0.0.1:3000/login/callback"],
+  "token_endpoint_auth_method": "none",
+  "dpop_bound_access_tokens": true
+}

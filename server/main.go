@@ -131,7 +131,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			Size:     fi.Size,
 		}
 
-		// todo update to v0.1.8
+		// todo update to v0.1.9
 		o := skywell.GetUriFromSlug_Output{
 			Cid: br.Ref.String(),
 			Uri: fi.URI.String(),
