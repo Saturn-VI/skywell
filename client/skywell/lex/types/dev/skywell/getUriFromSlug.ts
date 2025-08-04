@@ -1,6 +1,7 @@
 import type {} from "@atcute/lexicons";
 import * as v from "@atcute/lexicons/validations";
 import type {} from "@atcute/lexicons/ambient";
+import * as DevSkywellDefs from "./defs.js";
 
 const _mainSchema = /*#__PURE__*/ v.query("dev.skywell.getUriFromSlug", {
   params: /*#__PURE__*/ v.object({
@@ -9,8 +10,10 @@ const _mainSchema = /*#__PURE__*/ v.query("dev.skywell.getUriFromSlug", {
   output: {
     type: "lex",
     schema: /*#__PURE__*/ v.object({
-      cid: /*#__PURE__*/ v.cidString(),
-      did: /*#__PURE__*/ v.actorIdentifierString(),
+      get actor() {
+        return DevSkywellDefs.profileViewSchema;
+      },
+      blob: /*#__PURE__*/ v.blob(),
       uri: /*#__PURE__*/ v.resourceUriString(),
     }),
   },

@@ -150,6 +150,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 
 	// returns GetActorFiles_Output
 	// removing because of legal liability I guess?
+	// TODO make authenticated
 	/*
 		http.HandleFunc("/xrpc/dev.skywell.getActorFiles", func(w http.ResponseWriter, r *http.Request) {
 			pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)

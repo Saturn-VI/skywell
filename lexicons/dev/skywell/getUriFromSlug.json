@@ -20,7 +20,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["uri", "cid", "did"],
+          "required": ["uri", "blob", "actor"],
           "properties": {
             "uri": {
               "type": "string",
