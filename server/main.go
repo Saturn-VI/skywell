@@ -82,6 +82,42 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 		fmt.Fprintf(w, "%s", b)
 	})
 
+	// returns GetUriFromSlug_Output
+	// still waiting for pkg go to publish lol
+	http.HandleFunc("/xrpc/dev.skywell.getUriFromSlug", func(w http.ResponseWriter, r *http.Request) {
+		// based on slug, return:
+		// URI, CID, and DID
+		s := r.URL.Query().Get("slug")
+		if s == "" {
+			http.Error(w, "Required parameter 'slug' missing", 400)
+			return
+		}
+		fk := FileKey{}
+		if err := db.Where("slug = ?", s).First(&fk).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				http.Error(w, "No matching slug found", 404)
+				return
+			}
+			slog.Debug(fmt.Sprintf("Failed to find file key: %v", err))
+			http.Error(w, "Internal Server Error (file key lookup)", 500)
+			return
+		}
+		fi := File{}
+		if err := db.Where("id = ?", fk.File).First(&fi).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				http.Error(w, "No matching file found", 404)
+				return
+			}
+			slog.Debug(fmt.Sprintf("Failed to find file: %v", err))
+			http.Error(w, "Internal Server Error (file lookup)", 500)
+			return
+		}
+		// todo return these
+		// uri := fi.URI.String()
+		// cid := fi.BlobRef.String()
+		// did := fi.User.DID.String()
+	})
+
 	// returns GetActorFiles_Output
 	// removing because of legal liability I guess?
 	/*
@@ -95,10 +131,12 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			did, err := syntax.ParseDID(pfv.Did)
 			if err != nil {
 				http.Error(w, "Invalid 'actor' parameter", 400)
+				return
 			}
 			lim, err := strconv.Atoi(r.URL.Query().Get("limit"))
 			if err != nil {
 				http.Error(w, "Invalid 'limit' parameter", 400)
+				return
 			}
 			c, fl, stat, err := generateFileList(r.URL.Query().Get("cursor"), lim, did, db)
 			if err != nil {
