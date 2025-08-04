@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"crypto/sha256"
-	b64 "encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	b58 "github.com/mr-tron/base58"
 	"log/slog"
 	"net/http"
 
@@ -180,7 +180,7 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 
 		filekey := FileKey{
 			Key:  fk,
-			File: file.ID,
+			File: 0,
 		}
 
 		switch evt.Commit.Operation {
@@ -193,15 +193,16 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 				slog.Error("Failed to create or update file", "error", err)
 				return
 			}
+			filekey.File = file.ID // set the file ID after file is created/updated
+			slog.Debug(fmt.Sprintf("Creating filekey with key %s and file id %d", filekey.Key, filekey.ID))
 			err = db.Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "file"}},
 				DoNothing: true,
 			}).Create(&filekey).Error
 			if err != nil {
 				slog.Error("Failed to create file key", "error", err)
 				return
 			}
-			slog.Debug(fmt.Sprintf("Created file with name %s from DID %s and slug %s", file.Name, evt.Did, filekey.Key))
+			slog.Debug(fmt.Sprintf("Created file with ID %d and name %s from DID %s and slug %s", file.ID, file.Name, evt.Did, filekey.Key))
 		case jetstream.CommitOperationDelete:
 
 			var fd File
@@ -278,7 +279,7 @@ func generateSlug(db *gorm.DB, cid syntax.CID, uri syntax.URI) (slug string, err
 	hasher.Write([]byte(cid.String()))
 	hasher.Write([]byte(uri.String()))
 
-	b := b64.StdEncoding.EncodeToString(hasher.Sum(nil))
+	b := b58.Encode(hasher.Sum(nil))
 	tb := b[:SLUG_LENGTH]
 
 	counter := 0

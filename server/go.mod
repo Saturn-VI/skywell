@@ -9,6 +9,7 @@ require (
 	github.com/bluesky-social/jetstream v0.0.0-20250414024304-d17bd81a945e
 	github.com/gorilla/websocket v1.5.3
 	github.com/ipfs/go-cid v0.5.0
+	github.com/mr-tron/base58 v1.2.0
 	github.com/saturn-vi/skywell/api/skywell v0.1.7
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.1
@@ -29,25 +30,22 @@ require (
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/ipfs/bbloom v0.0.4 // indirect
-	github.com/ipfs/boxo v0.33.1 // indirect
-	github.com/ipfs/go-block-format v0.2.2 // indirect
+	github.com/ipfs/boxo v0.30.0 // indirect
+	github.com/ipfs/go-block-format v0.2.1 // indirect
 	github.com/ipfs/go-datastore v0.8.2 // indirect
 	github.com/ipfs/go-ipfs-blockstore v1.3.1 // indirect
 	github.com/ipfs/go-ipfs-ds-help v1.1.1 // indirect
-	github.com/ipfs/go-ipfs-util v0.0.3 // indirect
-	github.com/ipfs/go-ipld-cbor v0.2.1 // indirect
-	github.com/ipfs/go-ipld-format v0.6.2 // indirect
+	github.com/ipfs/go-ipld-cbor v0.2.0 // indirect
+	github.com/ipfs/go-ipld-format v0.6.1 // indirect
 	github.com/ipfs/go-log v1.0.5 // indirect
-	github.com/ipfs/go-log/v2 v2.8.0 // indirect
+	github.com/ipfs/go-log/v2 v2.5.1 // indirect
 	github.com/ipfs/go-metrics-interface v0.3.0 // indirect
-	github.com/jbenet/goprocess v0.1.4 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.30 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
-	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.2.0 // indirect
 	github.com/multiformats/go-multibase v0.2.0 // indirect
