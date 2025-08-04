@@ -111,18 +111,31 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			http.Error(w, "Internal Server Error (file lookup)", 500)
 			return
 		}
-		user := User{}
-		if err := db.Where("id = ?", fi.UserID).First(&user).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				http.Error(w, "No matching user found", 404)
-				return
-			}
+
+		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err.Error()))
+			http.Error(w, "Internal Server Error (profile view generation)", stat)
 		}
 
+		c, err := cid.Decode(fi.BlobRef.String())
+		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to decode blob CID: %v", err))
+			http.Error(w, "Internal Server Error (decoding blob CID)", 500)
+			return
+		}
+
+		br := util.LexBlob{
+			Ref:      util.LexLink(c),
+			MimeType: fi.MimeType,
+			Size:     fi.Size,
+		}
+
+		// todo update to v0.1.8
 		o := skywell.GetUriFromSlug_Output{
-			Cid: fi.BlobRef.String(),
+			Cid: br.Ref.String(),
 			Uri: fi.URI.String(),
-			Did: user.DID.String(),
+			Did: pfv.Did,
 		}
 
 		b, err := json.Marshal(o)
