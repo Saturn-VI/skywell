@@ -1,9 +1,10 @@
-import type { Component } from "solid-js";
-import type {
+import { createSignal, type Component } from "solid-js";
+import {
   DevSkywellDefs,
   DevSkywellFile,
   DevSkywellGetActorFiles,
   DevSkywellGetActorProfile,
+  DevSkywellGetUriFromSlug,
 } from "skywell";
 
 import logo from "./logo.svg";
@@ -11,17 +12,55 @@ import styles from "./App.module.css";
 
 import Header from "./Header.tsx";
 import Sidebar from "./Sidebar.tsx";
+import { getRPC } from "./Auth.tsx";
+import { type Params, useParams } from "@solidjs/router";
+import { toast } from "solid-toast";
+import { Client, isXRPCErrorPayload } from "@atcute/client";
+
+async function loadData(params: Params, rpc: Client) {
+  const data = await rpc.get(DevSkywellGetUriFromSlug.mainSchema.nsid, {
+    params: {
+      slug: params.slug,
+    },
+  });
+  if (data instanceof Error) {
+    console.error("Error fetching file data:", data);
+    toast.error("Failed to load file data.");
+    return;
+  } else {
+    if (isXRPCErrorPayload(data.data)) {
+      toast.error("File not found.");
+      return;
+    }
+    const fileData = data.data;
+    setFilename(fileData.);
+    
+
+
+  }
+}
+
+const [filename, setFilename] = createSignal<string>("Loading...");
+const [author, setAuthor] = createSignal<string>("Loading...");
+const [authorHandle, setAuthorHandle] = createSignal<string>("Loading...");
+const [description, setDescription] = createSignal<string>("");
+const [blob, setBlob] = createSignal<Blob | null>(null);
 
 const File: Component = () => {
+  const params = useParams();
+  const rpc = getRPC();
+
+  loadData(params, rpc);
+
   return (
     <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
       <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between mb-4">
         {/* filename, author info, download button */}
         <div class="flex flex-col md:w-1/3 w-full h-full p-4 justify-center">
           {/* filename + author info */}
-          <div class="text-4xl font-semibold">filename.exe</div>
-          <div class="text-xl font-medium">created by @authorname</div>
-          <div class="text-xl font-light">handle.author.com</div>
+          <div class="text-4xl font-semibold">{filename()}</div>
+          <div class="text-xl font-medium">created by @{author()}</div>
+          <div class="text-xl font-light">{authorHandle()}</div>
         </div>
         <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2  text-white">
           {/* download button */}
@@ -42,7 +81,7 @@ const File: Component = () => {
               readonly
               disabled
             >
-              description
+              {description()}
             </textarea>
           </div>
         </div>

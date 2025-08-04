@@ -20,9 +20,9 @@ const Upload: Component = () => {
   let fileInputRef: HTMLInputElement;
 
   const { setRef: dropzoneRef, files: droppedFiles } = createDropzone({
-    onDrop: async files => {
+    onDrop: async (files) => {
       setIsDragging(false);
-      files.forEach(f => console.log("dropped", f));
+      files.forEach((f) => console.log("dropped", f));
     },
   });
 
@@ -48,7 +48,7 @@ const Upload: Component = () => {
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer?.files || []);
-    files.forEach(f => console.log("dropped", f));
+    files.forEach((f) => console.log("dropped", f));
     if (files.length > 0) {
       setCurrentFile(files[0]);
     } else {
@@ -63,7 +63,7 @@ const Upload: Component = () => {
   const handleFileSelect = (e: Event) => {
     const target = e.target as HTMLInputElement;
     const files = Array.from(target.files || []);
-    files.forEach(f => console.log("selected", f));
+    files.forEach((f) => console.log("selected", f));
   };
 
   return (
@@ -91,7 +91,9 @@ const Upload: Component = () => {
           <div class="flex flex-col w-full h-full mt-4">
             <div class="mb-4">
               {/* file */}
-              <label class="block text-lg w-fit font-medium mb-2 cursor-text">Upload File</label>
+              <label class="block text-lg w-fit font-medium mb-2 cursor-text">
+                Upload File
+              </label>
               {/* hidden file input */}
               <input
                 ref={fileInputRef!}
@@ -109,7 +111,9 @@ const Upload: Component = () => {
               </button>
               <div>
                 {currentFile() ? (
-                  <p class="mt-2 text-gray-300">Selected file: {currentFile()?.name}</p>
+                  <p class="mt-2 text-gray-300">
+                    Selected file: {currentFile()?.name}
+                  </p>
                 ) : (
                   <p class="mt-2 text-gray-500">No file selected</p>
                 )}
@@ -117,16 +121,30 @@ const Upload: Component = () => {
             </div>
             <div class="mb-4">
               {/* file name */}
-              <label class="block text-lg w-fit font-medium mb-2 cursor-text">File Name</label>
-              <input maxlength="80" type="text" id="fileName" class="lg:w-1/2 w-full p-2 bg-gray-800 text-white border border-gray-600" />
+              <label class="block text-lg w-fit font-medium mb-2 cursor-text">
+                File Name
+              </label>
+              <input
+                maxlength="80"
+                type="text"
+                id="fileName"
+                class="lg:w-1/2 w-full p-2 bg-gray-800 text-white border border-gray-600"
+              />
             </div>
             <div class="mb-4">
               {/* description */}
-              <label class="block text-lg w-fit font-medium mb-2 cursor-text">Description</label>
-              <textarea maxlength="500" id="description" rows="6" class="lg:w-3/4 w-full p-2 bg-gray-800 text-white border border-gray-600"></textarea>
+              <label class="block text-lg w-fit font-medium mb-2 cursor-text">
+                Description
+              </label>
+              <textarea
+                maxlength="500"
+                id="description"
+                rows="6"
+                class="lg:w-3/4 w-full p-2 bg-gray-800 text-white border border-gray-600"
+              ></textarea>
+            </div>
           </div>
         </div>
-      </div>
         {/* appears when dragging files - positioned at root level */}
         {isDragging() && (
           <div class="absolute inset-0 z-50 flex items-center justify-center bg-black/70 pointer-events-none">

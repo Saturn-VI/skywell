@@ -11,7 +11,6 @@
         "properties": {
           "slug": {
             "type": "string",
-            "format": "at-identifier",
             "description": "Slug to convert to ATProto info."
           }
         }
@@ -20,16 +19,21 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["uri", "blob", "actor"],
+          "required": ["uri", "cid", "file", "actor"],
           "properties": {
             "uri": {
               "type": "string",
               "format": "at-uri",
-              "description": "URI of the file record."
+              "description": "Link to the file record."
             },
-            "blob": {
-              "type": "blob",
-              "description": "Blobref to the file."
+            "cid": {
+              "type": "string",
+              "format": "cid",
+              "description": "CID of the file record."
+            },
+            "file": {
+              "type": "ref",
+              "ref": "dev.skywell.defs#fileView"
             },
             "actor": {
               "type": "ref",

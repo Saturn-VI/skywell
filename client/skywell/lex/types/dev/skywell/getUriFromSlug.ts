@@ -5,7 +5,7 @@ import * as DevSkywellDefs from "./defs.js";
 
 const _mainSchema = /*#__PURE__*/ v.query("dev.skywell.getUriFromSlug", {
   params: /*#__PURE__*/ v.object({
-    slug: /*#__PURE__*/ v.actorIdentifierString(),
+    slug: /*#__PURE__*/ v.string(),
   }),
   output: {
     type: "lex",
@@ -13,7 +13,10 @@ const _mainSchema = /*#__PURE__*/ v.query("dev.skywell.getUriFromSlug", {
       get actor() {
         return DevSkywellDefs.profileViewSchema;
       },
-      blob: /*#__PURE__*/ v.blob(),
+      cid: /*#__PURE__*/ v.cidString(),
+      get file() {
+        return DevSkywellDefs.fileViewSchema;
+      },
       uri: /*#__PURE__*/ v.resourceUriString(),
     }),
   },

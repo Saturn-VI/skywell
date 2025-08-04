@@ -1,35 +1,39 @@
 import type { Component } from "solid-js";
 import { createSignal } from "solid-js";
-import { configureOAuth, createAuthorizationUrl, resolveFromIdentity } from "@atcute/oauth-browser-client";
+import {
+  configureOAuth,
+  createAuthorizationUrl,
+  resolveFromIdentity,
+} from "@atcute/oauth-browser-client";
 import sleep from "sleep-promise";
 import { toast } from "solid-toast";
 
 configureOAuth({
-	metadata: {
-		client_id: 'http://localhost?redirect_uri=http://127.0.0.1:3000/login/callback&scope=atproto transition:generic',
-		redirect_uri: 'http://127.0.0.1:3000/login/callback',
-	},
+  metadata: {
+    client_id:
+      "http://localhost?redirect_uri=http://127.0.0.1:3000/login/callback&scope=atproto transition:generic",
+    redirect_uri: "http://127.0.0.1:3000/login/callback",
+  },
 });
 
-const [userHandle, setUserHandle] = createSignal<string>('');
+const [userHandle, setUserHandle] = createSignal<string>("");
 
 async function runLoginFlow() {
-
   try {
     const { identity, metadata } = await resolveFromIdentity(userHandle());
 
     const authUrl = await createAuthorizationUrl({
       metadata: metadata,
       identity: identity,
-      scope: 'atproto transition:generic'
-    })
+      scope: "atproto transition:generic",
+    });
 
-    toast.success("Redirecting to login...")
-    await sleep(200)
-    window.location.assign(authUrl)
+    toast.success("Redirecting to login...");
+    await sleep(200);
+    window.location.assign(authUrl);
   } catch {
-    console.log("Invalid handle, probably")
-    toast.error("Invalid handle")
+    console.log("Invalid handle, probably");
+    toast.error("Invalid handle");
   }
 }
 
@@ -42,11 +46,12 @@ const Login: Component = () => {
           type="text"
           class="bg-amber-100"
           value={userHandle()}
-          onInput={(e) => setUserHandle(e.target.value)} />
+          onInput={(e) => setUserHandle(e.target.value)}
+        />
         <button onClick={(e) => runLoginFlow()}>login</button>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default Login;
