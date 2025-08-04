@@ -12,10 +12,9 @@ import (
 
 // GetUriFromSlug_Output is the output of a dev.skywell.getUriFromSlug call.
 type GetUriFromSlug_Output struct {
-	// cid: CID of the file.
-	Cid string `json:"cid" cborgen:"cid"`
-	// did: DID of the account that owns the file.
-	Did string `json:"did" cborgen:"did"`
+	Actor *Defs_ProfileView `json:"actor,omitempty" cborgen:"actor,omitempty"`
+	// blob: Blobref to the file.
+	Blob *util.LexBlob `json:"blob,omitempty" cborgen:"blob,omitempty"`
 	// uri: URI of the file record.
 	Uri string `json:"uri" cborgen:"uri"`
 }

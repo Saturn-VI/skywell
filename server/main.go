@@ -83,9 +83,8 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 	})
 
 	// returns GetUriFromSlug_Output
-	// still waiting for pkg go to publish lol
 	http.HandleFunc("/xrpc/dev.skywell.getUriFromSlug", func(w http.ResponseWriter, r *http.Request) {
-		// based on slug, return:
+		// based on slug, get:
 		// URI, CID, and DID
 		s := r.URL.Query().Get("slug")
 		if s == "" {
@@ -93,7 +92,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			return
 		}
 		fk := FileKey{}
-		if err := db.Where("slug = ?", s).First(&fk).Error; err != nil {
+		if err := db.Where("key = ?", s).First(&fk).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				http.Error(w, "No matching slug found", 404)
 				return
@@ -112,10 +111,28 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			http.Error(w, "Internal Server Error (file lookup)", 500)
 			return
 		}
-		// todo return these
-		// uri := fi.URI.String()
-		// cid := fi.BlobRef.String()
-		// did := fi.User.DID.String()
+		user := User{}
+		if err := db.Where("id = ?", fi.UserID).First(&user).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				http.Error(w, "No matching user found", 404)
+				return
+			}
+		}
+
+		o := skywell.GetUriFromSlug_Output{
+			Cid: fi.BlobRef.String(),
+			Uri: fi.URI.String(),
+			Did: user.DID.String(),
+		}
+
+		b, err := json.Marshal(o)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to marshal content: %v", err))
+			http.Error(w, "Internal Server Error (marshaling content)", 500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, "%s", b)
 	})
 
 	// returns GetActorFiles_Output

@@ -27,15 +27,13 @@
               "format": "at-uri",
               "description": "URI of the file record."
             },
-            "cid": {
-              "type": "string",
-              "format": "cid",
-              "description": "CID of the file."
+            "blob": {
+              "type": "blob",
+              "description": "Blobref to the file."
             },
-            "did": {
-              "type": "string",
-              "format": "at-identifier",
-              "description": "DID of the account that owns the file."
+            "actor": {
+              "type": "ref",
+              "ref": "dev.skywell.defs#profileView"
             }
           }
         }
