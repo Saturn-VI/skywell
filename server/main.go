@@ -101,7 +101,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 		fmt.Fprintf(w, "%s", b)
 	})
 
-	// returns GetUriFromSlug_Output
+	// returns GetFileFromSlug_Output
 	http.HandleFunc("/xrpc/dev.skywell.getFileFromSlug", func(w http.ResponseWriter, r *http.Request) {
 		// based on slug, get:
 		// URI, CID, and DID

@@ -4,7 +4,7 @@ import {
   DevSkywellFile,
   DevSkywellGetActorFiles,
   DevSkywellGetActorProfile,
-  DevSkywellGetUriFromSlug,
+  DevSkywellGetFileFromSlug,
 } from "skywell";
 
 import logo from "./logo.svg";
@@ -19,7 +19,7 @@ import { Client, isXRPCErrorPayload } from "@atcute/client";
 import { ComAtprotoSyncGetBlob } from "@atcute/atproto";
 
 async function loadData(params: Params, rpc: Client) {
-  const data = await rpc.get(DevSkywellGetUriFromSlug.mainSchema.nsid, {
+  const data = await rpc.get(DevSkywellGetFileFromSlug.mainSchema.nsid, {
     params: {
       slug: params.slug,
     },
