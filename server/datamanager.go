@@ -85,6 +85,7 @@ func updateIdentity(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx c
 		slog.Error("Failed to parse DID", "error", err)
 		return
 	}
+	cacheDir.Purge(ctx, did.AtIdentifier())
 	err = updateUserProfile(did, db, client, ctx)
 	if err != nil {
 		slog.Error("Failed to update user profile", "error", err)

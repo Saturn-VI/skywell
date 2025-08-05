@@ -24,6 +24,8 @@ import (
 
 var port string = ":8080"
 
+var cacheDir identity.CacheDirectory = identity.NewCacheDirectory(identity.DefaultDirectory(), 0, 0, 0, 0)
+
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -256,7 +258,7 @@ func generateProfileView(actor string, db *gorm.DB, ctx context.Context) (profil
 		return nil, 400, fmt.Errorf("Invalid 'actor' parameter: %w", err)
 	}
 
-	id, err := identity.DefaultDirectory().Lookup(ctx, *at)
+	id, err := cacheDir.Lookup(ctx, *at)
 	user := User{}
 	result := db.First(&user, "did = ?", id.DID.String())
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
