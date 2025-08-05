@@ -41,6 +41,7 @@ type File struct {
 	gorm.Model
 	gorm.DeletedAt `gorm:"index"`
 	URI            syntax.URI `gorm:"uniqueIndex"`
+	CID            syntax.CID
 	UserID         uint
 	User           User `gorm:"foreignKey:UserID"`
 	CreatedAt      syntax.Datetime
@@ -119,6 +120,11 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			slog.Error("Failed to parse URI", "error", err)
 			return
 		}
+		cid, err := syntax.ParseCID(evt.Commit.CID)
+		if err != nil {
+			slog.Error("Failed to parse CID", "error", err)
+			return
+		}
 
 		// get user
 		var user User
@@ -158,6 +164,7 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 
 		file := File{
 			URI:       uri,
+			CID:       cid,
 			UserID:    user.ID,
 			CreatedAt: pt,
 			IndexedAt: syntax.DatetimeNow().Time().UnixNano(),

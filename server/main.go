@@ -150,24 +150,18 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			return
 		}
 
-		c, err := cid.Decode(fi.BlobRef.String())
+		fv, stat, err := generateFileView(fi.ID, db)
 		if err != nil {
-			slog.Error(fmt.Sprintf("Failed to decode blob CID: %v", err))
-			http.Error(w, "Internal Server Error (decoding blob CID)", 500)
+			slog.Error(fmt.Sprintf("Failed to generate file view: %v", err.Error()))
+			http.Error(w, "Internal Server Error (file view generation)", stat)
 			return
 		}
 
-		br := util.LexBlob{
-			Ref:      util.LexLink(c),
-			MimeType: fi.MimeType,
-			Size:     fi.Size,
-		}
-
-		// todo update to v0.1.9
-		o := skywell.GetUriFromSlug_Output{
-			Cid: br.Ref.String(),
-			Uri: fi.URI.String(),
-			Did: pfv.Did,
+		o := skywell.GetFileFromSlug_Output{
+			Cid:   fi.CID.String(),
+			Uri:   fi.URI.String(),
+			File:  fv,
+			Actor: pfv,
 		}
 
 		b, err := json.Marshal(o)
@@ -222,6 +216,34 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			fmt.Fprintf(w, "%s", b)
 		})
 	*/
+}
+
+func generateFileView(fileID uint, db *gorm.DB) (fileView *skywell.Defs_FileView, httpResponse int, err error) {
+	file := File{}
+	result := db.First(&file, "id = ?", fileID)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, 404, fmt.Errorf("File not found")
+	} else if result.Error != nil {
+		return nil, 500, fmt.Errorf("Failed to find file: %w", result.Error)
+	}
+
+	c, err := cid.Decode(file.BlobRef.String())
+	if err != nil {
+		return nil, 500, fmt.Errorf("Failed to decode blob CID: %w", err)
+	}
+
+	fileView = &skywell.Defs_FileView{
+		Blob: &util.LexBlob{
+			Ref:      util.LexLink(c),
+			MimeType: file.MimeType,
+			Size:     file.Size,
+		},
+		CreatedAt:   file.CreatedAt.String(),
+		Name:        file.Name,
+		Description: &file.Description,
+	}
+
+	return fileView, 200, nil
 }
 
 func generateProfileView(actor string, db *gorm.DB, ctx context.Context) (profileView *skywell.Defs_ProfileView, httpResponse int, err error) {
