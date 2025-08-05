@@ -22,7 +22,7 @@ const _profileViewSchema = /*#__PURE__*/ v.object({
     /*#__PURE__*/ v.literal("dev.skywell.defs#profileView"),
   ),
   avatar: /*#__PURE__*/ v.optional(/*#__PURE__*/ v.genericUriString()),
-  did: /*#__PURE__*/ v.actorIdentifierString(),
+  did: /*#__PURE__*/ v.didString(),
   displayName: /*#__PURE__*/ v.optional(
     /*#__PURE__*/ v.constrain(/*#__PURE__*/ v.string(), [
       /*#__PURE__*/ v.stringLength(0, 640),

@@ -12,10 +12,11 @@ import styles from "./App.module.css";
 
 import Header from "./Header.tsx";
 import Sidebar from "./Sidebar.tsx";
-import { getRPC } from "./Auth.tsx";
+import { getRelayRpc, getRPC } from "./Auth.tsx";
 import { type Params, useParams } from "@solidjs/router";
 import { toast } from "solid-toast";
 import { Client, isXRPCErrorPayload } from "@atcute/client";
+import { ComAtprotoSyncGetBlob } from "@atcute/atproto";
 
 async function loadData(params: Params, rpc: Client) {
   const data = await rpc.get(DevSkywellGetUriFromSlug.mainSchema.nsid, {
@@ -33,10 +34,36 @@ async function loadData(params: Params, rpc: Client) {
       return;
     }
     const fileData = data.data;
-    setFilename(fileData.);
-    
+    setFilename(fileData.file.name);
+    setAuthor(fileData.actor.displayName || fileData.actor.handle);
+    setAuthorHandle(fileData.actor.handle);
+    setDescription(fileData.file.description || "");
+    fetchBlob(fileData.file.blob.ref.$link, fileData.actor.did);
+  }
+}
 
+async function fetchBlob(cid: string, did: `did:${string}:${string}`) {
+  const rpc = getRelayRpc();
 
+  try {
+    const data = await rpc.get(ComAtprotoSyncGetBlob.mainSchema.nsid, {
+      params: {
+        cid: cid,
+        did: did,
+      },
+      as: 'blob',
+    });
+
+    if (data instanceof Error) {
+      console.error("Error fetching blob:", data);
+      toast.error("Failed to load file.");
+      return;
+    } else {
+      setBlob(data.data as Blob);
+    }
+  } catch (error) {
+    console.error("Error fetching blob:", error);
+    toast.error("Failed to load file.");
   }
 }
 
