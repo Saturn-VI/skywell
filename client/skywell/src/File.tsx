@@ -12,7 +12,7 @@ import styles from "./App.module.css";
 
 import Header from "./Header.tsx";
 import Sidebar from "./Sidebar.tsx";
-import { getRelayRpc, getRPC } from "./Auth.tsx";
+import { getEntrywayRpc, getRPC } from "./Auth.tsx";
 import { type Params, useParams } from "@solidjs/router";
 import { toast } from "solid-toast";
 import { Client, isXRPCErrorPayload } from "@atcute/client";
@@ -34,16 +34,16 @@ async function loadData(params: Params, rpc: Client) {
       return;
     }
     const fileData = data.data;
+    fetchBlob(fileData.file.blob.ref.$link, fileData.actor.did);
     setFilename(fileData.file.name);
     setAuthor(fileData.actor.displayName || fileData.actor.handle);
     setAuthorHandle(fileData.actor.handle);
     setDescription(fileData.file.description || "");
-    fetchBlob(fileData.file.blob.ref.$link, fileData.actor.did);
   }
 }
 
 async function fetchBlob(cid: string, did: `did:${string}:${string}`) {
-  const rpc = getRelayRpc();
+  const rpc = getEntrywayRpc();
 
   try {
     const data = await rpc.get(ComAtprotoSyncGetBlob.mainSchema.nsid, {
@@ -86,8 +86,8 @@ const File: Component = () => {
         <div class="flex flex-col md:w-1/3 w-full h-full p-4 justify-center">
           {/* filename + author info */}
           <div class="text-4xl font-semibold">{filename()}</div>
-          <div class="text-xl font-medium">created by @{author()}</div>
-          <div class="text-xl font-light">{authorHandle()}</div>
+          <div class="text-xl font-medium">created by {author()}</div>
+          <div class="text-xl font-light">@{authorHandle()}</div>
         </div>
         <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2  text-white">
           {/* download button */}

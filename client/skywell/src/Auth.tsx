@@ -23,10 +23,10 @@ export function getRPC(): Client {
   return new Client({ handler: hand });
 }
 
-export function getRelayRpc(): Client {
+export function getEntrywayRpc(): Client {
   return new Client({
     handler: simpleFetchHandler({
-      service: "https://bsky.network",
+      service: "https://bsky.social",
     }),
   });
 }
