@@ -18,13 +18,15 @@ import (
 	identity "github.com/bluesky-social/indigo/atproto/identity"
 	syntax "github.com/bluesky-social/indigo/atproto/syntax"
 	"github.com/bluesky-social/indigo/lex/util"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/ipfs/go-cid"
 	skywell "github.com/saturn-vi/skywell/api/skywell"
 )
 
 const PORT string = ":8080"
-const SKYWELL_DID = "did:plc:PLACEHOLDER"
-const USER_AGENT = "Skywell AppView v0.1.12"
+const SKYWELL_DID syntax.DID = "did:plc:PLACEHOLDER"
+const SKYWELL_SERVICE_ID string = "#skywell_server"
+const USER_AGENT string = "Skywell AppView v0.1.12"
 
 var cacheDir identity.CacheDirectory = identity.NewCacheDirectory(identity.DefaultDirectory(), 0, 0, 0, 0)
 
@@ -179,47 +181,79 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 	})
 
 	// returns GetActorFiles_Output
-	// removing because of legal liability I guess?
-	// TODO make authenticated
-	/*
-		http.HandleFunc("/xrpc/dev.skywell.getActorFiles", func(w http.ResponseWriter, r *http.Request) {
-			pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
-			if err != nil {
-				slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err))
-				http.Error(w, "Internal Server Error (profile view generation)", stat)
-				return
-			}
-			did, err := syntax.ParseDID(pfv.Did)
-			if err != nil {
-				http.Error(w, "Invalid 'actor' parameter", 400)
-				return
-			}
-			lim, err := strconv.Atoi(r.URL.Query().Get("limit"))
-			if err != nil {
-				http.Error(w, "Invalid 'limit' parameter", 400)
-				return
-			}
-			c, fl, stat, err := generateFileList(r.URL.Query().Get("cursor"), lim, did, db)
-			if err != nil {
-				slog.Error(fmt.Sprintf("Failed to generate file list: %v", err))
-				http.Error(w, "Internal Server Error (file list generation)", stat)
-				return
-			}
-			gaf_o := skywell.GetActorFiles_Output{
-				Actor:    pfv,
-				Cursor:   &c,
-				Profiles: *fl, // TODO update when package updates
-			}
-			b, err := json.Marshal(gaf_o)
-			if err != nil {
-				slog.Error(fmt.Sprintf("Failed to marshal content: %v", err))
-				http.Error(w, "Internal Server Error (marshaling content)", 500)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			fmt.Fprintf(w, "%s", b)
-		})
-	*/
+	http.HandleFunc("/xrpc/dev.skywell.getActorFiles", func(w http.ResponseWriter, r *http.Request) {
+		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err))
+			http.Error(w, "Internal Server Error (profile view generation)", stat)
+			return
+		}
+		did, err := syntax.ParseDID(pfv.Did)
+		if err != nil {
+			http.Error(w, "Invalid 'actor' parameter", 400)
+			return
+		}
+		lim, err := strconv.Atoi(r.URL.Query().Get("limit"))
+		if err != nil {
+			http.Error(w, "Invalid 'limit' parameter", 400)
+			return
+		}
+		c, fl, stat, err := generateFileList(r.URL.Query().Get("cursor"), lim, did, db)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to generate file list: %v", err))
+			http.Error(w, "Internal Server Error (file list generation)", stat)
+			return
+		}
+		gaf_o := skywell.GetActorFiles_Output{
+			Actor:  pfv,
+			Cursor: &c,
+			Files:  *fl, // TODO update when package updates
+		}
+		b, err := json.Marshal(gaf_o)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to marshal content: %v", err))
+			http.Error(w, "Internal Server Error (marshaling content)", 500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, "%s", b)
+	})
+}
+
+func verifyJWT(r *http.Request) (iss syntax.DID, aud syntax.DID, err error) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return "", "", fmt.Errorf("Authorization header missing")
+	}
+
+	tokStr := authHeader[len("Bearer "):]
+
+	tok, err := jwt.Parse(tokStr, func(token *jwt.Token) (any, error) {
+		// todo figure out what goes here
+		return "", nil
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodES256.Alg()}))
+	if err != nil {
+		return "", "", fmt.Errorf("Failed to parse JWT token: %w", err)
+	}
+
+	if claims, ok := tok.Claims.(jwt.MapClaims); ok {
+		slog.Debug(fmt.Sprintf("%s %s", claims["sub"], claims["aud"]))
+		pi, err := syntax.ParseDID(claims["aud"].(string))
+		if err != nil {
+			slog.Error("Failed to parse 'aud' from JWT", "error", err)
+			return "", "", fmt.Errorf("Invalid 'aud' in JWT: %w", err)
+		}
+		pa, err := syntax.ParseDID(claims["aud"].(string))
+		if err != nil {
+			slog.Error("Failed to parse 'aud' from JWT", "error", err)
+			return "", "", fmt.Errorf("Invalid 'aud' in JWT: %w", err)
+		}
+		return pi, pa, nil
+	}
+	slog.Error("Failed to get claims from JWT", "error", err)
+
+	return "", "", nil
+
 }
 
 func generateFileView(fileID uint, db *gorm.DB) (fileView *skywell.Defs_FileView, httpResponse int, err error) {
@@ -331,5 +365,6 @@ func generateFileList(c string, limit int, a syntax.DID, db *gorm.DB) (cursor st
 }
 
 func userAgent() *string {
-	return &USER_AGENT
+	str := USER_AGENT
+	return &str
 }

@@ -7,6 +7,7 @@ toolchain go1.24.5
 require (
 	github.com/bluesky-social/indigo v0.0.0-20250729223159-573ae927246a
 	github.com/bluesky-social/jetstream v0.0.0-20250414024304-d17bd81a945e
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/ipfs/go-cid v0.5.0
 	github.com/mr-tron/base58 v1.2.0

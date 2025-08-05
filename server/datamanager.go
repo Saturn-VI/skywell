@@ -39,17 +39,17 @@ type FileKey struct {
 
 type File struct {
 	gorm.Model
-	URI            syntax.URI `gorm:"uniqueIndex"`
-	CID            syntax.CID
-	UserID         uint
-	User           User `gorm:"foreignKey:UserID"`
-	CreatedAt      syntax.Datetime
-	IndexedAt      int64 `gorm:"index"`
-	Name           string
-	Description    string
-	BlobRef        syntax.CID
-	MimeType       string
-	Size           int64
+	URI         syntax.URI `gorm:"uniqueIndex"`
+	CID         syntax.CID
+	UserID      uint
+	User        User `gorm:"foreignKey:UserID"`
+	CreatedAt   syntax.Datetime
+	IndexedAt   int64 `gorm:"index"`
+	Name        string
+	Description string
+	BlobRef     syntax.CID
+	MimeType    string
+	Size        int64
 }
 
 const SLUG_LENGTH int = 6 // enough entropy for anyone

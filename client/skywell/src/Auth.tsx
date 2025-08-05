@@ -16,7 +16,7 @@ import {
 import { toast } from "solid-toast";
 import sleep from "sleep-promise";
 import { XRPCProcedures, XRPCQueries } from "@atcute/lexicons/ambient";
-import { ENTRYWAY_URL, SKYWELL_DID, SKYWELL_SERVICE_LABEL, SKYWELL_URL } from "./Constants.tsx";
+import { ENTRYWAY_URL, SKYWELL_DID, SKYWELL_SERVICE_ID, SKYWELL_URL } from "./Constants.tsx";
 
 export const [did, setDid] = makePersisted(createSignal<Did | null>(null));
 export const [agent, setAgent] = makePersisted(
@@ -79,7 +79,7 @@ export async function getAuthedSkywellClient(): Promise<Client<
       console.log("here3")
       const p: ServiceProxyOptions = {
         did: SKYWELL_DID,
-        serviceId: SKYWELL_SERVICE_LABEL,
+        serviceId: SKYWELL_SERVICE_ID,
       }
       console.log(p)
       const c = new Client({
