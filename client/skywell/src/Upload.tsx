@@ -7,9 +7,9 @@ import { toast } from "solid-toast";
 
 const Upload: Component = () => {
   if (!isLoggedIn()) {
-    console.log("Not logged in")
-    toast.error("Not logged in, redirecting...")
-    return <Navigate href="/login" />;;
+    console.log("Not logged in");
+    toast.error("Not logged in, redirecting...");
+    return <Navigate href="/login" />;
   }
 
   const [isDragging, setIsDragging] = createSignal(false);

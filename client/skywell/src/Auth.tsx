@@ -1,4 +1,8 @@
-import { deleteStoredSession, getSession, OAuthUserAgent } from "@atcute/oauth-browser-client";
+import {
+  deleteStoredSession,
+  getSession,
+  OAuthUserAgent,
+} from "@atcute/oauth-browser-client";
 import { createSignal, onMount } from "solid-js";
 import { makePersisted } from "@solid-primitives/storage";
 import type { Did } from "@atcute/lexicons";
@@ -11,7 +15,9 @@ import {
 import { toast } from "solid-toast";
 
 export const [did, setDid] = makePersisted(createSignal<Did | null>(null));
-export const [agent, setAgent] = makePersisted(createSignal<OAuthUserAgent | null>(null));
+export const [agent, setAgent] = makePersisted(
+  createSignal<OAuthUserAgent | null>(null),
+);
 
 onMount(async () => {
   runAuthChecks();

@@ -1,7 +1,5 @@
 import { createSignal, onMount, type Component } from "solid-js";
-import {
-  DevSkywellGetFileFromSlug,
-} from "skywell";
+import { DevSkywellGetFileFromSlug } from "skywell";
 
 import { getEntrywayRpc, getSkywellRpc } from "./Auth.tsx";
 import { type Params, useParams } from "@solidjs/router";
@@ -83,7 +81,6 @@ const [blob, setBlob] = createSignal<Blob | null>(null);
 
 const File: Component = () => {
   const params = useParams();
-
 
   onMount(() => {
     toast.promise(
