@@ -1,20 +1,11 @@
 import {
   finalizeAuthorization,
-  getSession,
   OAuthUserAgent,
 } from "@atcute/oauth-browser-client";
-import type { Component } from "solid-js";
-import { agent, did, setAgent, setDid } from "./Auth.tsx";
+import { type Component } from "solid-js";
+import { setAgent, setDid } from "./Auth.tsx";
 import { toast } from "solid-toast";
 import sleep from "sleep-promise";
-
-if (did() == null) {
-  agent()?.signOut();
-} else {
-  const session = await getSession(did()!, { allowStale: true });
-
-  setAgent(new OAuthUserAgent(session));
-}
 
 async function runAuth() {
   const params = new URLSearchParams(location.hash.slice(1));
@@ -25,9 +16,9 @@ async function runAuth() {
   try {
     const session = await finalizeAuthorization(params);
 
-    setAgent(new OAuthUserAgent(session));
-
-    setDid(agent()!.session.info.sub);
+    const newAgent = new OAuthUserAgent(session);
+    setAgent(newAgent);
+    setDid(newAgent.session.info.sub);
 
     toast.success("Successfully logged in, redirecting to home...");
     await sleep(1000);

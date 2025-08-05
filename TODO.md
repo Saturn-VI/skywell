@@ -11,13 +11,13 @@
 server doesn't need to do any auth for this usecase because PDS does creation/deletion of records
 - [x] scan jetstream
 - [x] implement getActorProfile & getActorFiles
-- [ ] implement getUriFromSlug
+- [x] implement getUriFromSlug
 - [ ] authenticate getActorFiles
 - [x] figure out database
   - go has a built in sql database interface
   - ended up using [gorm](https://gorm.io/) for database access
 - [ ] rate limiter
-- [ ] translation between slug and atproto uri (uris too long)
+- [x] translation between slug and atproto uri (uris too long)
 
 ## client
 
@@ -26,8 +26,9 @@ server doesn't need to do any auth for this usecase because PDS does creation/de
 
 ### pages
 - [ ] home
-- [x] upload
+- [ ] upload
 - [x] file
+  - [ ] file delete button
 - [ ] login page
 - [ ] profile
 

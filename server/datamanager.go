@@ -39,7 +39,6 @@ type FileKey struct {
 
 type File struct {
 	gorm.Model
-	gorm.DeletedAt `gorm:"index"`
 	URI            syntax.URI `gorm:"uniqueIndex"`
 	CID            syntax.CID
 	UserID         uint
@@ -78,6 +77,10 @@ func updateIdentity(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx c
 	// updateIdentity called when identity cache should be purged
 	if evt.Kind != jetstream.EventKindIdentity {
 		return
+	}
+
+	if !evt.Account.Active {
+
 	}
 
 	did, err := syntax.ParseDID(evt.Did)

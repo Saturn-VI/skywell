@@ -1,24 +1,16 @@
-import { createSignal, type Component } from "solid-js";
+import { createSignal, onMount, type Component } from "solid-js";
 import {
-  DevSkywellDefs,
-  DevSkywellFile,
-  DevSkywellGetActorFiles,
-  DevSkywellGetActorProfile,
   DevSkywellGetFileFromSlug,
 } from "skywell";
 
-import logo from "./logo.svg";
-import styles from "./App.module.css";
-
-import Header from "./Header.tsx";
-import Sidebar from "./Sidebar.tsx";
-import { getEntrywayRpc, getRPC } from "./Auth.tsx";
+import { getEntrywayRpc, getSkywellRpc } from "./Auth.tsx";
 import { type Params, useParams } from "@solidjs/router";
 import { toast } from "solid-toast";
-import { Client, isXRPCErrorPayload } from "@atcute/client";
+import { isXRPCErrorPayload } from "@atcute/client";
 import { ComAtprotoSyncGetBlob } from "@atcute/atproto";
 
-async function loadData(params: Params, rpc: Client) {
+async function loadData(params: Params) {
+  const rpc = getSkywellRpc();
   const data = await rpc.get(DevSkywellGetFileFromSlug.mainSchema.nsid, {
     params: {
       slug: params.slug,
@@ -65,7 +57,7 @@ async function fetchBlob(cid: string, did: `did:${string}:${string}`) {
       return;
     } else {
       let b = data.data as Blob;
-      console.log(b)
+      console.log(b);
       setBlob(b);
     }
   } catch (error) {
@@ -77,7 +69,7 @@ async function fetchBlob(cid: string, did: `did:${string}:${string}`) {
 async function clickDownloadLink() {
   let link = document.getElementById("download-link") as HTMLAnchorElement;
   if (blob() != null) {
-    link.href = URL.createObjectURL(blob()!)
+    link.href = URL.createObjectURL(blob()!);
     link.click();
   }
 }
@@ -91,27 +83,25 @@ const [blob, setBlob] = createSignal<Blob | null>(null);
 
 const File: Component = () => {
   const params = useParams();
-  const rpc = getRPC();
 
-  toast.promise(
-    loadData(params, rpc),
-    {
-      loading: "Loading file data...",
-      success: "Loaded file data!",
-      error: "Failed to load file data.",
-    },
-    {
-      position: "top-center",
-    },
-  );
+
+  onMount(() => {
+    toast.promise(
+      loadData(params),
+      {
+        loading: "Loading file data...",
+        success: "Loaded file data!",
+        error: "Failed to load file data.",
+      },
+      {
+        position: "top-center",
+      },
+    );
+  });
 
   return (
     <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
-      <a
-        id="download-link"
-        download={filename()}
-        class="hidden w-0 h-0"
-      />
+      <a id="download-link" download={filename()} class="hidden w-0 h-0" />
       <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between mb-4">
         {/* filename, author info, download button */}
         <div class="flex flex-col md:w-1/3 w-full h-full p-4 justify-center">
@@ -120,7 +110,9 @@ const File: Component = () => {
           <div class="sm:text-xl text-lg font-medium">
             uploaded {creationDate().toLocaleString()}
           </div>
-          <div class="sm:text-xl text-lg font-medium">created by {author()}</div>
+          <div class="sm:text-xl text-lg font-medium">
+            created by {author()}
+          </div>
           <div class="sm:text-xl text-lg font-light">@{authorHandle()}</div>
         </div>
         <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2  text-white">

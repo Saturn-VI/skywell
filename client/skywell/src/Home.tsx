@@ -1,13 +1,10 @@
 import type { Component } from "solid-js";
 
-import Header from "./Header.tsx";
-import Sidebar from "./Sidebar.tsx";
-
 const Home: Component = () => {
   return (
     <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
       skywell
-      <a class="text-blue-400" href="/file/abcd">
+      <a class="text-blue-400" href="/file/DCsW4t">
         file test link
       </a>
       <a class="text-blue-400" href="/upload">

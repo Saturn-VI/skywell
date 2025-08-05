@@ -1,20 +1,17 @@
 import type { Component } from "solid-js";
 import { createSignal } from "solid-js";
-import type {
-  DevSkywellDefs,
-  DevSkywellFile,
-  DevSkywellGetActorFiles,
-  DevSkywellGetActorProfile,
-} from "skywell";
-
-import logo from "./logo.svg";
-import styles from "./App.module.css";
-
-import Header from "./Header.tsx";
-import Sidebar from "./Sidebar.tsx";
 import { createDropzone } from "@solid-primitives/upload";
+import { isLoggedIn } from "./Auth.tsx";
+import { Navigate } from "@solidjs/router";
+import { toast } from "solid-toast";
 
 const Upload: Component = () => {
+  if (!isLoggedIn()) {
+    console.log("Not logged in")
+    toast.error("Not logged in, redirecting...")
+    return <Navigate href="/login" />;;
+  }
+
   const [isDragging, setIsDragging] = createSignal(false);
   const [currentFile, setCurrentFile] = createSignal<File | null>(null);
   let fileInputRef: HTMLInputElement;

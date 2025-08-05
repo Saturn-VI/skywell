@@ -31,6 +31,19 @@ async function runLoginFlow() {
     toast.success("Redirecting to login...");
     await sleep(200);
     window.location.assign(authUrl);
+
+    // from docs:
+    // // if this is on an async function, ideally the function should never ever resolve.
+    // // the only way it should resolve at this point is if the user aborted the authorization
+    // // by returning back to this page (thanks to back-forward page caching)
+    await new Promise((_resolve, reject) => {
+      const listener = () => {
+        toast.error("Login cancelled, probably.");
+        reject(new Error(`user aborted the login request`));
+      };
+
+      window.addEventListener("pageshow", listener, { once: true });
+    });
   } catch {
     console.log("Invalid handle, probably");
     toast.error("Invalid handle");
