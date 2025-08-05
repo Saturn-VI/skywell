@@ -10,18 +10,22 @@ import {
   Client,
   FetchHandler,
   FetchHandlerObject,
+  ServiceProxyOptions,
   simpleFetchHandler,
 } from "@atcute/client";
 import { toast } from "solid-toast";
+import sleep from "sleep-promise";
+import { XRPCProcedures, XRPCQueries } from "@atcute/lexicons/ambient";
+import { ENTRYWAY_URL, SKYWELL_DID, SKYWELL_SERVICE_LABEL, SKYWELL_URL } from "./Constants.tsx";
 
 export const [did, setDid] = makePersisted(createSignal<Did | null>(null));
 export const [agent, setAgent] = makePersisted(
   createSignal<OAuthUserAgent | null>(null),
 );
 
-onMount(async () => {
-  runAuthChecks();
-});
+// onMount(async () => {
+//   runAuthChecks();
+// });
 
 async function runAuthChecks() {
   if (did() == null) {
@@ -50,23 +54,49 @@ export function isLoggedIn(): boolean {
   return did() != null && agent() != null;
 }
 
-export function getRPC(): Client {
-  var hand: FetchHandler | FetchHandlerObject;
-  const currentAgent = agent();
-  if (currentAgent != null && currentAgent.session != null) {
-    hand = currentAgent;
-  } else {
-    hand = simpleFetchHandler({
-      service: "https://bsky.social",
-    });
+export async function getAuthedClient(): Promise<Client<
+  XRPCQueries,
+  XRPCProcedures
+> | null> {
+  if (isLoggedIn()) {
+    if (agent()) {
+      await sleep(5); // this is ridiculous but necessary
+      return new Client({
+        handler: agent()!,
+      });
+    }
   }
-  return new Client({ handler: hand });
+  return null;
+}
+
+export async function getAuthedSkywellClient(): Promise<Client<
+  XRPCQueries,
+  XRPCProcedures
+> | null> {
+  if (isLoggedIn()) {
+    if (agent) {
+      await sleep(5); // this is ridiculous but necessary
+      console.log("here3")
+      const p: ServiceProxyOptions = {
+        did: SKYWELL_DID,
+        serviceId: SKYWELL_SERVICE_LABEL,
+      }
+      console.log(p)
+      const c = new Client({
+        handler: agent()!,
+        proxy: p
+      });
+      console.log(c)
+      return c
+    }
+  }
+  return null;
 }
 
 export function getSkywellRpc(): Client {
   return new Client({
     handler: simpleFetchHandler({
-      service: "http://127.0.0.1:8080",
+      service: SKYWELL_URL,
     }),
   });
 }
@@ -74,7 +104,7 @@ export function getSkywellRpc(): Client {
 export function getEntrywayRpc(): Client {
   return new Client({
     handler: simpleFetchHandler({
-      service: "https://bsky.social",
+      service: ENTRYWAY_URL,
     }),
   });
 }

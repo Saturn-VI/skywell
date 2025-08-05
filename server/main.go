@@ -22,7 +22,9 @@ import (
 	skywell "github.com/saturn-vi/skywell/api/skywell"
 )
 
-var port string = ":8080"
+const PORT string = ":8080"
+const SKYWELL_DID = "did:plc:PLACEHOLDER"
+const USER_AGENT = "Skywell AppView v0.1.12"
 
 var cacheDir identity.CacheDirectory = identity.NewCacheDirectory(identity.DefaultDirectory(), 0, 0, 0, 0)
 
@@ -42,13 +44,13 @@ func main() {
 	initializeHandleFuncs(db, ctx)
 
 	handler := corsMiddleware(http.DefaultServeMux)
-	server := &http.Server{Addr: port, Handler: handler}
+	server := &http.Server{Addr: PORT, Handler: handler}
 
 	slog.Info("Reading from Jetstream...")
 	go read(db, client, ctx)
 
 	go func() {
-		slog.Info(fmt.Sprintf("Server started on %s!", port))
+		slog.Info(fmt.Sprintf("Server started on %s!", PORT))
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error(fmt.Sprintf("Server error: %v", err.Error()))
 		}
@@ -328,8 +330,6 @@ func generateFileList(c string, limit int, a syntax.DID, db *gorm.DB) (cursor st
 	return cursor, fileviews, 200, nil
 }
 
-var ua string = "Skywell AppView v0.1.0"
-
 func userAgent() *string {
-	return &ua
+	return &USER_AGENT
 }
