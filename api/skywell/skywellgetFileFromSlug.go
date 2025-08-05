@@ -2,7 +2,7 @@
 
 package skywell
 
-// schema: dev.skywell.getUriFromSlug
+// schema: dev.skywell.getFileFromSlug
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"github.com/bluesky-social/indigo/lex/util"
 )
 
-// GetUriFromSlug_Output is the output of a dev.skywell.getUriFromSlug call.
-type GetUriFromSlug_Output struct {
+// GetFileFromSlug_Output is the output of a dev.skywell.getFileFromSlug call.
+type GetFileFromSlug_Output struct {
 	Actor *Defs_ProfileView `json:"actor" cborgen:"actor"`
 	// cid: CID of the file record.
 	Cid  string         `json:"cid" cborgen:"cid"`
@@ -20,15 +20,15 @@ type GetUriFromSlug_Output struct {
 	Uri string `json:"uri" cborgen:"uri"`
 }
 
-// GetUriFromSlug calls the XRPC method "dev.skywell.getUriFromSlug".
+// GetFileFromSlug calls the XRPC method "dev.skywell.getFileFromSlug".
 //
 // slug: Slug to convert to ATProto info.
-func GetUriFromSlug(ctx context.Context, c util.LexClient, slug string) (*GetUriFromSlug_Output, error) {
-	var out GetUriFromSlug_Output
+func GetFileFromSlug(ctx context.Context, c util.LexClient, slug string) (*GetFileFromSlug_Output, error) {
+	var out GetFileFromSlug_Output
 
 	params := map[string]interface{}{}
 	params["slug"] = slug
-	if err := c.LexDo(ctx, util.Query, "", "dev.skywell.getUriFromSlug", params, nil, &out); err != nil {
+	if err := c.LexDo(ctx, util.Query, "", "dev.skywell.getFileFromSlug", params, nil, &out); err != nil {
 		return nil, err
 	}
 

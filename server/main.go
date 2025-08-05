@@ -38,7 +38,9 @@ func main() {
 
 	slog.Info("Initializing HTTP server...")
 	initializeHandleFuncs(db, ctx)
-	server := &http.Server{Addr: port, Handler: http.DefaultServeMux}
+
+	handler := corsMiddleware(http.DefaultServeMux)
+	server := &http.Server{Addr: port, Handler: handler}
 
 	slog.Info("Reading from Jetstream...")
 	go read(db, client, ctx)
@@ -63,14 +65,31 @@ func main() {
 	}
 }
 
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 
 	// returns ProfileView
 	http.HandleFunc("/xrpc/dev.skywell.getActorProfile", func(w http.ResponseWriter, r *http.Request) {
+		slog.Debug("Received request for /xrpc/dev.skywell.getActorProfile")
 		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err.Error()))
 			http.Error(w, "Internal Server Error (profile view generation)", stat)
+			return
 		}
 		b, err := json.Marshal(pfv)
 		if err != nil {
@@ -83,9 +102,10 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 	})
 
 	// returns GetUriFromSlug_Output
-	http.HandleFunc("/xrpc/dev.skywell.getUriFromSlug", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/xrpc/dev.skywell.getFileFromSlug", func(w http.ResponseWriter, r *http.Request) {
 		// based on slug, get:
 		// URI, CID, and DID
+		slog.Debug("Received request for /xrpc/dev.skywell.getUriFromSlug")
 		s := r.URL.Query().Get("slug")
 		if s == "" {
 			http.Error(w, "Required parameter 'slug' missing", 400)
@@ -112,10 +132,22 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			return
 		}
 
-		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
+		u := User{}
+		if err := db.Where("id = ?", fi.UserID).First(&u).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				http.Error(w, "No matching user found", 404)
+				return
+			}
+			slog.Debug(fmt.Sprintf("Failed to find user: %v", err))
+			http.Error(w, "Internal Server Error (user lookup)", 500)
+			return
+		}
+
+		pfv, stat, err := generateProfileView(string(u.DID), db, ctx)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err.Error()))
 			http.Error(w, "Internal Server Error (profile view generation)", stat)
+			return
 		}
 
 		c, err := cid.Decode(fi.BlobRef.String())

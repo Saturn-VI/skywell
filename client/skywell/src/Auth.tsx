@@ -15,7 +15,7 @@ export function getRPC(): Client {
   var hand: FetchHandler | FetchHandlerObject;
   if (agent() == null) {
     hand = simpleFetchHandler({
-      service: "https://skywell.dev",
+      service: "http://127.0.0.1:8080",
     });
   } else {
     hand = agent()!;

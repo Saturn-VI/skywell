@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "dev.skywell.getUriFromSlug",
+  "id": "dev.skywell.getFileFromSlug",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Gets the URI, DID, and CID linked to a certain slug.",
+      "description": "Gets the file and actor data linked to a certain slug.",
       "parameters": {
         "type": "params",
         "required": ["slug"],
