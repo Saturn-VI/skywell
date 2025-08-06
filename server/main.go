@@ -90,12 +90,12 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 	// returns ProfileView
 	http.HandleFunc("/xrpc/dev.skywell.getActorProfile", func(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Received request for /xrpc/dev.skywell.getActorProfile")
-		a := r.URL.Query().Get("actor")
-		if a == "" {
+		actor := r.URL.Query().Get("actor")
+		if actor == "" {
 			http.Error(w, "Required parameter 'actor' missing", 400)
 			return
 		}
-		did, err := syntax.ParseDID(a)
+		did, err := syntax.ParseDID(actor)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to parse DID from actor parameter: %v", err))
 			http.Error(w, "Invalid 'actor' parameter", 400)
@@ -113,6 +113,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			http.Error(w, "Internal Server Error (marshaling content)", 500)
 			return
 		}
+		slog.Debug(fmt.Sprintf("Returning JSON for actor %s (DID %s): %s", actor, did.String(), string(b)))
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, "%s", b)
 	})
@@ -122,13 +123,13 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 		// based on slug, get:
 		// URI, CID, and DID
 		slog.Debug("Received request for /xrpc/dev.skywell.getUriFromSlug")
-		s := r.URL.Query().Get("slug")
-		if s == "" {
+		slug := r.URL.Query().Get("slug")
+		if slug == "" {
 			http.Error(w, "Required parameter 'slug' missing", 400)
 			return
 		}
 		fk := FileKey{}
-		if err := db.Where("key = ?", s).First(&fk).Error; err != nil {
+		if err := db.Where("key = ?", slug).First(&fk).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				http.Error(w, "No matching slug found", 404)
 				return
@@ -187,6 +188,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
+		slog.Debug(fmt.Sprintf("Returning JSON for slug %s: %s", slug, string(b)))
 		fmt.Fprintf(w, "%s", b)
 	})
 
@@ -201,6 +203,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 		}
 		a := r.URL.Query().Get("actor")
 		if a == "" {
+			slog.Error("Required parameter 'actor' missing")
 			http.Error(w, "Required parameter 'actor' missing", 400)
 			return
 		}
@@ -215,10 +218,14 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			http.Error(w, "Internal Server Error (profile view generation)", stat)
 			return
 		}
-		lim, err := strconv.Atoi(r.URL.Query().Get("limit"))
-		if err != nil {
-			http.Error(w, "Invalid 'limit' parameter", 400)
-			return
+		var lim int = 50 // default limit
+		if r.URL.Query().Get("limit") != "" {
+			lim, err = strconv.Atoi(r.URL.Query().Get("limit"))
+			if err != nil {
+				slog.Error("Invalid 'limit' parameter")
+				http.Error(w, "Invalid 'limit' parameter", 400)
+				return
+			}
 		}
 		c, fl, stat, err := generateFileList(r.URL.Query().Get("cursor"), lim, did, db)
 		if err != nil {
