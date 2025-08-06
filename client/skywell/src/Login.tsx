@@ -12,9 +12,8 @@ import { toast } from "solid-toast";
 
 configureOAuth({
   metadata: {
-    client_id:
-      "http://localhost?redirect_uri=http://127.0.0.1:3000/login/callback&scope=atproto transition:generic",
-    redirect_uri: "http://127.0.0.1:3000/login/callback",
+    client_id: "https://skywell.dev/client-metadata.json",
+    redirect_uri: "https://skywell.dev/login/callback",
   },
 });
 
