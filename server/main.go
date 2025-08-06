@@ -23,7 +23,7 @@ import (
 	skywell "github.com/saturn-vi/skywell/api/skywell"
 )
 
-const PORT string = ":8080"
+const PORT string = ":4999"
 const SKYWELL_DID syntax.DID = "did:plc:tsaj4ffwyj5z6rjqaxmg5cp4"
 const SKYWELL_SERVICE_ID string = "#skywell_server"
 const USER_AGENT string = "Skywell AppView v0.1.12"

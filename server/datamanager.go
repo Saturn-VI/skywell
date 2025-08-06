@@ -79,10 +79,6 @@ func updateIdentity(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx c
 		return
 	}
 
-	if !evt.Account.Active {
-
-	}
-
 	did, err := syntax.ParseDID(evt.Did)
 	if err != nil {
 		slog.Error("Failed to parse DID", "error", err)
