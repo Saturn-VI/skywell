@@ -5,9 +5,10 @@ import {
   did,
   getAuthedSkywellClient,
   getAuthedClient,
+  trySignOut,
 } from "./Auth.tsx";
 import { toast } from "solid-toast";
-import { Navigate } from "@solidjs/router";
+import { Navigate, redirect, useNavigate } from "@solidjs/router";
 import { getSkywellRpc } from "./Auth.tsx";
 import { DevSkywellGetActorFiles, DevSkywellGetActorProfile } from "skywell";
 import { isXRPCErrorPayload } from "@atcute/client";
@@ -28,14 +29,15 @@ const Account: Component = () => {
   const [files, setFiles] = createSignal<any[]>([]);
   const [fileCount, setFileCount] = createSignal<number>(0);
   const [loading, setLoading] = createSignal(true);
-
-  if (!isLoggedIn()) {
-    console.log("Not logged in");
-    toast.error("Not logged in, redirecting...");
-    return <Navigate href="/login" />;
-  }
+  const navigate = useNavigate();
 
   onMount(async () => {
+    if (!(await isLoggedIn())) {
+      console.log("Not logged in");
+      toast.error("Not logged in, redirecting...");
+      navigate("/login");
+    }
+
     try {
       const currentAgent = agent();
       if (currentAgent && currentAgent.session) {
@@ -56,19 +58,21 @@ const Account: Component = () => {
             setHandle(res.data.handle);
             setDisplayName(res.data.displayName || handle());
             setFileCount(res.data.fileCount || 0);
-            console.log("here")
+            console.log("here");
 
             const skywellClient = await getAuthedSkywellClient();
-            console.log(skywellClient)
-            console.log("here2")
             if (!skywellClient) return;
-            console.log(skywellClient)
-            // const flist = await skywellClient.get(DevSkywellGetActorFiles.mainSchema.nsid, {
-            //   params: { actor: userDid },
-            // })
-            // if (isXRPCErrorPayload(res.data)) {
-            //   throw new Error("Failed to fetch user files");
-            // }
+            console.log(skywellClient);
+            console.log(skywellClient.proxy);
+            const flist = await skywellClient.get(
+              DevSkywellGetActorFiles.mainSchema.nsid,
+              {
+                params: { actor: userDid },
+              },
+            );
+            if (isXRPCErrorPayload(res.data)) {
+              throw new Error("Failed to fetch user files");
+            }
           })(),
           {
             loading: "Loading account data...",
@@ -77,7 +81,7 @@ const Account: Component = () => {
           },
           {
             position: "top-center",
-          }
+          },
         );
 
         // TODO: Fetch files
@@ -128,7 +132,10 @@ const Account: Component = () => {
           </div>
         </div>
         <div class="flex justify-center items-center lg:w-1/4 md:w-1/3 w-full lg:h-full md:h-2/3 h-1/2 p-2">
-          <button class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-red-600 hover:bg-red-700 text-center lg:text-xl text-lg">
+          <button
+            class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-red-600 hover:bg-red-700 text-center lg:text-xl text-lg"
+            onClick={(e) => trySignOut()}
+          >
             Sign Out
           </button>
         </div>
