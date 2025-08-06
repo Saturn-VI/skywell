@@ -87,11 +87,16 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
-
 	// returns ProfileView
 	http.HandleFunc("/xrpc/dev.skywell.getActorProfile", func(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Received request for /xrpc/dev.skywell.getActorProfile")
-		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
+		a := r.URL.Query().Get("actor")
+		if a == "" {
+			http.Error(w, "Required parameter 'actor' missing", 400)
+			return
+		}
+		slog.Debug("Received request for /xrpc/dev.skywell.getActorProfile")
+		pfv, stat, err := generateProfileView(a, db, ctx)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err.Error()))
 			http.Error(w, "Internal Server Error (profile view generation)", stat)
@@ -182,7 +187,13 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 
 	// returns GetActorFiles_Output
 	http.HandleFunc("/xrpc/dev.skywell.getActorFiles", func(w http.ResponseWriter, r *http.Request) {
-		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
+		slog.Debug("Received request for /xrpc/dev.skywell.getActorFiles")
+		a := r.URL.Query().Get("actor")
+		if a == "" {
+			http.Error(w, "Required parameter 'actor' missing", 400)
+			return
+		}
+		pfv, stat, err := generateProfileView(a, db, ctx)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err))
 			http.Error(w, "Internal Server Error (profile view generation)", stat)
