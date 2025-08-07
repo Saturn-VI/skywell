@@ -12,7 +12,7 @@ server doesn't need to do any auth for this usecase because PDS does creation/de
 - [x] scan jetstream
 - [x] implement getActorProfile & getActorFiles
 - [x] implement getUriFromSlug
-- [ ] authenticate getActorFiles
+- [x] authenticate getActorFiles
 - [x] figure out database
   - go has a built in sql database interface
   - ended up using [gorm](https://gorm.io/) for database access
@@ -23,17 +23,19 @@ server doesn't need to do any auth for this usecase because PDS does creation/de
 
 ### general
 - [ ] make an actually good color theme (catpuccin macchiato? that's boring though)
+  - [ ] really just make the site prettier
+- [ ] make a logo/icon
 
 ### pages
 - [ ] home
 - [ ] upload
 - [x] file
   - [ ] file delete button
-- [ ] login page
+- [x] login page
 - [ ] profile
 
 ### functionality
-- [ ] oauth
+- [x] oauth
 - [ ] create/delete records
 - [ ] upload blobs
-- [ ] download files
+- [x] download files
