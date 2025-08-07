@@ -360,6 +360,14 @@ func generateFileList(c string, limit int, a syntax.DID, db *gorm.DB) (cursor st
 		return "", nil, 500, fmt.Errorf("Failed to query files: %w", result.Error)
 	}
 	for _, f := range *files {
+		fk := FileKey{}
+		if err := db.Where("file = ?", f.ID).First(&fk).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				slog.Debug(fmt.Sprintf("No file key found for file ID %d", f.ID))
+				continue
+			}
+			return "", nil, 500, fmt.Errorf("Failed to find file key: %w", err)
+		}
 		c, err := cid.Decode(f.BlobRef.String())
 		if err != nil {
 			return "", nil, 500, fmt.Errorf("Failed to decode blob CID: %w", err)
@@ -372,6 +380,7 @@ func generateFileList(c string, limit int, a syntax.DID, db *gorm.DB) (cursor st
 			},
 			CreatedAt:   f.CreatedAt.String(),
 			Name:        f.Name,
+			Slug:        fk.Key,
 			Description: &f.Description,
 		})
 	}
