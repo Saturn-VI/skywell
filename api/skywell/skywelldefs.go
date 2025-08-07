@@ -14,6 +14,7 @@ type Defs_FileView struct {
 	CreatedAt   string        `json:"createdAt" cborgen:"createdAt"`
 	Description *string       `json:"description,omitempty" cborgen:"description,omitempty"`
 	Name        string        `json:"name" cborgen:"name"`
+	Slug        string        `json:"slug" cborgen:"slug"`
 }
 
 // Defs_ProfileView is a "profileView" in the dev.skywell.defs schema.

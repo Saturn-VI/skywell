@@ -16,6 +16,7 @@ const _fileViewSchema = /*#__PURE__*/ v.object({
   name: /*#__PURE__*/ v.constrain(/*#__PURE__*/ v.string(), [
     /*#__PURE__*/ v.stringGraphemes(1, 80),
   ]),
+  slug: /*#__PURE__*/ v.string(),
 });
 const _profileViewSchema = /*#__PURE__*/ v.object({
   $type: /*#__PURE__*/ v.optional(
