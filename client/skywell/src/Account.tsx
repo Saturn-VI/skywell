@@ -11,7 +11,7 @@ import { toast } from "solid-toast";
 import { Navigate, redirect, useNavigate } from "@solidjs/router";
 import { getSkywellRpc } from "./Auth.tsx";
 import {
-  DevSkywellFile,
+  DevSkywellDefs,
   DevSkywellGetActorFiles,
   DevSkywellGetActorProfile,
 } from "skywell";
@@ -22,17 +22,10 @@ import { ComAtprotoServerGetServiceAuth } from "@atcute/atproto";
 import { SKYWELL_DID } from "./Constants.tsx";
 import { filesize } from "filesize";
 
-interface ListFile {
-  name: string;
-  createdAt: Date;
-  size: number;
-  slug: string;
-}
-
 const Account: Component = () => {
   const [handle, setHandle] = createSignal<string>("Loading...");
   const [displayName, setDisplayName] = createSignal<string>("Loading...");
-  const [files, setFiles] = createSignal<DevSkywellFile.Main[]>([]);
+  const [files, setFiles] = createSignal<DevSkywellDefs.FileView[]>([]);
   const [fileCount, setFileCount] = createSignal<number>(0);
   const [loading, setLoading] = createSignal(true);
   const [loadingMore, setLoadingMore] = createSignal(false);
@@ -67,7 +60,7 @@ const Account: Component = () => {
         throw new Error("Failed to fetch user files");
       }
 
-      const newFiles = flist.data.files || [];
+      const newFiles = (flist.data.files || []) as DevSkywellDefs.FileView[];
 
       if (loadMore) {
         setFiles((prev) => [...prev, ...newFiles]);
