@@ -48,14 +48,19 @@ export async function runAuthChecks() {
 }
 
 export function trySignOut() {
-  try {
-    agent()?.signOut();
-  } catch (error) {
-    console.error("Failed to sign out:", error);
-  }
+  toast.promise(
+    (async () => {
+      await agent()?.signOut();
 
-  setDid(null);
-  setAgent(null);
+      setDid(null);
+      setAgent(null);
+    })(),
+    {
+      success: "Signed out.",
+      error: "Failed to sign out.",
+      loading: "Signing out...",
+    },
+  );
 }
 
 export async function isLoggedIn(): Promise<boolean> {
