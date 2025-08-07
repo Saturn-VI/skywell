@@ -16,7 +16,7 @@ server doesn't need to do any auth for this usecase because PDS does creation/de
 - [x] figure out database
   - go has a built in sql database interface
   - ended up using [gorm](https://gorm.io/) for database access
-- [ ] rate limiter
+- [x] rate limiter
 - [x] translation between slug and atproto uri (uris too long)
 
 ## client
