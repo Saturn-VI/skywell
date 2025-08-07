@@ -8,7 +8,7 @@
   - [x] dev.skywell.getFileFromSlug
 
 ## server
-server doesn't need to do any auth for this usecase because PDS does creation/deletion of records
+~~server doesn't need to do any auth for this usecase because PDS does creation/deletion of records~~
 - [x] scan jetstream
 - [x] implement getActorProfile & getActorFiles
 - [x] implement getFileFromSlug
