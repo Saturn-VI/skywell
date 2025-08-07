@@ -21,6 +21,7 @@ import (
 	identity "github.com/bluesky-social/indigo/atproto/identity"
 	syntax "github.com/bluesky-social/indigo/atproto/syntax"
 	"github.com/bluesky-social/indigo/lex/util"
+	"github.com/gigatar/ratelimiter"
 	"github.com/ipfs/go-cid"
 	skywell "github.com/saturn-vi/skywell/api/skywell"
 )
@@ -34,7 +35,6 @@ const requestIDKey string = "requestID"
 
 var cacheDir identity.CacheDirectory = identity.NewCacheDirectory(identity.DefaultDirectory(), 0, 0, 0, 0)
 
-// Component-specific loggers
 var (
 	httpLogger      = slog.With("component", "http")
 	dbLogger        = slog.With("component", "database")
@@ -58,7 +58,15 @@ func main() {
 	httpLogger.Info("Initializing HTTP server...")
 	initializeHandleFuncs(db, ctx)
 
-	handler := requestCorrelationMiddleware(corsMiddleware(http.DefaultServeMux))
+	httpLogger.Info("Initializing ratelimiter...")
+	limiter := ratelimiter.New(&ratelimiter.Config{
+		RequestsPerSecond: 10,
+		Burst:             30,
+		CleanupInterval:   2 * time.Minute,
+		MaxIdleTime:       5 * time.Minute,
+	})
+
+	handler := requestCorrelationMiddleware(limiter.Middleware(corsMiddleware(http.DefaultServeMux)))
 	server := &http.Server{Addr: PORT, Handler: handler}
 
 	jetstreamLogger.Info("Reading from Jetstream...")
@@ -97,7 +105,6 @@ func requestCorrelationMiddleware(next http.Handler) http.Handler {
 		r = r.WithContext(ctx)
 
 		w.Header().Set("X-Request-ID", requestID)
-
 		next.ServeHTTP(w, r)
 	})
 }

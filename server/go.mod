@@ -1,6 +1,6 @@
 module saturnvi/skywell
 
-go 1.24
+go 1.24.2
 
 toolchain go1.24.5
 
@@ -20,6 +20,7 @@ require (
 	github.com/carlmjohnson/versioninfo v0.22.5 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/gigatar/ratelimiter v0.1.2 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect

@@ -5,13 +5,13 @@
   - [x] dev.skywell.file
   - [x] dev.skywell.getActorProfile
   - [x] dev.skywell.getActorFiles
-  - [x] dev.skywell.getUriFromSlug
+  - [x] dev.skywell.getFileFromSlug
 
 ## server
 server doesn't need to do any auth for this usecase because PDS does creation/deletion of records
 - [x] scan jetstream
 - [x] implement getActorProfile & getActorFiles
-- [x] implement getUriFromSlug
+- [x] implement getFileFromSlug
 - [x] authenticate getActorFiles
 - [x] figure out database
   - go has a built in sql database interface
