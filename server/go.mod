@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/ipfs/go-cid v0.5.0
 	github.com/mr-tron/base58 v1.2.0
-	github.com/saturn-vi/skywell/api/skywell v0.1.12
+	github.com/saturn-vi/skywell/api/skywell v0.1.13
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.1
 )
