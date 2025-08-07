@@ -48,6 +48,9 @@ export async function runAuthChecks() {
 }
 
 export function trySignOut() {
+  if (did() == null || agent() == null) {
+    return;
+  }
   toast.promise(
     (async () => {
       await agent()?.signOut();
@@ -59,6 +62,9 @@ export function trySignOut() {
       success: "Signed out.",
       error: "Failed to sign out.",
       loading: "Signing out...",
+    },
+    {
+      position: "top-center",
     },
   );
 }
