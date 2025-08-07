@@ -7,7 +7,6 @@ toolchain go1.24.5
 require (
 	github.com/bluesky-social/indigo v0.0.0-20250729223159-573ae927246a
 	github.com/bluesky-social/jetstream v0.0.0-20250414024304-d17bd81a945e
-	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/ipfs/go-cid v0.5.0
 	github.com/mr-tron/base58 v1.2.0
@@ -25,6 +24,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
