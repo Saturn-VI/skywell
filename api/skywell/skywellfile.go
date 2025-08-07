@@ -18,4 +18,5 @@ type File struct {
 	CreatedAt     string        `json:"createdAt" cborgen:"createdAt"`
 	Description   *string       `json:"description,omitempty" cborgen:"description,omitempty"`
 	Name          string        `json:"name" cborgen:"name"`
+	Slug          *string       `json:"slug,omitempty" cborgen:"slug,omitempty"`
 }

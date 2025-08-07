@@ -17,6 +17,7 @@ const _mainSchema = /*#__PURE__*/ v.record(
     name: /*#__PURE__*/ v.constrain(/*#__PURE__*/ v.string(), [
       /*#__PURE__*/ v.stringGraphemes(1, 80),
     ]),
+    slug: /*#__PURE__*/ v.optional(/*#__PURE__*/ v.string()),
   }),
 );
 
