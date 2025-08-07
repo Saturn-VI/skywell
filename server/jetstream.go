@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -22,7 +21,7 @@ var jetstream_uri string = "wss://jetstream2.us-east.bsky.network/subscribe?want
 func read(db *gorm.DB, client *xrpc.Client, ctx context.Context) {
 	conn, res, err := websocket.DefaultDialer.Dial(jetstream_uri, http.Header{})
 	if err != nil {
-		slog.Error(fmt.Sprintf("Failed to connect to Jetstream (%d): %v", res.StatusCode, err))
+		slog.Error("Failed to connect to Jetstream", "status_code", res.StatusCode, "error", err, "uri", jetstream_uri)
 		panic(err)
 	}
 	defer conn.Close()
@@ -30,30 +29,35 @@ func read(db *gorm.DB, client *xrpc.Client, ctx context.Context) {
 	for {
 		_, r, err := conn.NextReader()
 		if err != nil {
-			slog.Error(fmt.Sprintf("Error reading from jetstream: %v", err))
+			slog.Error("Error reading from jetstream", "error", err, "uri", jetstream_uri)
 			continue
 		}
 
 		msg, err := io.ReadAll(r)
 		if err != nil {
-			slog.Error(fmt.Sprintf("Error reading message: %v", err))
+			slog.Error("Error reading message", "error", err, "uri", jetstream_uri)
 			continue
 		}
 
 		var evt jetstream.Event
 		err = json.Unmarshal(msg, &evt)
 		if err != nil {
-			slog.Error(fmt.Sprintf("Failed to unmarshal to event: %v", err))
+			slog.Error("Failed to unmarshal to event", "error", err, "message_size", len(msg))
 			continue
 		}
 
 		switch evt.Kind {
 		case jetstream.EventKindIdentity:
+			slog.Debug("Processing jetstream event", "kind", "identity", "did", evt.Did)
 			updateIdentity(evt, db, client, ctx)
 		case jetstream.EventKindAccount:
+			slog.Debug("Processing jetstream event", "kind", "account", "did", evt.Did)
 			updateAccount(evt)
 		case jetstream.EventKindCommit:
+			slog.Debug("Processing jetstream event", "kind", "commit", "did", evt.Did, "collection", evt.Commit.Collection, "operation", evt.Commit.Operation)
 			updateRecord(evt, db, client, ctx)
+		default:
+			slog.Warn("Unknown jetstream event kind", "kind", evt.Kind, "did", evt.Did)
 		}
 	}
 }
