@@ -35,7 +35,7 @@ const Account: Component = () => {
     if (!(await isLoggedIn())) {
       console.log("Not logged in");
       toast.error("Not logged in, redirecting...");
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
 
     try {
@@ -83,10 +83,6 @@ const Account: Component = () => {
             position: "top-center",
           },
         );
-
-        // TODO: Fetch files
-        // const filesData = await rpc.get("dev.skywell.getActorFiles", { params: { actor: userDid } });
-
         setFiles([
           {
             name: "example-file.pdf",
@@ -134,7 +130,10 @@ const Account: Component = () => {
         <div class="flex justify-center items-center lg:w-1/4 md:w-1/3 w-full lg:h-full md:h-2/3 h-1/2 p-2">
           <button
             class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-red-600 hover:bg-red-700 text-center lg:text-xl text-lg"
-            onClick={(e) => trySignOut()}
+            onClick={(e) => {
+              trySignOut();
+              navigate("/");
+            }}
           >
             Sign Out
           </button>

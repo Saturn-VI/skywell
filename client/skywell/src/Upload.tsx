@@ -62,7 +62,7 @@ const Upload: Component = () => {
     if (!(await isLoggedIn())) {
       console.log("Not logged in");
       toast.error("Not logged in, redirecting...");
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   });
 
