@@ -213,7 +213,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			return
 		}
 		if did.String() != a {
-			slog.Error("JWT issuer mismatch", "jwt_iss", did.String(), "actor_param", a)
+			slog.Warn("JWT issuer mismatch", "jwt_iss", did.String(), "actor_param", a)
 			http.Error(w, "JWT 'iss' does not match 'actor' parameter", 403)
 			return
 		}

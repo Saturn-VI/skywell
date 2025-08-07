@@ -48,13 +48,10 @@ func read(db *gorm.DB, client *xrpc.Client, ctx context.Context) {
 
 		switch evt.Kind {
 		case jetstream.EventKindIdentity:
-			slog.Debug("Processing jetstream event", "kind", "identity", "did", evt.Did)
 			updateIdentity(evt, db, client, ctx)
 		case jetstream.EventKindAccount:
-			slog.Debug("Processing jetstream event", "kind", "account", "did", evt.Did)
 			updateAccount(evt)
 		case jetstream.EventKindCommit:
-			slog.Debug("Processing jetstream event", "kind", "commit", "did", evt.Did, "collection", evt.Commit.Collection, "operation", evt.Commit.Operation)
 			updateRecord(evt, db, client, ctx)
 		default:
 			slog.Warn("Unknown jetstream event kind", "kind", evt.Kind, "did", evt.Did)
