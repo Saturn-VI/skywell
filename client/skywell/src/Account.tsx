@@ -78,6 +78,22 @@ const Account: Component = () => {
     }
   };
 
+  const loadUserData = async (did: `did:${string}:${string}`) => {
+    const skywellRpc = getSkywellRpc();
+    const res = await skywellRpc.get(
+      DevSkywellGetActorProfile.mainSchema.nsid,
+      {
+        params: { actor: did },
+      },
+    );
+    if (isXRPCErrorPayload(res.data)) {
+      throw new Error("Failed to fetch user profile");
+    }
+    setHandle(res.data.handle);
+    setDisplayName(res.data.displayName || handle());
+    setFileCount(res.data.fileCount || 0);
+  };
+
   const handleScroll = (e: Event) => {
     const target = e.target as HTMLElement;
     const { scrollTop, scrollHeight, clientHeight } = target;
@@ -108,23 +124,8 @@ const Account: Component = () => {
           (async () => {
             const userDid = currentAgent.session.info.sub;
 
-            // Load user data
-            const skywellRpc = getSkywellRpc();
-            const res = await skywellRpc.get(
-              DevSkywellGetActorProfile.mainSchema.nsid,
-              {
-                params: { actor: userDid },
-              },
-            );
-            if (isXRPCErrorPayload(res.data)) {
-              throw new Error("Failed to fetch user profile");
-            }
-            setHandle(res.data.handle);
-            setDisplayName(res.data.displayName || handle());
-            setFileCount(res.data.fileCount || 0);
-
-            // Load some files
-            await loadFiles();
+            // Load user data and files parallelally (is that a word?)
+            await Promise.all([loadUserData(userDid), await loadFiles()]);
           })(),
           {
             loading: "Loading account data...",
