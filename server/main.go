@@ -250,11 +250,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 	})
 }
 
-<<<<<<< HEAD
-func verifyJWT(ctx context.Context, r *http.Request) (iss syntax.DID, aud syntax.DID, err error) {
-=======
 func verifyJWT(ctx context.Context, r *http.Request) (did syntax.DID, err error) {
->>>>>>> 294587bef56500ba1f8daee1d68725e0dc9b2f04
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		return "", fmt.Errorf("Authorization header missing")
@@ -264,32 +260,6 @@ func verifyJWT(ctx context.Context, r *http.Request) (did syntax.DID, err error)
 		return "", fmt.Errorf("Invalid Authorization header format")
 	}
 
-<<<<<<< HEAD
-	tok, err := jwt.Parse(tokStr, func(token *jwt.Token) (any, error) {
-		// todo figure out what goes here
-		iss, err := token.Claims.GetIssuer()
-		if err != nil {
-			slog.Error("Failed to get 'iss' from JWT", "error", err)
-			return "", fmt.Errorf("Invalid 'iss' in JWT: %w", err)
-		}
-		atid, err := syntax.ParseAtIdentifier(iss)
-		if err != nil {
-			slog.Error("Failed to parse 'iss' from JWT", "error", err)
-			return "", fmt.Errorf("Invalid 'iss' in JWT: %w", err)
-		}
-		id, err := cacheDir.Lookup(ctx, *atid)
-		if err != nil {
-			slog.Error("Failed to lookup DID in cache directory", "error", err)
-			return "", fmt.Errorf("Failed to lookup DID in cache directory: %w", err)
-		}
-		pubk, err := id.PublicKey()
-		if err != nil {
-			slog.Error("Failed to get public key from DID", "error", err)
-			return "", fmt.Errorf("Failed to get public key from DID: %w", err)
-		}
-		return pubk.Bytes(), nil
-	}, jwt.WithValidMethods([]string{jwt.SigningMethodES256.Alg()}))
-=======
 	tokStr := authHeader[7:]
 	slog.Debug("Processing JWT token", "token_length", len(tokStr))
 
@@ -300,33 +270,13 @@ func verifyJWT(ctx context.Context, r *http.Request) (did syntax.DID, err error)
 	}
 
 	issuerDID, err := validator.Validate(ctx, tokStr, nil)
->>>>>>> 294587bef56500ba1f8daee1d68725e0dc9b2f04
 	if err != nil {
 		slog.Error("JWT validation failed", "error", err)
 		return "", fmt.Errorf("JWT validation failed: %w", err)
 	}
 
-<<<<<<< HEAD
-	if claims, ok := tok.Claims.(jwt.MapClaims); ok {
-		slog.Debug(fmt.Sprintf("%s %s", claims["sub"], claims["aud"]))
-		pi, err := syntax.ParseDID(claims["iss"].(string))
-		if err != nil {
-			slog.Error("Failed to parse 'iss' from JWT", "error", err)
-			return "", "", fmt.Errorf("Invalid 'iss' in JWT: %w", err)
-		}
-		pa, err := syntax.ParseDID(claims["aud"].(string))
-		if err != nil {
-			slog.Error("Failed to parse 'aud' from JWT", "error", err)
-			return "", "", fmt.Errorf("Invalid 'aud' in JWT: %w", err)
-		}
-		return pi, pa, nil
-	}
-	slog.Error("Failed to get claims from JWT", "error", err)
-	return "", "", err
-=======
 	slog.Debug("JWT validated successfully", "issuer", issuerDID, "audience", SKYWELL_DID)
 	return issuerDID, nil
->>>>>>> 294587bef56500ba1f8daee1d68725e0dc9b2f04
 }
 
 func generateFileView(fileID uint, db *gorm.DB) (fileView *skywell.Defs_FileView, httpResponse int, err error) {
