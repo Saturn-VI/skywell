@@ -340,6 +340,8 @@ func generateFileView(fileID uint, db *gorm.DB) (fileView *skywell.Defs_FileView
 	}
 
 	fileView = &skywell.Defs_FileView{
+		Uri: file.URI.String(),
+		Cid: file.CID.String(),
 		Blob: &util.LexBlob{
 			Ref:      util.LexLink(c),
 			MimeType: file.MimeType,
