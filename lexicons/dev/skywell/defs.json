@@ -32,6 +32,14 @@
             "type": "object",
             "required": ["blob", "createdAt", "name", "slug"],
             "properties": {
+                "uri": {
+                    "type": "string",
+                    "format": "at-uri"
+                },
+                "cid": {
+                    "type": "string",
+                    "format": "cid"
+                },
                 "blob": {
                     "type": "blob"
                 },

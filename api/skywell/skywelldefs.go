@@ -11,10 +11,12 @@ import (
 // Defs_FileView is a "fileView" in the dev.skywell.defs schema.
 type Defs_FileView struct {
 	Blob        *util.LexBlob `json:"blob" cborgen:"blob"`
+	Cid         *string       `json:"cid,omitempty" cborgen:"cid,omitempty"`
 	CreatedAt   string        `json:"createdAt" cborgen:"createdAt"`
 	Description *string       `json:"description,omitempty" cborgen:"description,omitempty"`
 	Name        string        `json:"name" cborgen:"name"`
 	Slug        string        `json:"slug" cborgen:"slug"`
+	Uri         *string       `json:"uri,omitempty" cborgen:"uri,omitempty"`
 }
 
 // Defs_ProfileView is a "profileView" in the dev.skywell.defs schema.

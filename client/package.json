@@ -1,5 +1,6 @@
 {
   "dependencies": {
     "@atcute/lex-cli": "^2.1.1"
-  }
+  },
+  "type": "module"
 }
