@@ -10,11 +10,17 @@ import {
 import { toast } from "solid-toast";
 import { Navigate, redirect, useNavigate } from "@solidjs/router";
 import { getSkywellRpc } from "./Auth.tsx";
-import { DevSkywellGetActorFiles, DevSkywellGetActorProfile } from "skywell";
+import {
+  DevSkywellFile,
+  DevSkywellGetActorFiles,
+  DevSkywellGetActorProfile,
+} from "skywell";
+import { Blob } from "@atcute/lexicons";
 import { isXRPCErrorPayload } from "@atcute/client";
 import { ServiceProxyOptions } from "@atcute/client";
 import { ComAtprotoServerGetServiceAuth } from "@atcute/atproto";
 import { SKYWELL_DID } from "./Constants.tsx";
+import { filesize } from "filesize";
 
 interface ListFile {
   name: string;
@@ -26,7 +32,7 @@ interface ListFile {
 const Account: Component = () => {
   const [handle, setHandle] = createSignal<string>("Loading...");
   const [displayName, setDisplayName] = createSignal<string>("Loading...");
-  const [files, setFiles] = createSignal<any[]>([]);
+  const [files, setFiles] = createSignal<DevSkywellFile.Main[]>([]);
   const [fileCount, setFileCount] = createSignal<number>(0);
   const [loading, setLoading] = createSignal(true);
   const [loadingMore, setLoadingMore] = createSignal(false);
@@ -211,7 +217,9 @@ const Account: Component = () => {
                 <div class="text-gray-300">
                   {new Date(file.createdAt).toLocaleDateString()}
                 </div>
-                <div class="text-gray-300">{file.size}</div>
+                <div class="text-gray-300">
+                  {filesize((file.blob as Blob).size)}
+                </div>
                 <div class="flex space-x-2">
                   <a
                     href={`/file/${file.slug}`}
