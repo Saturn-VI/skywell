@@ -1,47 +1,47 @@
 {
-  "lexicon": 1,
-  "id": "dev.skywell.getFileFromSlug",
-  "defs": {
-    "main": {
-      "type": "query",
-      "description": "Gets the file and actor data linked to a certain slug.",
-      "parameters": {
-        "type": "params",
-        "required": ["slug"],
-        "properties": {
-          "slug": {
-            "type": "string",
-            "description": "Slug to convert to ATProto info."
-          }
-        }
-      },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["uri", "cid", "file", "actor"],
-          "properties": {
-            "uri": {
-              "type": "string",
-              "format": "at-uri",
-              "description": "Link to the file record."
+    "lexicon": 1,
+    "id": "dev.skywell.getFileFromSlug",
+    "defs": {
+        "main": {
+            "type": "query",
+            "description": "Gets the file and actor data linked to a certain slug.",
+            "parameters": {
+                "type": "params",
+                "required": ["slug"],
+                "properties": {
+                    "slug": {
+                        "type": "string",
+                        "description": "Slug to convert to ATProto info."
+                    }
+                }
             },
-            "cid": {
-              "type": "string",
-              "format": "cid",
-              "description": "CID of the file record."
-            },
-            "file": {
-              "type": "ref",
-              "ref": "dev.skywell.defs#fileView"
-            },
-            "actor": {
-              "type": "ref",
-              "ref": "dev.skywell.defs#profileView"
+            "output": {
+                "encoding": "application/json",
+                "schema": {
+                    "type": "object",
+                    "required": ["uri", "cid", "file", "actor"],
+                    "properties": {
+                        "uri": {
+                            "type": "string",
+                            "format": "at-uri",
+                            "description": "Link to the file record."
+                        },
+                        "cid": {
+                            "type": "string",
+                            "format": "cid",
+                            "description": "CID of the file record."
+                        },
+                        "file": {
+                            "type": "ref",
+                            "ref": "dev.skywell.defs#fileView"
+                        },
+                        "actor": {
+                            "type": "ref",
+                            "ref": "dev.skywell.defs#profileView"
+                        }
+                    }
+                }
             }
-          }
         }
-      }
     }
-  }
 }

@@ -29,22 +29,87 @@ const Account: Component = () => {
   const [files, setFiles] = createSignal<any[]>([]);
   const [fileCount, setFileCount] = createSignal<number>(0);
   const [loading, setLoading] = createSignal(true);
+  const [loadingMore, setLoadingMore] = createSignal(false);
+  const [cursor, setCursor] = createSignal<string | undefined>(undefined);
+  const [hasMore, setHasMore] = createSignal(true);
   const navigate = useNavigate();
+
+  const loadFiles = async (loadMore = false) => {
+    try {
+      const currentAgent = agent();
+      if (!currentAgent?.session) return;
+
+      const userDid = currentAgent.session.info.sub;
+      const skywellClient = await getAuthedSkywellClient();
+      if (!skywellClient) return;
+
+      const params: any = {
+        actor: userDid,
+        limit: 50,
+      };
+
+      if (loadMore && cursor()) {
+        params.cursor = cursor();
+      }
+
+      const flist = await skywellClient.get(
+        DevSkywellGetActorFiles.mainSchema.nsid,
+        { params },
+      );
+
+      if (isXRPCErrorPayload(flist.data)) {
+        throw new Error("Failed to fetch user files");
+      }
+
+      const newFiles = flist.data.files || [];
+
+      if (loadMore) {
+        setFiles((prev) => [...prev, ...newFiles]);
+      } else {
+        setFiles(newFiles);
+      }
+
+      setCursor(flist.data.cursor);
+      setHasMore(newFiles.length >= 50);
+    } catch (error) {
+      console.error("Failed to load files:", error);
+      if (!loadMore) {
+        toast.error("Failed to load files");
+      }
+    }
+  };
+
+  const handleScroll = (e: Event) => {
+    const target = e.target as HTMLElement;
+    const { scrollTop, scrollHeight, clientHeight } = target;
+
+    // Load more when user scrolls to within 200px of the bottom
+    if (
+      scrollHeight - scrollTop - clientHeight < 200 &&
+      hasMore() &&
+      !loadingMore()
+    ) {
+      setLoadingMore(true);
+      loadFiles(true).finally(() => setLoadingMore(false));
+    }
+  };
 
   onMount(async () => {
     if (!(await isLoggedIn())) {
       console.log("Not logged in");
       toast.error("Not logged in, redirecting...");
       navigate("/login", { replace: true });
+      return;
     }
 
     try {
       const currentAgent = agent();
       if (currentAgent && currentAgent.session) {
-        toast.promise(
+        await toast.promise(
           (async () => {
             const userDid = currentAgent.session.info.sub;
 
+            // Load user data
             const skywellRpc = getSkywellRpc();
             const res = await skywellRpc.get(
               DevSkywellGetActorProfile.mainSchema.nsid,
@@ -58,21 +123,9 @@ const Account: Component = () => {
             setHandle(res.data.handle);
             setDisplayName(res.data.displayName || handle());
             setFileCount(res.data.fileCount || 0);
-            console.log("here");
 
-            const skywellClient = await getAuthedSkywellClient();
-            if (!skywellClient) return;
-            console.log(skywellClient);
-            console.log(skywellClient.proxy);
-            const flist = await skywellClient.get(
-              DevSkywellGetActorFiles.mainSchema.nsid,
-              {
-                params: { actor: userDid },
-              },
-            );
-            if (isXRPCErrorPayload(res.data)) {
-              throw new Error("Failed to fetch user files");
-            }
+            // Load some files
+            await loadFiles();
           })(),
           {
             loading: "Loading account data...",
@@ -83,26 +136,6 @@ const Account: Component = () => {
             position: "top-center",
           },
         );
-        setFiles([
-          {
-            name: "example-file.pdf",
-            createdAt: "2024-01-15",
-            size: "2.5 MB",
-            slug: "abc123",
-          },
-          {
-            name: "document.docx",
-            createdAt: "2024-01-10",
-            size: "1.2 MB",
-            slug: "def456",
-          },
-          {
-            name: "image.png",
-            createdAt: "2024-01-05",
-            size: "500 KB",
-            slug: "ghi789",
-          },
-        ]);
       }
     } catch (error) {
       console.error("Failed to load account data:", error);
@@ -159,9 +192,12 @@ const Account: Component = () => {
             </a>
           </div>
         ) : (
-          <div class="bg-gray-800 w-full">
+          <div
+            class="bg-gray-800 w-full overflow-y-auto max-h-full"
+            onScroll={handleScroll}
+          >
             {/* Files Header */}
-            <div class="grid grid-cols-4 gap-4 p-4 border-b border-gray-600 font-semibold">
+            <div class="grid grid-cols-4 gap-4 p-4 border-b border-gray-600 font-semibold sticky top-0 bg-gray-800">
               <div>Name</div>
               <div>Date Uploaded</div>
               <div>Size</div>
@@ -189,6 +225,20 @@ const Account: Component = () => {
                 </div>
               </div>
             ))}
+
+            {/* Loading More Indicator */}
+            {loadingMore() && (
+              <div class="flex items-center justify-center p-4">
+                <p class="text-gray-400">Loading more files...</p>
+              </div>
+            )}
+
+            {/* End of List Indicator */}
+            {!hasMore() && files().length > 0 && (
+              <div class="flex items-center justify-center p-4">
+                <p class="text-gray-500 text-sm">No more files to load</p>
+              </div>
+            )}
           </div>
         )}
       </div>

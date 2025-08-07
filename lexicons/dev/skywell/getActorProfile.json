@@ -1,28 +1,28 @@
 {
-  "lexicon": 1,
-  "id": "dev.skywell.getActorProfile",
-  "defs": {
-    "main": {
-      "type": "query",
-      "description": "Gets basic information about an actor.",
-      "parameters": {
-        "type": "params",
-        "required": ["actor"],
-        "properties": {
-          "actor": {
-            "type": "string",
-            "format": "at-identifier",
-            "description": "Handle or DID of account to fetch profile of."
-          }
+    "lexicon": 1,
+    "id": "dev.skywell.getActorProfile",
+    "defs": {
+        "main": {
+            "type": "query",
+            "description": "Gets basic information about an actor.",
+            "parameters": {
+                "type": "params",
+                "required": ["actor"],
+                "properties": {
+                    "actor": {
+                        "type": "string",
+                        "format": "at-identifier",
+                        "description": "Handle or DID of account to fetch profile of."
+                    }
+                }
+            },
+            "output": {
+                "encoding": "application/json",
+                "schema": {
+                    "type": "ref",
+                    "ref": "dev.skywell.defs#profileView"
+                }
+            }
         }
-      },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "ref",
-          "ref": "dev.skywell.defs#profileView"
-        }
-      }
     }
-  }
 }
