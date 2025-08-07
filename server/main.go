@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,49 +29,77 @@ const PORT string = ":4999"
 const SKYWELL_DID syntax.DID = "did:plc:tsaj4ffwyj5z6rjqaxmg5cp4"
 const SKYWELL_SERVICE_ID string = "#skywell_server"
 const USER_AGENT string = "Skywell AppView v0.1.12"
+const REQUEST_ID_BYTE_LENGTH int = 8
+const requestIDKey string = "requestID"
 
 var cacheDir identity.CacheDirectory = identity.NewCacheDirectory(identity.DefaultDirectory(), 0, 0, 0, 0)
+
+// Component-specific loggers
+var (
+	httpLogger      = slog.With("component", "http")
+	dbLogger        = slog.With("component", "database")
+	jetstreamLogger = slog.With("component", "jetstream")
+	authLogger      = slog.With("component", "auth")
+)
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	slog.SetLogLoggerLevel(slog.LevelDebug)
-	slog.Info("Initializing database...")
+	httpLogger.Info("Initializing database...")
 	db, client, err := initializeDB()
 
 	if err != nil {
-		slog.Error("Failed to initialize database", "error", err)
+		dbLogger.Error("Failed to initialize database", "error", err)
 		panic("Failed to initialize database: " + err.Error())
 	}
 
-	slog.Info("Initializing HTTP server...")
+	httpLogger.Info("Initializing HTTP server...")
 	initializeHandleFuncs(db, ctx)
 
-	handler := corsMiddleware(http.DefaultServeMux)
+	handler := requestCorrelationMiddleware(corsMiddleware(http.DefaultServeMux))
 	server := &http.Server{Addr: PORT, Handler: handler}
 
-	slog.Info("Reading from Jetstream...")
+	jetstreamLogger.Info("Reading from Jetstream...")
 	go read(db, client, ctx)
 
 	go func() {
-		slog.Info("Server started!", "port", PORT)
+		httpLogger.Info("Server started!", "port", PORT)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("Server error", "error", err, "port", PORT)
+			httpLogger.Error("Server error", "error", err, "port", PORT)
 		}
 	}()
 
 	<-ctx.Done()
-	slog.Info("Shutting down server...")
+	httpLogger.Info("Shutting down server...")
 
 	sCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(sCtx); err != nil {
-		slog.Error("Server failed to shutdown (???)", "error", err)
+		httpLogger.Error("Server failed to shutdown (???)", "error", err)
 	} else {
-		slog.Info("Server shutdown gracefully.")
+		httpLogger.Info("Server shutdown gracefully.")
 	}
+}
+
+func generateRequestID() string {
+	bytes := make([]byte, 8)
+	rand.Read(bytes)
+	return hex.EncodeToString(bytes)
+}
+
+func requestCorrelationMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestID := generateRequestID()
+		ctx := context.WithValue(r.Context(), requestIDKey, requestID)
+		r = r.WithContext(ctx)
+
+		w.Header().Set("X-Request-ID", requestID)
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -90,91 +120,97 @@ func corsMiddleware(next http.Handler) http.Handler {
 func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 	// returns ProfileView
 	http.HandleFunc("/xrpc/dev.skywell.getActorProfile", func(w http.ResponseWriter, r *http.Request) {
-		slog.Debug("Received request", "endpoint", "/xrpc/dev.skywell.getActorProfile", "remote_addr", r.RemoteAddr)
+		requestID := r.Context().Value(requestIDKey).(string)
+		logger := httpLogger.With("request_id", requestID)
+
+		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.getActorProfile", "remote_addr", r.RemoteAddr)
 		actor := r.URL.Query().Get("actor")
 		if actor == "" {
-			slog.Warn("Missing required parameter", "endpoint", "/xrpc/dev.skywell.getActorProfile", "parameter", "actor")
+			logger.Warn("Missing required parameter", "endpoint", "/xrpc/dev.skywell.getActorProfile", "parameter", "actor")
 			http.Error(w, "Required parameter 'actor' missing", 400)
 			return
 		}
 		did, err := syntax.ParseDID(actor)
 		if err != nil {
-			slog.Error("Failed to parse DID", "actor", actor, "error", err, "endpoint", "/xrpc/dev.skywell.getActorProfile")
+			logger.Error("Failed to parse DID", "actor", actor, "error", err, "endpoint", "/xrpc/dev.skywell.getActorProfile")
 			http.Error(w, "Invalid 'actor' parameter", 400)
 			return
 		}
 		view, stat, err := generateProfileView(did, db, ctx)
 		if err != nil {
-			slog.Error("Failed to generate profile view", "did", did.String(), "status", stat, "error", err)
+			logger.Error("Failed to generate profile view", "did", did.String(), "http_status", stat, "error", err)
 			http.Error(w, "Internal Server Error (profile view generation)", stat)
 			return
 		}
 		b, err := json.Marshal(view)
 		if err != nil {
-			slog.Error("Failed to marshal profile", "did", did.String(), "error", err)
+			logger.Error("Failed to marshal profile", "did", did.String(), "error", err)
 			http.Error(w, "Internal Server Error (marshaling content)", 500)
 			return
 		}
-		slog.Debug("Returning profile response", "actor", actor, "did", did.String(), "response_size", len(b))
+		logger.Debug("Returning profile response", "actor", actor, "did", did.String(), "response_size", len(b))
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, "%s", b)
 	})
 
 	// returns GetFileFromSlug_Output
 	http.HandleFunc("/xrpc/dev.skywell.getFileFromSlug", func(w http.ResponseWriter, r *http.Request) {
+		requestID := r.Context().Value(requestIDKey).(string)
+		logger := httpLogger.With("request_id", requestID)
+
 		// based on slug, get:
 		// URI, CID, and DID
-		slog.Debug("Received request", "endpoint", "/xrpc/dev.skywell.getFileFromSlug", "remote_addr", r.RemoteAddr)
+		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.getFileFromSlug", "remote_addr", r.RemoteAddr)
 		slug := r.URL.Query().Get("slug")
 		if slug == "" {
-			slog.Warn("Missing required parameter", "endpoint", "/xrpc/dev.skywell.getFileFromSlug", "parameter", "slug")
+			logger.Warn("Missing required parameter", "endpoint", "/xrpc/dev.skywell.getFileFromSlug", "parameter", "slug")
 			http.Error(w, "Required parameter 'slug' missing", 400)
 			return
 		}
 		fk := FileKey{}
 		if err := db.Where("key = ?", slug).First(&fk).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				slog.Debug("File key not found", "slug", slug)
+				logger.Debug("File key not found", "slug", slug)
 				http.Error(w, "No matching slug found", 404)
 				return
 			}
-			slog.Error("Failed to find file key", "slug", slug, "error", err)
+			logger.Error("Failed to find file key", "slug", slug, "error", err)
 			http.Error(w, "Internal Server Error (file key lookup)", 500)
 			return
 		}
 		fi := File{}
 		if err := db.Where("id = ?", fk.File).First(&fi).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				slog.Debug("File not found", "file_id", fk.File, "slug", slug)
+				logger.Debug("File not found", "file_id", fk.File, "slug", slug)
 				http.Error(w, "No matching file found", 404)
 				return
 			}
-			slog.Error("Failed to find file", "file_id", fk.File, "slug", slug, "error", err)
+			logger.Error("Failed to find file", "file_id", fk.File, "slug", slug, "error", err)
 			http.Error(w, "Internal Server Error (file lookup)", 500)
 			return
 		}
 		u := User{}
 		if err := db.Where("id = ?", fi.UserID).First(&u).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				slog.Debug("User not found", "user_id", fi.UserID, "file_id", fi.ID, "slug", slug)
+				logger.Debug("User not found", "user_id", fi.UserID, "file_id", fi.ID, "slug", slug)
 				http.Error(w, "No matching user found", 404)
 				return
 			}
-			slog.Error("Failed to find user", "user_id", fi.UserID, "file_id", fi.ID, "slug", slug, "error", err)
+			logger.Error("Failed to find user", "user_id", fi.UserID, "file_id", fi.ID, "slug", slug, "error", err)
 			http.Error(w, "Internal Server Error (user lookup)", 500)
 			return
 		}
 
 		profile, stat, err := generateProfileView(u.DID, db, ctx)
 		if err != nil {
-			slog.Error("Failed to generate profile view", "did", u.DID.String(), "status", stat, "slug", slug, "error", err)
+			logger.Error("Failed to generate profile view", "did", u.DID.String(), "http_status", stat, "slug", slug, "error", err)
 			http.Error(w, "Internal Server Error (profile view generation)", stat)
 			return
 		}
 
 		fileView, stat, err := generateFileView(fi.ID, db)
 		if err != nil {
-			slog.Error("Failed to generate file view", "file_id", fi.ID, "status", stat, "slug", slug, "error", err)
+			logger.Error("Failed to generate file view", "file_id", fi.ID, "http_status", stat, "slug", slug, "error", err)
 			http.Error(w, "Internal Server Error (file view generation)", stat)
 			return
 		}
@@ -188,38 +224,41 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 
 		b, err := json.Marshal(o)
 		if err != nil {
-			slog.Error("Failed to marshal file response", "slug", slug, "file_id", fi.ID, "error", err)
+			logger.Error("Failed to marshal file response", "slug", slug, "file_id", fi.ID, "error", err)
 			http.Error(w, "Internal Server Error (marshaling content)", 500)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		slog.Debug("Returning file response", "slug", slug, "file_id", fi.ID, "response_size", len(b))
+		logger.Debug("Returning file response", "slug", slug, "file_id", fi.ID, "response_size", len(b))
 		fmt.Fprintf(w, "%s", b)
 	})
 
 	// returns GetActorFiles_Output
 	http.HandleFunc("/xrpc/dev.skywell.getActorFiles", func(w http.ResponseWriter, r *http.Request) {
-		slog.Debug("Received request", "endpoint", "/xrpc/dev.skywell.getActorFiles", "remote_addr", r.RemoteAddr)
+		requestID := r.Context().Value(requestIDKey).(string)
+		logger := httpLogger.With("request_id", requestID)
+
+		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.getActorFiles", "remote_addr", r.RemoteAddr)
 		did, err := verifyJWT(ctx, r)
 		if err != nil {
-			slog.Error("Failed to verify JWT", "error", err, "remote_addr", r.RemoteAddr)
+			logger.Error("Failed to verify JWT", "error", err, "remote_addr", r.RemoteAddr)
 			http.Error(w, "Internal Server Error (JWT verification)", 500)
 			return
 		}
 		a := r.URL.Query().Get("actor")
 		if a == "" {
-			slog.Warn("Missing required parameter", "endpoint", "/xrpc/dev.skywell.getActorFiles", "parameter", "actor", "did", did.String())
+			logger.Warn("Missing required parameter", "endpoint", "/xrpc/dev.skywell.getActorFiles", "parameter", "actor", "did", did.String())
 			http.Error(w, "Required parameter 'actor' missing", 400)
 			return
 		}
 		if did.String() != a {
-			slog.Warn("JWT issuer mismatch", "jwt_iss", did.String(), "actor_param", a)
+			logger.Warn("JWT issuer mismatch", "jwt_iss", did.String(), "actor_param", a)
 			http.Error(w, "JWT 'iss' does not match 'actor' parameter", 403)
 			return
 		}
 		profile, stat, err := generateProfileView(did, db, ctx)
 		if err != nil {
-			slog.Error("Failed to generate profile view", "did", did.String(), "status", stat, "error", err)
+			logger.Error("Failed to generate profile view", "did", did.String(), "http_status", stat, "error", err)
 			http.Error(w, "Internal Server Error (profile view generation)", stat)
 			return
 		}
@@ -227,14 +266,14 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 		if l := r.URL.Query().Get("limit"); l != "" {
 			limit, err = strconv.Atoi(l)
 			if err != nil {
-				slog.Error("Invalid limit parameter", "limit_param", l, "did", did.String(), "error", err)
+				logger.Error("Invalid limit parameter", "limit_param", l, "did", did.String(), "error", err)
 				http.Error(w, "Invalid 'limit' parameter", 400)
 				return
 			}
 		}
 		c, files, stat, err := generateFileList(r.URL.Query().Get("cursor"), limit, did, db)
 		if err != nil {
-			slog.Error("Failed to generate file list", "did", did.String(), "limit", limit, "status", stat, "error", err)
+			logger.Error("Failed to generate file list", "did", did.String(), "limit", limit, "http_status", stat, "error", err)
 			http.Error(w, "Internal Server Error (file list generation)", stat)
 			return
 		}
@@ -246,11 +285,11 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 
 		b, err := json.Marshal(resp)
 		if err != nil {
-			slog.Error("Failed to marshal actor files response", "did", did.String(), "file_count", len(*files), "error", err)
+			logger.Error("Failed to marshal actor files response", "did", did.String(), "file_count", len(*files), "error", err)
 			http.Error(w, "Internal Server Error (marshaling content)", 500)
 			return
 		}
-		slog.Debug("Returning actor files response", "did", did.String(), "file_count", len(*files), "response_size", len(b))
+		logger.Debug("Returning actor files response", "did", did.String(), "file_count", len(*files), "response_size", len(b))
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, "%s", b)
 	})
@@ -268,7 +307,7 @@ func verifyJWT(ctx context.Context, r *http.Request) (did syntax.DID, err error)
 
 	tokStr := authHeader[7:]
 
-	slog.Debug("Processing JWT token", "token", tokStr, "token_length", len(tokStr))
+	authLogger.Debug("Processing JWT token", "token", tokStr, "token_length", len(tokStr))
 
 	validator := &auth.ServiceAuthValidator{
 		Audience:        SKYWELL_DID.String(),
@@ -278,11 +317,11 @@ func verifyJWT(ctx context.Context, r *http.Request) (did syntax.DID, err error)
 
 	issuerDID, err := validator.Validate(ctx, tokStr, nil)
 	if err != nil {
-		slog.Error("JWT validation failed", "error", err)
+		authLogger.Error("JWT validation failed", "error", err)
 		return "", fmt.Errorf("JWT validation failed: %w", err)
 	}
 
-	slog.Debug("JWT validated successfully", "issuer", issuerDID, "audience", SKYWELL_DID)
+	authLogger.Debug("JWT validated successfully", "issuer", issuerDID, "audience", SKYWELL_DID)
 	return issuerDID, nil
 }
 

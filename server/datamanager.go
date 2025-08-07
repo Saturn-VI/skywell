@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	b58 "github.com/mr-tron/base58"
@@ -82,13 +81,13 @@ func updateIdentity(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx c
 
 	did, err := syntax.ParseDID(evt.Did)
 	if err != nil {
-		slog.Error("Failed to parse DID", "did_string", evt.Did, "error", err)
+		jetstreamLogger.Error("Failed to parse DID", "did", evt.Did, "error", err)
 		return
 	}
 	cacheDir.Purge(ctx, did.AtIdentifier())
 	err = updateUserProfile(did, db, client, ctx)
 	if err != nil {
-		slog.Error("Failed to update user profile", "did", evt.Did, "error", err)
+		jetstreamLogger.Error("Failed to update user profile", "did", evt.Did, "error", err)
 		return
 	}
 }
@@ -113,17 +112,17 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 		var r skywell.File
 		err := json.Unmarshal(evt.Commit.Record, &r)
 		if err != nil {
-			slog.Error("Failed to unmarshal to file", "did", evt.Did, "error", err)
+			jetstreamLogger.Error("Failed to unmarshal to file", "did", evt.Did, "error", err)
 			return
 		}
 		uri, err := syntax.ParseURI(fmt.Sprintf("at://%s/%s/%s", evt.Did, evt.Commit.Collection, evt.Commit.RKey))
 		if err != nil {
-			slog.Error("Failed to parse URI", "did", evt.Did, "error", err)
+			jetstreamLogger.Error("Failed to parse URI", "did", evt.Did, "error", err)
 			return
 		}
 		cid, err := syntax.ParseCID(evt.Commit.CID)
 		if err != nil {
-			slog.Error("Failed to parse CID", "cid_string", r.Blob.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
+			jetstreamLogger.Error("Failed to parse CID", "cid", r.Blob.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
 			return
 		}
 
@@ -132,10 +131,10 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 		result := db.First(&user, "did = ?", evt.Did)
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// user not found, create user
-			slog.Debug("User not found, creating new user", "did", evt.Did)
+			dbLogger.Debug("User not found, creating new user", "did", evt.Did)
 			h, d, a, err := getUserData(syntax.DID(evt.Did), client, ctx)
 			if err != nil {
-				slog.Error("Failed to get user data", "did", evt.Did, "error", err)
+				jetstreamLogger.Error("Failed to get user data", "did", evt.Did, "error", err)
 				return
 			}
 			user = User{
@@ -146,20 +145,20 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			}
 
 			if err := db.Create(&user).Error; err != nil {
-				slog.Error("Failed to create user", "did", evt.Did, "handle", h.String(), "error", err)
+				dbLogger.Error("Failed to create user", "did", evt.Did, "handle", h.String(), "error", err)
 				return
 			}
 		}
 
 		pt, err := syntax.ParseDatetime(r.CreatedAt)
 		if err != nil {
-			slog.Error("Failed to parse createdAt", "created_at", r.CreatedAt, "uri", uri.String(), "did", evt.Did, "error", err)
+			jetstreamLogger.Error("Failed to parse createdAt", "created_at", r.CreatedAt, "uri", uri.String(), "did", evt.Did, "error", err)
 			return
 		}
 
 		pc, err := syntax.ParseCID(r.Blob.Ref.String())
 		if err != nil {
-			slog.Error("Failed to parse blobRef", "blob_ref", r.Blob.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
+			jetstreamLogger.Error("Failed to parse blobRef", "blob_ref", r.Blob.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
 			return
 		}
 
@@ -182,7 +181,7 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 		fk, err := generateSlug(db, file.BlobRef, file.URI)
 
 		if err != nil {
-			slog.Error("Failed to generate slug", "file_name", file.Name, "user_id", user.ID, "uri", uri.String(), "did", evt.Did, "error", err)
+			dbLogger.Error("Failed to generate slug", "file_name", file.Name, "user_id", user.ID, "uri", uri.String(), "did", evt.Did, "error", err)
 			return
 		}
 
@@ -198,36 +197,36 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 				DoUpdates: clause.AssignmentColumns([]string{"name", "description", "blob_ref", "mime_type", "size"}),
 			}).Create(&file).Error
 			if err != nil {
-				slog.Error("Failed to create or update file", "file_name", file.Name, "user_id", user.ID, "uri", uri.String(), "did", evt.Did, "error", err)
+				dbLogger.Error("Failed to create or update file", "file_name", file.Name, "user_id", user.ID, "uri", uri.String(), "did", evt.Did, "error", err)
 				return
 			}
 			filekey.File = file.ID // set the file ID after file is created/updated
-			slog.Debug("Creating filekey", "key", filekey.Key, "file_id", file.ID, "user_id", user.ID, "did", evt.Did)
+			dbLogger.Debug("Creating filekey", "key", filekey.Key, "file_id", file.ID, "user_id", user.ID, "did", evt.Did)
 			err = db.Clauses(clause.OnConflict{
 				DoNothing: true,
 			}).Create(&filekey).Error
 			if err != nil {
-				slog.Error("Failed to create file key", "key", filekey.Key, "file_id", file.ID, "user_id", user.ID, "did", evt.Did, "error", err)
+				dbLogger.Error("Failed to create file key", "key", filekey.Key, "file_id", file.ID, "user_id", user.ID, "did", evt.Did, "error", err)
 				return
 			}
-			slog.Info("Created file", "file_id", file.ID, "file_name", file.Name, "slug", filekey.Key, "did", evt.Did)
+			jetstreamLogger.Info("Created file", "file_id", file.ID, "file_name", file.Name, "slug", filekey.Key, "did", evt.Did)
 		case jetstream.CommitOperationDelete:
 
 			var fd File
 			if err := db.Where("uri = ?", uri.String()).First(&fd).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					slog.Warn("Attempted to delete non-existent file", "uri", uri.String(), "did", evt.Did)
+					dbLogger.Warn("Attempted to delete non-existent file", "uri", uri.String(), "did", evt.Did)
 				} else {
-					slog.Error("Failed to query file for deletion", "uri", uri.String(), "did", evt.Did, "error", err)
+					dbLogger.Error("Failed to query file for deletion", "uri", uri.String(), "did", evt.Did, "error", err)
 				}
 				return
 			}
 			var fk FileKey
 			if err := db.Where("file_id = ?", fd.ID).First(&fk).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					slog.Warn("Attempted to delete non-existent file key", "file_id", fd.ID, "did", evt.Did)
+					dbLogger.Warn("Attempted to delete non-existent file key", "file_id", fd.ID, "did", evt.Did)
 				} else {
-					slog.Error("Failed to query file key for deletion", "file_id", fd.ID, "did", evt.Did, "error", err)
+					dbLogger.Error("Failed to query file key for deletion", "file_id", fd.ID, "did", evt.Did, "error", err)
 				}
 				return
 			}
@@ -243,13 +242,13 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			})
 
 			if err != nil {
-				slog.Error("Failed to delete file", "file_id", fd.ID, "file_name", fd.Name, "slug", fk.Key, "did", evt.Did, "error", err)
+				dbLogger.Error("Failed to delete file", "file_id", fd.ID, "file_name", fd.Name, "slug", fk.Key, "did", evt.Did, "error", err)
 				return
 			}
 
-			slog.Info("Deleted file", "file_id", fd.ID, "file_name", fd.Name, "slug", fk.Key, "did", evt.Did)
+			jetstreamLogger.Info("Deleted file", "file_id", fd.ID, "file_name", fd.Name, "slug", fk.Key, "did", evt.Did)
 		default:
-			slog.Warn("Unknown commit operation", "operation", evt.Commit.Operation, "collection", evt.Commit.Collection, "did", evt.Did)
+			jetstreamLogger.Warn("Unknown commit operation", "operation", evt.Commit.Operation, "collection", evt.Commit.Collection, "did", evt.Did)
 		}
 
 	case "app.bsky.actor.profile":
@@ -259,17 +258,17 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 
 		did, err := syntax.ParseDID(evt.Did)
 		if err != nil {
-			slog.Error("Failed to parse DID for profile update", "did_string", evt.Did, "error", err)
+			jetstreamLogger.Error("Failed to parse DID for profile update", "did", evt.Did, "error", err)
 			return
 		}
 		err = updateUserProfile(did, db, client, ctx)
 		if err != nil {
-			slog.Error("Failed to update user profile", "did", evt.Did, "error", err)
+			jetstreamLogger.Error("Failed to update user profile", "did", evt.Did, "error", err)
 			return
 		}
 
 	default:
-		slog.Warn("Unknown collection", "collection", evt.Commit.Collection, "operation", evt.Commit.Operation, "did", evt.Did)
+		jetstreamLogger.Warn("Unknown collection", "collection", evt.Commit.Collection, "operation", evt.Commit.Operation, "did", evt.Did)
 	}
 }
 
