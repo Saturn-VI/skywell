@@ -16,24 +16,29 @@ import {
 import { toast } from "solid-toast";
 import sleep from "sleep-promise";
 import { XRPCProcedures, XRPCQueries } from "@atcute/lexicons/ambient";
-import { ENTRYWAY_URL, SKYWELL_DID, SKYWELL_SERVICE_ID, SKYWELL_URL } from "./Constants.tsx";
+import {
+  ENTRYWAY_URL,
+  SKYWELL_DID,
+  SKYWELL_SERVICE_ID,
+  SKYWELL_URL,
+} from "./Constants.tsx";
+import { Navigate, redirect } from "@solidjs/router";
 
 export const [did, setDid] = makePersisted(createSignal<Did | null>(null));
-export const [agent, setAgent] = makePersisted(
-  createSignal<OAuthUserAgent | null>(null),
-);
+export const [agent, setAgent] = createSignal<OAuthUserAgent | null>(null);
 
-// onMount(async () => {
-//   runAuthChecks();
-// });
+onMount(async () => {
+  runAuthChecks();
+});
 
-async function runAuthChecks() {
+export async function runAuthChecks() {
   if (did() == null) {
     trySignOut();
   } else {
     try {
       const session = await getSession(did()!, { allowStale: true });
-      setAgent(new OAuthUserAgent(session));
+      const newAgent = new OAuthUserAgent(session);
+      setAgent(newAgent);
     } catch (error) {
       console.error("Failed to restore session:", error);
       toast.error("Failed to restore session, logging out.");
@@ -43,14 +48,23 @@ async function runAuthChecks() {
 }
 
 export function trySignOut() {
-  try {
-    agent()?.signOut();
-  } catch (error) {
-    console.error("Failed to sign out:", error);
-  }
+  toast.promise(
+    (async () => {
+      await agent()?.signOut();
+
+      setDid(null);
+      setAgent(null);
+    })(),
+    {
+      success: "Signed out.",
+      error: "Failed to sign out.",
+      loading: "Signing out...",
+    },
+  );
 }
 
-export function isLoggedIn(): boolean {
+export async function isLoggedIn(): Promise<boolean> {
+  await runAuthChecks();
   return did() != null && agent() != null;
 }
 
@@ -58,9 +72,8 @@ export async function getAuthedClient(): Promise<Client<
   XRPCQueries,
   XRPCProcedures
 > | null> {
-  if (isLoggedIn()) {
+  if (await isLoggedIn()) {
     if (agent()) {
-      await sleep(5); // this is ridiculous but necessary
       return new Client({
         handler: agent()!,
       });
@@ -73,21 +86,20 @@ export async function getAuthedSkywellClient(): Promise<Client<
   XRPCQueries,
   XRPCProcedures
 > | null> {
-  if (isLoggedIn()) {
-    if (agent) {
-      await sleep(5); // this is ridiculous but necessary
-      console.log("here3")
-      const p: ServiceProxyOptions = {
-        did: SKYWELL_DID,
-        serviceId: SKYWELL_SERVICE_ID,
+  if (await isLoggedIn()) {
+    if (agent()) {
+      try {
+        const c = new Client({
+          handler: agent()!,
+          proxy: {
+            did: SKYWELL_DID,
+            serviceId: SKYWELL_SERVICE_ID,
+          },
+        });
+        return c;
+      } catch (error) {
+        console.error("Failed to create authed Skywell client:", error);
       }
-      console.log(p)
-      const c = new Client({
-        handler: agent()!,
-        proxy: p
-      });
-      console.log(c)
-      return c
     }
   }
   return null;

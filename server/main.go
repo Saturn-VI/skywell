@@ -15,10 +15,10 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/bluesky-social/indigo/atproto/auth"
 	identity "github.com/bluesky-social/indigo/atproto/identity"
 	syntax "github.com/bluesky-social/indigo/atproto/syntax"
 	"github.com/bluesky-social/indigo/lex/util"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/ipfs/go-cid"
 	skywell "github.com/saturn-vi/skywell/api/skywell"
 )
@@ -87,11 +87,21 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
-
 	// returns ProfileView
 	http.HandleFunc("/xrpc/dev.skywell.getActorProfile", func(w http.ResponseWriter, r *http.Request) {
 		slog.Debug("Received request for /xrpc/dev.skywell.getActorProfile")
-		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
+		actor := r.URL.Query().Get("actor")
+		if actor == "" {
+			http.Error(w, "Required parameter 'actor' missing", 400)
+			return
+		}
+		did, err := syntax.ParseDID(actor)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to parse DID from actor parameter: %v", err))
+			http.Error(w, "Invalid 'actor' parameter", 400)
+			return
+		}
+		pfv, stat, err := generateProfileView(did, db, ctx)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err.Error()))
 			http.Error(w, "Internal Server Error (profile view generation)", stat)
@@ -103,6 +113,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			http.Error(w, "Internal Server Error (marshaling content)", 500)
 			return
 		}
+		slog.Debug(fmt.Sprintf("Returning JSON for actor %s (DID %s): %s", actor, did.String(), string(b)))
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, "%s", b)
 	})
@@ -112,13 +123,13 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 		// based on slug, get:
 		// URI, CID, and DID
 		slog.Debug("Received request for /xrpc/dev.skywell.getUriFromSlug")
-		s := r.URL.Query().Get("slug")
-		if s == "" {
+		slug := r.URL.Query().Get("slug")
+		if slug == "" {
 			http.Error(w, "Required parameter 'slug' missing", 400)
 			return
 		}
 		fk := FileKey{}
-		if err := db.Where("key = ?", s).First(&fk).Error; err != nil {
+		if err := db.Where("key = ?", slug).First(&fk).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				http.Error(w, "No matching slug found", 404)
 				return
@@ -149,7 +160,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			return
 		}
 
-		pfv, stat, err := generateProfileView(string(u.DID), db, ctx)
+		pfv, stat, err := generateProfileView(u.DID, db, ctx)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err.Error()))
 			http.Error(w, "Internal Server Error (profile view generation)", stat)
@@ -177,26 +188,44 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
+		slog.Debug(fmt.Sprintf("Returning JSON for slug %s: %s", slug, string(b)))
 		fmt.Fprintf(w, "%s", b)
 	})
 
 	// returns GetActorFiles_Output
 	http.HandleFunc("/xrpc/dev.skywell.getActorFiles", func(w http.ResponseWriter, r *http.Request) {
-		pfv, stat, err := generateProfileView(r.URL.Query().Get("actor"), db, ctx)
+		slog.Debug(fmt.Sprintf("Received request for /xrpc/dev.skywell.getActorFiles from %s", r.RemoteAddr))
+		did, err := verifyJWT(ctx, r)
+		if err != nil {
+			slog.Error(fmt.Sprintf("Failed to verify JWT: %v", err))
+			http.Error(w, "Internal Server Error (JWT verification)", 500)
+			return
+		}
+		a := r.URL.Query().Get("actor")
+		if a == "" {
+			slog.Error("Required parameter 'actor' missing")
+			http.Error(w, "Required parameter 'actor' missing", 400)
+			return
+		}
+		if did.String() != a {
+			slog.Error(fmt.Sprintf("JWT 'iss' (%s) does not match 'actor' parameter (%s)", did, a))
+			http.Error(w, "JWT 'iss' does not match 'actor' parameter", 403)
+			return
+		}
+		pfv, stat, err := generateProfileView(did, db, ctx)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Failed to generate profile view: %v", err))
 			http.Error(w, "Internal Server Error (profile view generation)", stat)
 			return
 		}
-		did, err := syntax.ParseDID(pfv.Did)
-		if err != nil {
-			http.Error(w, "Invalid 'actor' parameter", 400)
-			return
-		}
-		lim, err := strconv.Atoi(r.URL.Query().Get("limit"))
-		if err != nil {
-			http.Error(w, "Invalid 'limit' parameter", 400)
-			return
+		var lim int = 50 // default limit
+		if r.URL.Query().Get("limit") != "" {
+			lim, err = strconv.Atoi(r.URL.Query().Get("limit"))
+			if err != nil {
+				slog.Error("Invalid 'limit' parameter")
+				http.Error(w, "Invalid 'limit' parameter", 400)
+				return
+			}
 		}
 		c, fl, stat, err := generateFileList(r.URL.Query().Get("cursor"), lim, did, db)
 		if err != nil {
@@ -207,7 +236,7 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 		gaf_o := skywell.GetActorFiles_Output{
 			Actor:  pfv,
 			Cursor: &c,
-			Files:  *fl, // TODO update when package updates
+			Files:  *fl,
 		}
 		b, err := json.Marshal(gaf_o)
 		if err != nil {
@@ -215,19 +244,27 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 			http.Error(w, "Internal Server Error (marshaling content)", 500)
 			return
 		}
+		slog.Debug(fmt.Sprintf("Returning JSON for actor %s: %s", a, string(b)))
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, "%s", b)
 	})
 }
 
+<<<<<<< HEAD
 func verifyJWT(ctx context.Context, r *http.Request) (iss syntax.DID, aud syntax.DID, err error) {
+=======
+func verifyJWT(ctx context.Context, r *http.Request) (did syntax.DID, err error) {
+>>>>>>> 294587bef56500ba1f8daee1d68725e0dc9b2f04
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
-		return "", "", fmt.Errorf("Authorization header missing")
+		return "", fmt.Errorf("Authorization header missing")
 	}
 
-	tokStr := authHeader[len("Bearer "):]
+	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+		return "", fmt.Errorf("Invalid Authorization header format")
+	}
 
+<<<<<<< HEAD
 	tok, err := jwt.Parse(tokStr, func(token *jwt.Token) (any, error) {
 		// todo figure out what goes here
 		iss, err := token.Claims.GetIssuer()
@@ -252,10 +289,24 @@ func verifyJWT(ctx context.Context, r *http.Request) (iss syntax.DID, aud syntax
 		}
 		return pubk.Bytes(), nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodES256.Alg()}))
-	if err != nil {
-		return "", "", fmt.Errorf("Failed to parse JWT token: %w", err)
+=======
+	tokStr := authHeader[7:]
+	slog.Debug("Processing JWT token", "token_length", len(tokStr))
+
+	validator := &auth.ServiceAuthValidator{
+		Audience:        SKYWELL_DID.String(),
+		Dir:             &cacheDir,
+		TimestampLeeway: 10 * time.Second,
 	}
 
+	issuerDID, err := validator.Validate(ctx, tokStr, nil)
+>>>>>>> 294587bef56500ba1f8daee1d68725e0dc9b2f04
+	if err != nil {
+		slog.Error("JWT validation failed", "error", err)
+		return "", fmt.Errorf("JWT validation failed: %w", err)
+	}
+
+<<<<<<< HEAD
 	if claims, ok := tok.Claims.(jwt.MapClaims); ok {
 		slog.Debug(fmt.Sprintf("%s %s", claims["sub"], claims["aud"]))
 		pi, err := syntax.ParseDID(claims["iss"].(string))
@@ -272,6 +323,10 @@ func verifyJWT(ctx context.Context, r *http.Request) (iss syntax.DID, aud syntax
 	}
 	slog.Error("Failed to get claims from JWT", "error", err)
 	return "", "", err
+=======
+	slog.Debug("JWT validated successfully", "issuer", issuerDID, "audience", SKYWELL_DID)
+	return issuerDID, nil
+>>>>>>> 294587bef56500ba1f8daee1d68725e0dc9b2f04
 }
 
 func generateFileView(fileID uint, db *gorm.DB) (fileView *skywell.Defs_FileView, httpResponse int, err error) {
@@ -302,17 +357,12 @@ func generateFileView(fileID uint, db *gorm.DB) (fileView *skywell.Defs_FileView
 	return fileView, 200, nil
 }
 
-func generateProfileView(actor string, db *gorm.DB, ctx context.Context) (profileView *skywell.Defs_ProfileView, httpResponse int, err error) {
-	if actor == "" {
-		return nil, 400, fmt.Errorf("Required parameter 'actor' missing")
-	}
-
-	at, err := syntax.ParseAtIdentifier(actor)
+func generateProfileView(did syntax.DID, db *gorm.DB, ctx context.Context) (profileView *skywell.Defs_ProfileView, httpResponse int, err error) {
+	id, err := cacheDir.Lookup(ctx, did.AtIdentifier())
 	if err != nil {
-		return nil, 400, fmt.Errorf("Invalid 'actor' parameter: %w", err)
+		slog.Error(fmt.Sprintf("Failed to lookup DID %s in cache: %v", did, err))
+		return nil, 500, fmt.Errorf("Failed to lookup DID in cache: %w", err)
 	}
-
-	id, err := cacheDir.Lookup(ctx, *at)
 	user := User{}
 	result := db.First(&user, "did = ?", id.DID.String())
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {

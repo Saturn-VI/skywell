@@ -1,19 +1,14 @@
 import type { Component } from "solid-js";
-import { createSignal } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import { createDropzone } from "@solid-primitives/upload";
 import { isLoggedIn } from "./Auth.tsx";
-import { Navigate } from "@solidjs/router";
+import { Navigate, redirect, useNavigate } from "@solidjs/router";
 import { toast } from "solid-toast";
 
 const Upload: Component = () => {
-  if (!isLoggedIn()) {
-    console.log("Not logged in");
-    toast.error("Not logged in, redirecting...");
-    return <Navigate href="/login" />;
-  }
-
   const [isDragging, setIsDragging] = createSignal(false);
   const [currentFile, setCurrentFile] = createSignal<File | null>(null);
+  const navigate = useNavigate();
   let fileInputRef: HTMLInputElement;
 
   const { setRef: dropzoneRef, files: droppedFiles } = createDropzone({
@@ -63,12 +58,21 @@ const Upload: Component = () => {
     files.forEach((f) => console.log("selected", f));
   };
 
+  onMount(async () => {
+    if (!(await isLoggedIn())) {
+      console.log("Not logged in");
+      toast.error("Not logged in, redirecting...");
+      navigate("/login", { replace: true });
+    }
+  });
+
   return (
     <div
       ref={dropzoneRef}
       class="relative flex flex-col h-screen w-full"
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
