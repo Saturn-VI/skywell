@@ -4,7 +4,10 @@
     "defs": {
         "profileView": {
             "type": "object",
-            "required": ["did", "handle"],
+            "required": [
+                "did",
+                "handle"
+            ],
             "properties": {
                 "did": {
                     "type": "string",
@@ -30,7 +33,14 @@
         },
         "fileView": {
             "type": "object",
-            "required": ["blob", "createdAt", "name", "slug"],
+            "required": [
+                "uri",
+                "cid",
+                "blob",
+                "createdAt",
+                "name",
+                "slug"
+            ],
             "properties": {
                 "uri": {
                     "type": "string",
