@@ -6,6 +6,7 @@ const _fileViewSchema = /*#__PURE__*/ v.object({
     /*#__PURE__*/ v.literal("dev.skywell.defs#fileView"),
   ),
   blob: /*#__PURE__*/ v.blob(),
+  cid: /*#__PURE__*/ v.optional(/*#__PURE__*/ v.cidString()),
   createdAt: /*#__PURE__*/ v.datetimeString(),
   description: /*#__PURE__*/ v.optional(
     /*#__PURE__*/ v.constrain(/*#__PURE__*/ v.string(), [
@@ -17,6 +18,7 @@ const _fileViewSchema = /*#__PURE__*/ v.object({
     /*#__PURE__*/ v.stringGraphemes(1, 80),
   ]),
   slug: /*#__PURE__*/ v.string(),
+  uri: /*#__PURE__*/ v.optional(/*#__PURE__*/ v.resourceUriString()),
 });
 const _profileViewSchema = /*#__PURE__*/ v.object({
   $type: /*#__PURE__*/ v.optional(
