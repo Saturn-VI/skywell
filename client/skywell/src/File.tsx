@@ -6,6 +6,7 @@ import {
   getSkywellRpc,
   isLoggedIn,
   getAuthedClient,
+  agent,
 } from "./Auth.tsx";
 import {
   type Params,
@@ -55,7 +56,6 @@ async function loadData(navigate: Navigator, params: Params) {
     const loggedIn = await isLoggedIn();
     setUserLoggedIn(loggedIn);
     if (loggedIn) {
-      const { agent } = await import("./Auth.tsx");
       const currentAgent = agent();
       if (currentAgent?.session) {
         setIsOwner(currentAgent.session.info.sub === fileData.actor.did);

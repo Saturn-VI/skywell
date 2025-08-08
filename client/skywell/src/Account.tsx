@@ -5,11 +5,11 @@ import {
   did,
   getAuthedSkywellClient,
   getAuthedClient,
+  getSkywellRpc,
   trySignOut,
 } from "./Auth.tsx";
 import { toast } from "solid-toast";
 import { Navigate, redirect, useNavigate } from "@solidjs/router";
-import { getSkywellRpc } from "./Auth.tsx";
 import {
   DevSkywellDefs,
   DevSkywellGetActorFiles,
