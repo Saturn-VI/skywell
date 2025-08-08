@@ -111,8 +111,6 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 	case "dev.skywell.file":
 		var r skywell.File
 		err := json.Unmarshal(evt.Commit.Record, &r)
-		a, _ := evt.Commit.Record.MarshalJSON()
-		fmt.Println(string(a))
 		if err != nil {
 			jetstreamLogger.Error("Failed to unmarshal to file", "did", evt.Did, "error", err)
 			return
@@ -158,8 +156,10 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			return
 		}
 
-		fmt.Println(r)
-
+		if r.BlobRef == nil {
+			jetstreamLogger.Error("BlobRef is nil", "uri", uri.String(), "did", evt.Did)
+			return
+		}
 		pc, err := syntax.ParseCID(r.BlobRef.Ref.String())
 		if err != nil {
 			jetstreamLogger.Error("Failed to parse blobRef", "blob_ref", r.BlobRef.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
