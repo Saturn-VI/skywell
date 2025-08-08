@@ -1,9 +1,16 @@
 import type { Component } from "solid-js";
 import { createSignal, onMount } from "solid-js";
 import { createDropzone } from "@solid-primitives/upload";
-import { isLoggedIn } from "./Auth.tsx";
+import { agent, getAuthedClient, isLoggedIn } from "./Auth.tsx";
 import { Navigate, redirect, useNavigate } from "@solidjs/router";
 import { toast } from "solid-toast";
+import {
+  ComAtprotoRepoCreateRecord,
+  ComAtprotoRepoUploadBlob,
+} from "@atcute/atproto";
+import { isXRPCErrorPayload } from "@atcute/client";
+import { Blob } from "@atcute/lexicons";
+import { DevSkywellFile } from "skywell";
 
 const Upload: Component = () => {
   const [isDragging, setIsDragging] = createSignal(false);
@@ -74,7 +81,59 @@ const Upload: Component = () => {
     }
   };
 
-  const uploadFile = async () => {};
+  const uploadFile = async () => {
+    console.log("clicked");
+    const c = await getAuthedClient();
+    if (!c) {
+      toast.error("Not authenticated, please log in");
+      navigate("/login", { replace: true });
+      return;
+    }
+    if (!currentFile()) {
+      toast.error("No file selected");
+      return;
+    }
+    if (!fileName()) {
+      toast.error("File name is required");
+      return;
+    }
+    const arraybuf = await currentFile()?.arrayBuffer()!;
+    const blobres = await c.post(ComAtprotoRepoUploadBlob.mainSchema.nsid, {
+      input: arraybuf,
+      headers: {
+        "Content-Type": currentFile()?.type || "application/octet-stream",
+      },
+    });
+    if (isXRPCErrorPayload(blobres)) {
+      console.error("Error uploading file:", blobres);
+      toast.error("Error uploading file: " + blobres.message);
+      return;
+    }
+    const blobRef = blobres.data as { blob: Blob<string> };
+    // todo figure out how to not hardcode the collection
+    // NOTE: THIS NEEDS TO MATCH THE LEXICON EXACTLY
+    // BECAUSE IT ISN'T TYPE CHECKED
+    const record: DevSkywellFile.Main = {
+      $type: "dev.skywell.file",
+      name: fileName(),
+      description: description().length ? description() : undefined,
+      blobRef: blobRef.blob,
+      createdAt: new Date().toISOString(),
+    };
+    const recordres = await c.post(ComAtprotoRepoCreateRecord.mainSchema.nsid, {
+      input: {
+        repo: agent()!.sub,
+        collection: "dev.skywell.file",
+        record: {
+          $type: "dev.skywell.file",
+          name: fileName(),
+          description: description().length ? description() : undefined,
+          blobRef: blobRef.blob,
+          createdAt: new Date().toISOString(),
+        },
+      },
+    });
+  };
 
   const handleWindowBlur = () => {
     if (isDragging()) {
@@ -136,14 +195,14 @@ const Upload: Component = () => {
       <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
         <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between">
           {/* text, upload button */}
-          <button
-            class="flex flex-col md:w-1/3 w-full h-full p-4 text-4xl font-semibold justify-center text-center md:text-left"
-            onClick={(e) => uploadFile()}
-          >
+          <button class="flex flex-col md:w-1/3 w-full h-full p-4 text-4xl font-semibold justify-center text-center md:text-left">
             upload file
           </button>
           <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2 text-white">
-            <button class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-blue-600 hover:bg-blue-700 text-center lg:text-2xl text-xl">
+            <button
+              class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-blue-600 hover:bg-blue-700 text-center lg:text-2xl text-xl"
+              onClick={(e) => uploadFile()}
+            >
               publish
             </button>
           </div>

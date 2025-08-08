@@ -2,5 +2,5 @@ import { defineLexiconConfig } from '@atcute/lex-cli';
 
 export default defineLexiconConfig({
   files: ['../lexicons/**/*.json'],
-  outdir: 'skywell/lex/'
+  outdir: 'skywell/skywell/'
 });

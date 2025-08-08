@@ -8,11 +8,7 @@
             "key": "tid",
             "record": {
                 "type": "object",
-                "required": [
-                    "blobRef",
-                    "createdAt",
-                    "name"
-                ],
+                "required": ["blobRef", "createdAt", "name"],
                 "properties": {
                     "blobRef": {
                         "type": "blob"
@@ -30,9 +26,6 @@
                         "type": "string",
                         "minLength": 1,
                         "maxGraphemes": 500
-                    },
-                    "slug": {
-                        "type": "string"
                     }
                 }
             }
