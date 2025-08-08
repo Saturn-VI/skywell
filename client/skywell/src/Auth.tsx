@@ -2,6 +2,7 @@ import {
   deleteStoredSession,
   getSession,
   OAuthUserAgent,
+  TokenRefreshError,
 } from "@atcute/oauth-browser-client";
 import { createSignal, onMount } from "solid-js";
 import { makePersisted } from "@solid-primitives/storage";
@@ -40,8 +41,6 @@ export async function runAuthChecks() {
       const newAgent = new OAuthUserAgent(session);
       setAgent(newAgent);
     } catch (error) {
-      console.error("Failed to restore session:", error);
-      toast.error("Failed to restore session, logging out.");
       trySignOut();
     }
   }

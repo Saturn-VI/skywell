@@ -1,6 +1,6 @@
 module saturnvi/skywell
 
-go 1.24
+go 1.24.2
 
 toolchain go1.24.5
 
@@ -10,7 +10,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/ipfs/go-cid v0.5.0
 	github.com/mr-tron/base58 v1.2.0
-	github.com/saturn-vi/skywell/api/skywell v0.1.15
+	github.com/saturn-vi/skywell/api/skywell v0.1.17
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.1
 )
@@ -20,6 +20,7 @@ require (
 	github.com/carlmjohnson/versioninfo v0.22.5 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/gigatar/ratelimiter v0.1.2 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
