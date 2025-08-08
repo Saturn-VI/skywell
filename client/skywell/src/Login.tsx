@@ -9,6 +9,7 @@ import {
 } from "@atcute/oauth-browser-client";
 import sleep from "sleep-promise";
 import { toast } from "solid-toast";
+import { trySignOut } from "./Auth.tsx";
 
 configureOAuth({
   metadata: {
@@ -40,6 +41,7 @@ async function runLoginFlow() {
     });
 
     toast.success("Redirecting to login...");
+    await trySignOut();
     await sleep(200);
     window.location.assign(authUrl);
 

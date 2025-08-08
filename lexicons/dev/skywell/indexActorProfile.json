@@ -1,0 +1,21 @@
+{
+    "lexicon": 1,
+    "id": "dev.skywell.indexActorProfile",
+    "defs": {
+        "main": {
+            "type": "query",
+            "description": "Asks the AppView to index an actor's profile.",
+            "parameters": {
+                "type": "params",
+                "required": ["actor"],
+                "properties": {
+                    "actor": {
+                        "type": "string",
+                        "format": "at-identifier",
+                        "description": "Handle or DID of account to index profile of."
+                    }
+                }
+            }
+        }
+    }
+}

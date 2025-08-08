@@ -108,7 +108,9 @@ const Account: Component = () => {
       !loadingMore()
     ) {
       setLoadingMore(true);
-      loadFiles(true).finally(() => setLoadingMore(false));
+      Promise.all([loadUserData(did()!), loadFiles()]).finally(() => {
+        setLoadingMore(false);
+      });
     }
   };
 
@@ -156,11 +158,11 @@ const Account: Component = () => {
             const userDid = currentAgent.session.info.sub;
 
             // Load user data and files parallelally (is that a word?)
-            await Promise.all([loadUserData(userDid), await loadFiles()]);
+            await Promise.all([loadUserData(userDid), loadFiles()]);
           })(),
           {
             loading: "Loading account data...",
-            success: "Account data loaded successfully!",
+            success: "Account data loaded successfully",
             error: "Failed to load account data",
           },
           {
@@ -238,22 +240,24 @@ const Account: Component = () => {
             {/* Files List */}
             {files().map((file) => (
               <div class="grid grid-cols-4 gap-4 p-4 border-b border-gray-700 hover:bg-gray-700">
-                <div class="font-medium">{file.name}</div>
-                <div class="text-gray-300">
+                <div class="font-medium md:text-base sm:text-sm text-xs wrap-anywhere">
+                  {file.name}
+                </div>
+                <div class="text-gray-300 md:text-base sm:text-sm text-xs wrap-anywhere">
                   {new Date(file.createdAt).toLocaleDateString()}
                 </div>
-                <div class="text-gray-300">
+                <div class="text-gray-300 md:text-base sm:text-sm text-xs wrap-anywhere">
                   {filesize((file.blob as Blob).size)}
                 </div>
-                <div class="flex space-x-2">
+                <div class="flex sm:space-x-2 sm:flex-row flex-col items-start justify-items-center space-y-1">
                   <a
                     href={`/file/${file.slug}`}
-                    class="bg-blue-600 hover:bg-blue-700 px-3 py-1 text-sm font-medium"
+                    class="bg-blue-600 hover:bg-blue-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere"
                   >
                     View
                   </a>
                   <button
-                    class="bg-red-600 hover:bg-red-700 px-3 py-1 text-sm font-medium"
+                    class="bg-red-600 hover:bg-red-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere"
                     onclick={() => {
                       deleteFile(file.uri);
                     }}

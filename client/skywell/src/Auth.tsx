@@ -46,11 +46,11 @@ export async function runAuthChecks() {
   }
 }
 
-export function trySignOut() {
+export async function trySignOut() {
   if (did() == null || agent() == null) {
     return;
   }
-  toast.promise(
+  await toast.promise(
     (async () => {
       await agent()?.signOut();
 

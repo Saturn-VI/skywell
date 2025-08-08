@@ -6,6 +6,7 @@
   - [x] dev.skywell.getActorProfile
   - [x] dev.skywell.getActorFiles
   - [x] dev.skywell.getFileFromSlug
+  - [ ] dev.skywell.indexActorProfile
 
 ## server
 ~~server doesn't need to do any auth for this usecase because PDS does creation/deletion of records~~
@@ -25,6 +26,7 @@
 - [ ] make an actually good color theme (catpuccin macchiato? that's boring though)
   - [ ] really just make the site prettier
 - [ ] make a logo/icon
+- [ ] do mobile testing on every page (once entire thing is done)
 
 ### pages
 - [ ] home
@@ -33,8 +35,10 @@
   - [x] file delete button
 - [x] login page
 - [x] profile
+  - [ ] make not broken on mobile
 
 ### functionality
+- [ ] filter handle string for valid characters
 - [x] oauth
 - [x] create records
 - [x] delete records

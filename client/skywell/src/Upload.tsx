@@ -17,6 +17,7 @@ const Upload: Component = () => {
   const [currentFile, setCurrentFile] = createSignal<File | null>(null);
   const [fileName, setFileName] = createSignal("");
   const [description, setDescription] = createSignal("");
+  const [isUploading, setIsUploading] = createSignal(false);
   const navigate = useNavigate();
   let fileInputRef: HTMLInputElement;
 
@@ -82,8 +83,13 @@ const Upload: Component = () => {
   };
 
   const uploadFile = async () => {
+    if (isUploading()) {
+      toast.error("Already uploading a file (just give it time)");
+      return;
+    }
     toast.promise(
       (async () => {
+        setIsUploading(true);
         const c = await getAuthedClient();
         if (!c) {
           toast.error("Not authenticated, please log in");
