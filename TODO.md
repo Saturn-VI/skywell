@@ -30,13 +30,13 @@
 - [ ] home
 - [x] upload
 - [x] file
-  - [ ] file delete button
+  - [x] file delete button
 - [x] login page
 - [x] profile
 
 ### functionality
 - [x] oauth
 - [x] create records
-- [ ] delete records
+- [x] delete records
 - [x] upload blobs
 - [x] download files
