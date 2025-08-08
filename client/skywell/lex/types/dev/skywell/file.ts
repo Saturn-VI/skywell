@@ -6,7 +6,7 @@ const _mainSchema = /*#__PURE__*/ v.record(
   /*#__PURE__*/ v.tidString(),
   /*#__PURE__*/ v.object({
     $type: /*#__PURE__*/ v.literal("dev.skywell.file"),
-    blob: /*#__PURE__*/ v.blob(),
+    blobRef: /*#__PURE__*/ v.blob(),
     createdAt: /*#__PURE__*/ v.datetimeString(),
     description: /*#__PURE__*/ v.optional(
       /*#__PURE__*/ v.constrain(/*#__PURE__*/ v.string(), [
