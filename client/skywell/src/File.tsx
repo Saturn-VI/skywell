@@ -1,11 +1,20 @@
 import { createSignal, onMount, type Component } from "solid-js";
 import { DevSkywellGetFileFromSlug } from "skywell";
 
-import { getEntrywayRpc, getSkywellRpc } from "./Auth.tsx";
-import { type Params, useParams } from "@solidjs/router";
+import {
+  getEntrywayRpc,
+  getSkywellRpc,
+  isLoggedIn,
+  getAuthedClient,
+} from "./Auth.tsx";
+import { type Params, useParams, useNavigate } from "@solidjs/router";
 import { toast } from "solid-toast";
 import { isXRPCErrorPayload } from "@atcute/client";
-import { ComAtprotoSyncGetBlob } from "@atcute/atproto";
+import {
+  ComAtprotoSyncGetBlob,
+  ComAtprotoRepoDeleteRecord,
+} from "@atcute/atproto";
+import { parseResourceUri } from "@atcute/lexicons";
 
 async function loadData(params: Params) {
   const rpc = getSkywellRpc();
@@ -34,6 +43,18 @@ async function loadData(params: Params) {
     setAuthor(fileData.actor.displayName || fileData.actor.handle);
     setAuthorHandle(fileData.actor.handle);
     setDescription(fileData.file.description || "");
+    setFileUri(fileData.file.uri);
+
+    // Check if current user created the file
+    const loggedIn = await isLoggedIn();
+    setUserLoggedIn(loggedIn);
+    if (loggedIn) {
+      const { agent } = await import("./Auth.tsx");
+      const currentAgent = agent();
+      if (currentAgent?.session) {
+        setIsOwner(currentAgent.session.info.sub === fileData.actor.did);
+      }
+    }
   }
 }
 
@@ -72,15 +93,57 @@ async function clickDownloadLink() {
   }
 }
 
+async function deleteFile(uri: string, navigate: any) {
+  const result = parseResourceUri(uri);
+  if (result.ok) {
+    const c = await getAuthedClient();
+    if (!c) {
+      toast.error("Not authenticated, please log in");
+      navigate("/login", { replace: true });
+      return;
+    }
+    if (result.value.collection && result.value.rkey) {
+      try {
+        await toast.promise(
+          c.post(ComAtprotoRepoDeleteRecord.mainSchema.nsid, {
+            input: {
+              repo: result.value.repo,
+              collection: result.value.collection!,
+              rkey: result.value.rkey!,
+            },
+          }),
+          {
+            loading: "Deleting file...",
+            success: "File deleted successfully!",
+            error: "Failed to delete file",
+          },
+        );
+        navigate("/account", { replace: true });
+      } catch (error) {
+        console.error("Failed to delete file:", error);
+        toast.error("Failed to delete file");
+      }
+    }
+  } else {
+    console.error("Invalid resource URI:", uri);
+    toast.error("Invalid file URI");
+    return;
+  }
+}
+
 const [filename, setFilename] = createSignal<string>("Loading...");
 const [creationDate, setCreationDate] = createSignal<Date>(new Date(0));
 const [author, setAuthor] = createSignal<string>("Loading...");
 const [authorHandle, setAuthorHandle] = createSignal<string>("Loading...");
 const [description, setDescription] = createSignal<string>("");
 const [blob, setBlob] = createSignal<Blob | null>(null);
+const [fileUri, setFileUri] = createSignal<string>("");
+const [userLoggedIn, setUserLoggedIn] = createSignal<boolean>(false);
+const [isOwner, setIsOwner] = createSignal<boolean>(false);
 
 const File: Component = () => {
   const params = useParams();
+  const navigate = useNavigate();
 
   onMount(() => {
     toast.promise(
@@ -112,14 +175,24 @@ const File: Component = () => {
           </div>
           <div class="sm:text-xl text-lg font-light">@{authorHandle()}</div>
         </div>
-        <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2  text-white">
-          {/* download button */}
-          <button
-            onclick={clickDownloadLink}
-            class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-blue-600 hover:bg-blue-700 text-center lg:text-2xl text-xl"
-          >
-            download
-          </button>
+        <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2 text-white">
+          {/* download and delete buttons */}
+          <div class="flex flex-col lg:w-2/3 w-1/2 h-full gap-2">
+            <button
+              onclick={clickDownloadLink}
+              class="font-bold w-full flex-1 p-2 bg-blue-600 hover:bg-blue-700 text-center lg:text-xl text-lg"
+            >
+              download
+            </button>
+            {userLoggedIn() && isOwner() && (
+              <button
+                onclick={() => deleteFile(fileUri(), navigate)}
+                class="font-bold w-full flex-1 p-2 bg-red-600 hover:bg-red-700 text-center lg:text-xl text-lg"
+              >
+                delete
+              </button>
+            )}
+          </div>
         </div>
       </div>
       <div class="flex w-full h-full">
