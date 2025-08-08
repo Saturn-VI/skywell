@@ -40,7 +40,6 @@ const Upload: Component = () => {
   const handleDrop = (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-
     const files = Array.from(e.dataTransfer?.files || []);
     files.forEach((f) => console.log("dropped", f));
     if (files.length > 0) {
@@ -101,11 +100,24 @@ const Upload: Component = () => {
       navigate("/login", { replace: true });
     }
 
+    // Prevent default browser drag and drop behavior
+    const preventDefaults = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    // buttload of event listeners
+    document.addEventListener("dragenter", preventDefaults);
+    document.addEventListener("dragover", preventDefaults);
+    document.addEventListener("drop", preventDefaults);
     window.addEventListener("dragend", handleDragEnd);
     window.addEventListener("blur", handleWindowBlur);
     document.addEventListener("dragleave", handleDocumentDragLeave);
 
     return () => {
+      document.removeEventListener("dragenter", preventDefaults);
+      document.removeEventListener("dragover", preventDefaults);
+      document.removeEventListener("drop", preventDefaults);
       window.removeEventListener("dragend", handleDragEnd);
       window.removeEventListener("blur", handleWindowBlur);
       document.removeEventListener("dragleave", handleDocumentDragLeave);
