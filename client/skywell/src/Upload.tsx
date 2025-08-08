@@ -46,6 +46,7 @@ const Upload: Component = () => {
     files.forEach((f) => console.log("dropped", f));
     if (files.length > 0) {
       setCurrentFile(files[0]);
+      setFileName(files[0].name);
     } else {
       setCurrentFile(null);
     }
@@ -59,6 +60,12 @@ const Upload: Component = () => {
     const target = e.target as HTMLInputElement;
     const files = Array.from(target.files || []);
     files.forEach((f) => console.log("selected", f));
+    if (files.length > 0) {
+      setCurrentFile(files[0]);
+      setFileName(files[0].name);
+    } else {
+      setCurrentFile(null);
+    }
   };
 
   const uploadFile = async () => {};
@@ -73,7 +80,6 @@ const Upload: Component = () => {
 
   return (
     <div
-      ref={dropzoneRef}
       class="relative flex flex-col h-screen w-full"
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
@@ -160,7 +166,14 @@ const Upload: Component = () => {
         </div>
         {/* appears when dragging files - positioned at root level */}
         {isDragging() && (
-          <div class="absolute inset-0 z-50 flex items-center justify-center bg-black/70 pointer-events-none">
+          <div
+            ref={dropzoneRef}
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <div class="text-center opacity-100">
               <p class="text-white text-4xl font-bold mb-2">Drop files here</p>
               <p class="text-gray-300 text-xl">Release to upload</p>
