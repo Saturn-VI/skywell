@@ -40,22 +40,6 @@ func (t *File) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Blob (util.LexBlob) (struct)
-	if len("blob") > 1000000 {
-		return xerrors.Errorf("Value in field \"blob\" was too long")
-	}
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("blob"))); err != nil {
-		return err
-	}
-	if _, err := cw.WriteString(string("blob")); err != nil {
-		return err
-	}
-
-	if err := t.Blob.MarshalCBOR(cw); err != nil {
-		return err
-	}
-
 	// t.Name (string) (string)
 	if len("name") > 1000000 {
 		return xerrors.Errorf("Value in field \"name\" was too long")
@@ -127,6 +111,22 @@ func (t *File) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 	if _, err := cw.WriteString(string("dev.skywell.file")); err != nil {
+		return err
+	}
+
+	// t.BlobRef (util.LexBlob) (struct)
+	if len("blobRef") > 1000000 {
+		return xerrors.Errorf("Value in field \"blobRef\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("blobRef"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("blobRef")); err != nil {
+		return err
+	}
+
+	if err := t.BlobRef.MarshalCBOR(cw); err != nil {
 		return err
 	}
 
@@ -228,27 +228,7 @@ func (t *File) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		switch string(nameBuf[:nameLen]) {
-		// t.Blob (util.LexBlob) (struct)
-		case "blob":
-
-			{
-
-				b, err := cr.ReadByte()
-				if err != nil {
-					return err
-				}
-				if b != cbg.CborNull[0] {
-					if err := cr.UnreadByte(); err != nil {
-						return err
-					}
-					t.Blob = new(util.LexBlob)
-					if err := t.Blob.UnmarshalCBOR(cr); err != nil {
-						return xerrors.Errorf("unmarshaling t.Blob pointer: %w", err)
-					}
-				}
-
-			}
-			// t.Name (string) (string)
+		// t.Name (string) (string)
 		case "name":
 
 			{
@@ -290,6 +270,26 @@ func (t *File) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 				t.LexiconTypeID = string(sval)
+			}
+			// t.BlobRef (util.LexBlob) (struct)
+		case "blobRef":
+
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					t.BlobRef = new(util.LexBlob)
+					if err := t.BlobRef.UnmarshalCBOR(cr); err != nil {
+						return xerrors.Errorf("unmarshaling t.BlobRef pointer: %w", err)
+					}
+				}
+
 			}
 			// t.CreatedAt (string) (string)
 		case "createdAt":
