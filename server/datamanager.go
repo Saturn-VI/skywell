@@ -111,6 +111,8 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 	case "dev.skywell.file":
 		var r skywell.File
 		err := json.Unmarshal(evt.Commit.Record, &r)
+		a, _ := evt.Commit.Record.MarshalJSON()
+		fmt.Println(string(a))
 		if err != nil {
 			jetstreamLogger.Error("Failed to unmarshal to file", "did", evt.Did, "error", err)
 			return
@@ -122,7 +124,7 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 		}
 		cid, err := syntax.ParseCID(evt.Commit.CID)
 		if err != nil {
-			jetstreamLogger.Error("Failed to parse CID", "cid", r.Blob.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
+			jetstreamLogger.Error("Failed to parse CID", "cid", r.BlobRef.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
 			return
 		}
 
@@ -156,9 +158,11 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			return
 		}
 
-		pc, err := syntax.ParseCID(r.Blob.Ref.String())
+		fmt.Println(r)
+
+		pc, err := syntax.ParseCID(r.BlobRef.Ref.String())
 		if err != nil {
-			jetstreamLogger.Error("Failed to parse blobRef", "blob_ref", r.Blob.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
+			jetstreamLogger.Error("Failed to parse blobRef", "blob_ref", r.BlobRef.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
 			return
 		}
 
@@ -170,8 +174,8 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			IndexedAt: syntax.DatetimeNow().Time().UnixNano(),
 			Name:      r.Name,
 			BlobRef:   pc,
-			MimeType:  r.Blob.MimeType,
-			Size:      r.Blob.Size,
+			MimeType:  r.BlobRef.MimeType,
+			Size:      r.BlobRef.Size,
 		}
 
 		if r.Description != nil {
@@ -222,7 +226,7 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 				return
 			}
 			var fk FileKey
-			if err := db.Where("file_id = ?", fd.ID).First(&fk).Error; err != nil {
+			if err := db.Where("file = ?", fd.ID).First(&fk).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					dbLogger.Warn("Attempted to delete non-existent file key", "file_id", fd.ID, "did", evt.Did)
 				} else {
