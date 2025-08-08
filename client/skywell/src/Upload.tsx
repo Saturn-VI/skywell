@@ -124,13 +124,7 @@ const Upload: Component = () => {
       input: {
         repo: agent()!.sub,
         collection: "dev.skywell.file",
-        record: {
-          $type: "dev.skywell.file",
-          name: fileName(),
-          description: description().length ? description() : undefined,
-          blobRef: blobRef.blob,
-          createdAt: new Date().toISOString(),
-        },
+        record: record,
       },
     });
   };

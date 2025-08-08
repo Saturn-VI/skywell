@@ -12,4 +12,9 @@ export default defineConfig({
   build: {
     target: "esnext",
   },
+  preview: {
+    host: "127.0.0.1",
+    port: 5000,
+    allowedHosts: ["skywell.dev"],
+  },
 });

@@ -223,8 +223,8 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 		}
 
 		o := skywell.GetFileFromSlug_Output{
-			Cid:   fi.CID.String(),
-			Uri:   fi.URI.String(),
+			Cid:   fi.Cid.String(),
+			Uri:   fi.Uri.String(),
 			File:  fileView,
 			Actor: profile,
 		}
@@ -347,8 +347,8 @@ func generateFileView(fileID uint, db *gorm.DB) (fileView *skywell.Defs_FileView
 	}
 
 	fileView = &skywell.Defs_FileView{
-		Uri: file.URI.String(),
-		Cid: file.CID.String(),
+		Uri: file.Uri.String(),
+		Cid: file.Cid.String(),
 		Blob: &util.LexBlob{
 			Ref:      util.LexLink(c),
 			MimeType: file.MimeType,
@@ -428,6 +428,8 @@ func generateFileList(c string, limit int, a syntax.DID, db *gorm.DB) (cursor st
 			return "", nil, 500, fmt.Errorf("Failed to decode blob CID: %w", err)
 		}
 		*fileviews = append(*fileviews, &skywell.Defs_FileView{
+			Uri: f.Uri.String(),
+			Cid: f.Cid.String(),
 			Blob: &util.LexBlob{
 				Ref:      util.LexLink(c),
 				MimeType: f.MimeType,

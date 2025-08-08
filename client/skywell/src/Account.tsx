@@ -15,10 +15,13 @@ import {
   DevSkywellGetActorFiles,
   DevSkywellGetActorProfile,
 } from "skywell";
-import { Blob } from "@atcute/lexicons";
+import { Blob, parseResourceUri, ResourceUri } from "@atcute/lexicons";
 import { isXRPCErrorPayload } from "@atcute/client";
 import { ServiceProxyOptions } from "@atcute/client";
-import { ComAtprotoServerGetServiceAuth } from "@atcute/atproto";
+import {
+  ComAtprotoRepoDeleteRecord,
+  ComAtprotoServerGetServiceAuth,
+} from "@atcute/atproto";
 import { SKYWELL_DID } from "./Constants.tsx";
 import { filesize } from "filesize";
 
@@ -106,6 +109,34 @@ const Account: Component = () => {
     ) {
       setLoadingMore(true);
       loadFiles(true).finally(() => setLoadingMore(false));
+    }
+  };
+
+  const deleteFile = async (uri: string) => {
+    const result = parseResourceUri(uri);
+    if (result.ok) {
+      const c = await getAuthedClient();
+      if (!c) {
+        // this shouldn't happen but whatever
+        toast.error("Not authenticated, please log in");
+        navigate("/login", { replace: true });
+        return;
+      }
+      if (result.value.collection && result.value.rkey) {
+        const res = await c.post(ComAtprotoRepoDeleteRecord.mainSchema.nsid, {
+          input: {
+            repo: result.value.repo,
+            collection: result.value.collection!,
+            rkey: result.value.rkey!,
+          },
+        });
+        console.log(res);
+        setFiles(files().filter((f) => f.uri !== uri));
+      }
+    } else {
+      console.error("Invalid resource URI:", uri);
+      toast.error("Invalid file URI");
+      return;
     }
   };
 
@@ -221,7 +252,12 @@ const Account: Component = () => {
                   >
                     View
                   </a>
-                  <button class="bg-red-600 hover:bg-red-700 px-3 py-1 text-sm font-medium">
+                  <button
+                    class="bg-red-600 hover:bg-red-700 px-3 py-1 text-sm font-medium"
+                    onclick={() => {
+                      deleteFile(file.uri);
+                    }}
+                  >
                     Delete
                   </button>
                 </div>

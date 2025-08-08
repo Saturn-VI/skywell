@@ -28,14 +28,15 @@
 
 ### pages
 - [ ] home
-- [ ] upload
+- [x] upload
 - [x] file
   - [ ] file delete button
 - [x] login page
-- [ ] profile
+- [x] profile
 
 ### functionality
 - [x] oauth
-- [ ] create/delete records
-- [ ] upload blobs
+- [x] create records
+- [ ] delete records
+- [x] upload blobs
 - [x] download files

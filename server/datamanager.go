@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	b58 "github.com/mr-tron/base58"
+	skywell "github.com/saturn-vi/skywell/api/skywell"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -19,7 +20,6 @@ import (
 	syntax "github.com/bluesky-social/indigo/atproto/syntax"
 	xrpc "github.com/bluesky-social/indigo/xrpc"
 	jetstream "github.com/bluesky-social/jetstream/pkg/models"
-	skywell "github.com/saturn-vi/skywell/api/skywell"
 )
 
 type User struct {
@@ -39,8 +39,8 @@ type FileKey struct {
 
 type File struct {
 	gorm.Model
-	URI         syntax.URI `gorm:"uniqueIndex"`
-	CID         syntax.CID
+	Uri         syntax.URI `gorm:"uniqueIndex"`
+	Cid         syntax.CID
 	UserID      uint
 	User        User `gorm:"foreignKey:UserID"`
 	CreatedAt   syntax.Datetime
@@ -109,20 +109,9 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 
 	switch evt.Commit.Collection {
 	case "dev.skywell.file":
-		var r skywell.File
-		err := json.Unmarshal(evt.Commit.Record, &r)
-		if err != nil {
-			jetstreamLogger.Error("Failed to unmarshal to file", "did", evt.Did, "error", err)
-			return
-		}
 		uri, err := syntax.ParseURI(fmt.Sprintf("at://%s/%s/%s", evt.Did, evt.Commit.Collection, evt.Commit.RKey))
 		if err != nil {
 			jetstreamLogger.Error("Failed to parse URI", "did", evt.Did, "error", err)
-			return
-		}
-		cid, err := syntax.ParseCID(evt.Commit.CID)
-		if err != nil {
-			jetstreamLogger.Error("Failed to parse CID", "cid", r.BlobRef.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
 			return
 		}
 
@@ -150,53 +139,66 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			}
 		}
 
-		pt, err := syntax.ParseDatetime(r.CreatedAt)
-		if err != nil {
-			jetstreamLogger.Error("Failed to parse createdAt", "created_at", r.CreatedAt, "uri", uri.String(), "did", evt.Did, "error", err)
-			return
-		}
-
-		if r.BlobRef == nil {
-			jetstreamLogger.Error("BlobRef is nil", "uri", uri.String(), "did", evt.Did)
-			return
-		}
-		pc, err := syntax.ParseCID(r.BlobRef.Ref.String())
-		if err != nil {
-			jetstreamLogger.Error("Failed to parse blobRef", "blob_ref", r.BlobRef.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
-			return
-		}
-
-		file := File{
-			URI:       uri,
-			CID:       cid,
-			UserID:    user.ID,
-			CreatedAt: pt,
-			IndexedAt: syntax.DatetimeNow().Time().UnixNano(),
-			Name:      r.Name,
-			BlobRef:   pc,
-			MimeType:  r.BlobRef.MimeType,
-			Size:      r.BlobRef.Size,
-		}
-
-		if r.Description != nil {
-			file.Description = *r.Description
-		}
-
-		fk, err := generateSlug(db, file.BlobRef, file.URI)
-
-		if err != nil {
-			dbLogger.Error("Failed to generate slug", "file_name", file.Name, "user_id", user.ID, "uri", uri.String(), "did", evt.Did, "error", err)
-			return
-		}
-
-		filekey := FileKey{
-			Key:  fk,
-			File: 0,
-		}
-
 		switch evt.Commit.Operation {
 		case jetstream.CommitOperationCreate, jetstream.CommitOperationUpdate:
-			err := db.Clauses(clause.OnConflict{
+			var r skywell.File
+			err = json.Unmarshal(evt.Commit.Record, &r)
+			if err != nil {
+				jetstreamLogger.Error("Failed to unmarshal to file", "did", evt.Did, "error", err)
+				return
+			}
+
+			cid, err := syntax.ParseCID(evt.Commit.CID)
+			if err != nil {
+				jetstreamLogger.Error("Failed to parse CID", "cid", r.BlobRef.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
+				return
+			}
+
+			pt, err := syntax.ParseDatetime(r.CreatedAt)
+			if err != nil {
+				jetstreamLogger.Error("Failed to parse createdAt", "created_at", r.CreatedAt, "uri", uri.String(), "did", evt.Did, "error", err)
+				return
+			}
+
+			if r.BlobRef == nil {
+				jetstreamLogger.Error("BlobRef is nil", "uri", uri.String(), "did", evt.Did)
+				return
+			}
+			pc, err := syntax.ParseCID(r.BlobRef.Ref.String())
+			if err != nil {
+				jetstreamLogger.Error("Failed to parse blobRef", "blob_ref", r.BlobRef.Ref.String(), "uri", uri.String(), "did", evt.Did, "error", err)
+				return
+			}
+
+			file := File{
+				Uri:       uri,
+				Cid:       cid,
+				UserID:    user.ID,
+				CreatedAt: pt,
+				IndexedAt: syntax.DatetimeNow().Time().UnixNano(),
+				Name:      r.Name,
+				BlobRef:   pc,
+				MimeType:  r.BlobRef.MimeType,
+				Size:      r.BlobRef.Size,
+			}
+
+			if r.Description != nil {
+				file.Description = *r.Description
+			}
+
+			fk, err := generateSlug(db, file.BlobRef, file.Uri)
+
+			if err != nil {
+				dbLogger.Error("Failed to generate slug", "file_name", file.Name, "user_id", user.ID, "uri", uri.String(), "did", evt.Did, "error", err)
+				return
+			}
+
+			filekey := FileKey{
+				Key:  fk,
+				File: 0,
+			}
+
+			err = db.Clauses(clause.OnConflict{
 				Columns:   []clause.Column{{Name: "uri"}},
 				DoUpdates: clause.AssignmentColumns([]string{"name", "description", "blob_ref", "mime_type", "size"}),
 			}).Create(&file).Error
@@ -215,7 +217,6 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			}
 			jetstreamLogger.Info("Created file", "file_id", file.ID, "file_name", file.Name, "slug", filekey.Key, "did", evt.Did)
 		case jetstream.CommitOperationDelete:
-
 			var fd File
 			if err := db.Where("uri = ?", uri.String()).First(&fd).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -225,6 +226,7 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 				}
 				return
 			}
+
 			var fk FileKey
 			if err := db.Where("file = ?", fd.ID).First(&fk).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
