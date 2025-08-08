@@ -8,9 +8,13 @@
             "key": "tid",
             "record": {
                 "type": "object",
-                "required": ["blob", "createdAt", "name"],
+                "required": [
+                    "blobRef",
+                    "createdAt",
+                    "name"
+                ],
                 "properties": {
-                    "blob": {
+                    "blobRef": {
                         "type": "blob"
                     },
                     "createdAt": {

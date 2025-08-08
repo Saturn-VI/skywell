@@ -14,7 +14,7 @@ func init() {
 // RECORDTYPE: File
 type File struct {
 	LexiconTypeID string        `json:"$type,const=dev.skywell.file" cborgen:"$type,const=dev.skywell.file"`
-	Blob          *util.LexBlob `json:"blob" cborgen:"blob"`
+	BlobRef       *util.LexBlob `json:"blobRef" cborgen:"blobRef"`
 	CreatedAt     string        `json:"createdAt" cborgen:"createdAt"`
 	Description   *string       `json:"description,omitempty" cborgen:"description,omitempty"`
 	Name          string        `json:"name" cborgen:"name"`
