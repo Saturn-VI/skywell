@@ -8,6 +8,8 @@ import { toast } from "solid-toast";
 const Upload: Component = () => {
   const [isDragging, setIsDragging] = createSignal(false);
   const [currentFile, setCurrentFile] = createSignal<File | null>(null);
+  const [fileName, setFileName] = createSignal("");
+  const [description, setDescription] = createSignal("");
   const navigate = useNavigate();
   let fileInputRef: HTMLInputElement;
 
@@ -25,8 +27,9 @@ const Upload: Component = () => {
 
   const handleDragLeave = (e: DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
     if (!(e.currentTarget == (e.relatedTarget as Node))) {
+      setIsDragging(true);
+    } else {
       setIsDragging(false);
     }
   };
@@ -58,6 +61,8 @@ const Upload: Component = () => {
     files.forEach((f) => console.log("selected", f));
   };
 
+  const uploadFile = async () => {};
+
   onMount(async () => {
     if (!(await isLoggedIn())) {
       console.log("Not logged in");
@@ -78,9 +83,12 @@ const Upload: Component = () => {
       <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
         <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between">
           {/* text, upload button */}
-          <div class="flex flex-col md:w-1/3 w-full h-full p-4 text-4xl font-semibold justify-center text-center md:text-left">
+          <button
+            class="flex flex-col md:w-1/3 w-full h-full p-4 text-4xl font-semibold justify-center text-center md:text-left"
+            onClick={(e) => uploadFile()}
+          >
             upload file
-          </div>
+          </button>
           <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2 text-white">
             <button class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-blue-600 hover:bg-blue-700 text-center lg:text-2xl text-xl">
               publish
@@ -130,6 +138,8 @@ const Upload: Component = () => {
                 type="text"
                 id="fileName"
                 class="lg:w-1/2 w-full p-2 bg-gray-800 text-white border border-gray-600"
+                value={fileName()}
+                onInput={(e) => setFileName(e.target.value)}
               />
             </div>
             <div class="mb-4">
@@ -142,6 +152,8 @@ const Upload: Component = () => {
                 id="description"
                 rows="6"
                 class="lg:w-3/4 w-full p-2 bg-gray-800 text-white border border-gray-600"
+                value={description()}
+                onInput={(e) => setDescription(e.target.value)}
               ></textarea>
             </div>
           </div>
