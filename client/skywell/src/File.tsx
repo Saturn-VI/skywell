@@ -7,7 +7,12 @@ import {
   isLoggedIn,
   getAuthedClient,
 } from "./Auth.tsx";
-import { type Params, useParams, useNavigate } from "@solidjs/router";
+import {
+  type Params,
+  useParams,
+  useNavigate,
+  Navigator,
+} from "@solidjs/router";
 import { toast } from "solid-toast";
 import { isXRPCErrorPayload } from "@atcute/client";
 import {
@@ -16,7 +21,7 @@ import {
 } from "@atcute/atproto";
 import { parseResourceUri } from "@atcute/lexicons";
 
-async function loadData(params: Params) {
+async function loadData(navigate: Navigator, params: Params) {
   const rpc = getSkywellRpc();
   const data = await rpc.get(DevSkywellGetFileFromSlug.mainSchema.nsid, {
     params: {
@@ -30,7 +35,8 @@ async function loadData(params: Params) {
   } else {
     if (isXRPCErrorPayload(data.data)) {
       toast.error("File not found.");
-      return;
+      navigate("/", { replace: true });
+      throw new Error("File not found");
     }
     const fileData = data.data;
     toast.promise(fetchBlob(fileData.file.blob.ref.$link, fileData.actor.did), {
@@ -147,7 +153,7 @@ const File: Component = () => {
 
   onMount(() => {
     toast.promise(
-      loadData(params),
+      loadData(navigate, params),
       {
         loading: "Loading file data...",
         success: "Loaded file data!",
