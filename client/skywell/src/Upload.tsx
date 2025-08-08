@@ -16,7 +16,6 @@ const Upload: Component = () => {
   const { setRef: dropzoneRef, files: droppedFiles } = createDropzone({
     onDrop: async (files) => {
       setIsDragging(false);
-      files.forEach((f) => console.log("dropped", f));
     },
   });
 
@@ -52,6 +51,15 @@ const Upload: Component = () => {
     }
   };
 
+  const handleDragEnd = (e: DragEvent) => {
+    setIsDragging(false);
+  };
+
+  const handleDragExit = (e: DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
   const openFileBrowser = () => {
     fileInputRef!.click();
   };
@@ -59,7 +67,6 @@ const Upload: Component = () => {
   const handleFileSelect = (e: Event) => {
     const target = e.target as HTMLInputElement;
     const files = Array.from(target.files || []);
-    files.forEach((f) => console.log("selected", f));
     if (files.length > 0) {
       setCurrentFile(files[0]);
       setFileName(files[0].name);
@@ -70,12 +77,39 @@ const Upload: Component = () => {
 
   const uploadFile = async () => {};
 
+  const handleWindowBlur = () => {
+    if (isDragging()) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDocumentDragLeave = (e: DragEvent) => {
+    if (
+      e.clientX <= 0 ||
+      e.clientY <= 0 ||
+      e.clientX >= window.innerWidth ||
+      e.clientY >= window.innerHeight
+    ) {
+      setIsDragging(false);
+    }
+  };
+
   onMount(async () => {
     if (!(await isLoggedIn())) {
       console.log("Not logged in");
       toast.error("Not logged in, redirecting...");
       navigate("/login", { replace: true });
     }
+
+    window.addEventListener("dragend", handleDragEnd);
+    window.addEventListener("blur", handleWindowBlur);
+    document.addEventListener("dragleave", handleDocumentDragLeave);
+
+    return () => {
+      window.removeEventListener("dragend", handleDragEnd);
+      window.removeEventListener("blur", handleWindowBlur);
+      document.removeEventListener("dragleave", handleDocumentDragLeave);
+    };
   });
 
   return (
@@ -84,7 +118,8 @@ const Upload: Component = () => {
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      onDragEnd={handleDragEnd}
+      onDragExit={handleDragExit}
     >
       <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
         <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between">
@@ -172,6 +207,7 @@ const Upload: Component = () => {
             onDragEnter={handleDragEnter}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
+            onDragEnd={handleDragEnd}
             onDrop={handleDrop}
           >
             <div class="text-center opacity-100">
