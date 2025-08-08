@@ -70,7 +70,7 @@ const Login: Component = () => {
           <input
             type="text"
             class="p-3 bg-gray-800 text-white border border-gray-600 focus:border-blue-500 focus:outline-none"
-            placeholder="your.handle.com (no @)"
+            placeholder="you.bsky.soial (no @)"
             name="username"
             autocomplete="username"
             value={userHandle()}

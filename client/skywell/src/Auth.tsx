@@ -73,6 +73,11 @@ export async function isLoggedIn(): Promise<boolean> {
   return did() != null && agent() != null;
 }
 
+export function isLoggedInSync(): boolean {
+  runAuthChecks();
+  return did() != null && agent() != null;
+}
+
 export async function getAuthedClient(): Promise<Client<
   XRPCQueries,
   XRPCProcedures

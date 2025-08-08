@@ -82,51 +82,72 @@ const Upload: Component = () => {
   };
 
   const uploadFile = async () => {
-    console.log("clicked");
-    const c = await getAuthedClient();
-    if (!c) {
-      toast.error("Not authenticated, please log in");
-      navigate("/login", { replace: true });
-      return;
-    }
-    if (!currentFile()) {
-      toast.error("No file selected");
-      return;
-    }
-    if (!fileName()) {
-      toast.error("File name is required");
-      return;
-    }
-    const arraybuf = await currentFile()?.arrayBuffer()!;
-    const blobres = await c.post(ComAtprotoRepoUploadBlob.mainSchema.nsid, {
-      input: arraybuf,
-      headers: {
-        "Content-Type": currentFile()?.type || "application/octet-stream",
+    toast.promise(
+      (async () => {
+        const c = await getAuthedClient();
+        if (!c) {
+          toast.error("Not authenticated, please log in");
+          navigate("/login", { replace: true });
+          return;
+        }
+        if (!currentFile()) {
+          toast.error("No file selected");
+          return;
+        }
+        if (!fileName()) {
+          toast.error("File name is required");
+          return;
+        }
+        const arraybuf = await currentFile()?.arrayBuffer()!;
+        const blobres = await c.post(ComAtprotoRepoUploadBlob.mainSchema.nsid, {
+          input: arraybuf,
+          headers: {
+            "Content-Type": currentFile()?.type || "application/octet-stream",
+          },
+        });
+        if (!blobres.ok) {
+          if (blobres.data.error == "PayloadTooLarge") {
+            throw new Error("File is too large");
+          }
+        }
+        if (isXRPCErrorPayload(blobres)) {
+          console.error("Error uploading file:", blobres);
+          toast.error("Error uploading file: " + blobres.message);
+          return;
+        }
+        const blobRef = blobres.data as { blob: Blob<string> };
+        // todo figure out how to not hardcode the collection
+        // NOTE: THIS NEEDS TO MATCH THE LEXICON EXACTLY
+        // BECAUSE IT ISN'T TYPE CHECKED
+        const record: DevSkywellFile.Main = {
+          $type: "dev.skywell.file",
+          name: fileName(),
+          description: description().length ? description() : undefined,
+          blobRef: blobRef.blob,
+          createdAt: new Date().toISOString(),
+        };
+        const recordres = await c.post(
+          ComAtprotoRepoCreateRecord.mainSchema.nsid,
+          {
+            input: {
+              repo: agent()!.sub,
+              collection: "dev.skywell.file",
+              record: record,
+            },
+          },
+        );
+        if (!recordres.ok) {
+          console.error("Error creating record:", recordres);
+          throw new Error(`Error creating record: ${recordres.data.error}`);
+        }
+        navigate("/account", { replace: true });
+      })(),
+      {
+        loading: "Uploading file...",
+        success: "File uploaded successfully!",
+        error: (err) => `Error uploading file: ${err.message}`,
       },
-    });
-    if (isXRPCErrorPayload(blobres)) {
-      console.error("Error uploading file:", blobres);
-      toast.error("Error uploading file: " + blobres.message);
-      return;
-    }
-    const blobRef = blobres.data as { blob: Blob<string> };
-    // todo figure out how to not hardcode the collection
-    // NOTE: THIS NEEDS TO MATCH THE LEXICON EXACTLY
-    // BECAUSE IT ISN'T TYPE CHECKED
-    const record: DevSkywellFile.Main = {
-      $type: "dev.skywell.file",
-      name: fileName(),
-      description: description().length ? description() : undefined,
-      blobRef: blobRef.blob,
-      createdAt: new Date().toISOString(),
-    };
-    const recordres = await c.post(ComAtprotoRepoCreateRecord.mainSchema.nsid, {
-      input: {
-        repo: agent()!.sub,
-        collection: "dev.skywell.file",
-        record: record,
-      },
-    });
+    );
   };
 
   const handleWindowBlur = () => {
