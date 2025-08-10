@@ -125,15 +125,27 @@ const Account: Component = () => {
         return;
       }
       if (result.value.collection && result.value.rkey) {
-        const res = await c.post(ComAtprotoRepoDeleteRecord.mainSchema.nsid, {
-          input: {
-            repo: result.value.repo,
-            collection: result.value.collection!,
-            rkey: result.value.rkey!,
+        await toast.promise(
+          (async () => {
+            const res = await c.post(
+              ComAtprotoRepoDeleteRecord.mainSchema.nsid,
+              {
+                input: {
+                  repo: result.value.repo,
+                  collection: result.value.collection!,
+                  rkey: result.value.rkey!,
+                },
+              },
+            );
+            console.log(res);
+            setFiles(files().filter((f) => f.uri !== uri));
+          })(),
+          {
+            loading: "Deleting file...",
+            success: "File deleted successfully!",
+            error: "Failed to delete file",
           },
-        });
-        console.log(res);
-        setFiles(files().filter((f) => f.uri !== uri));
+        );
       }
     } else {
       console.error("Invalid resource URI:", uri);
