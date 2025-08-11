@@ -302,21 +302,32 @@ func initializeHandleFuncs(db *gorm.DB, client *xrpc.Client, ctx context.Context
 		fmt.Fprintf(w, "%s", b)
 	})
 
+	type IapBody struct {
+		Actor string `json:"actor"`
+	}
+
 	// returns nothing
 	http.HandleFunc("/xrpc/dev.skywell.indexActorProfile", func(w http.ResponseWriter, r *http.Request) {
 		requestID := r.Context().Value(requestIDKey).(string)
 		logger := httpLogger.With("request_id", requestID)
 
 		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.indexActorProfile", "remote_addr", r.RemoteAddr)
-		actor := r.URL.Query().Get("actor")
-		if actor == "" {
+		decoder := json.NewDecoder(r.Body)
+		var body IapBody
+		err := decoder.Decode(&body)
+		if err != nil {
+			logger.Error("Failed to decode request body", "error", err, "endpoint", "/xrpc/dev.skywell.indexActorProfile")
+			http.Error(w, "Invalid request body", 400)
+			return
+		}
+		if body.Actor == "" {
 			logger.Warn("Missing required parameter", "endpoint", "/xrpc/dev.skywell.indexActorProfile", "parameter", "actor")
 			http.Error(w, "Required parameter 'actor' missing", 400)
 			return
 		}
-		atid, err := syntax.ParseAtIdentifier(actor)
+		atid, err := syntax.ParseAtIdentifier(body.Actor)
 		if err != nil {
-			logger.Error("Failed to parse AtIdentifier", "actor", actor, "error", err, "endpoint", "/xrpc/dev.skywell.indexActorProfile")
+			logger.Error("Failed to parse AtIdentifier", "actor", body.Actor, "error", err, "endpoint", "/xrpc/dev.skywell.indexActorProfile")
 			http.Error(w, "Invalid 'actor' parameter", 400)
 			return
 		}
