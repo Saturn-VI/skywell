@@ -79,7 +79,7 @@ const Sidebar: Component = () => {
         </div>
       ) : loggedIn() ? (
         <>
-          <a href="/account">
+          <a href="/account" class="flex flex-col items-center">
             {/* Profile Picture */}
             <img
               src={pfpUri() || "/default-avatar.png"}
