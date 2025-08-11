@@ -75,8 +75,8 @@ const Login: Component = () => {
             type="text"
             class="p-3 bg-gray-800 text-white border border-gray-600 focus:border-blue-500 focus:outline-none"
             placeholder="you.bsky.social (no @)"
-            name="username"
-            autocomplete="username"
+            name="handle"
+            autocomplete="handle"
             value={userHandle()}
             onInput={(e) => setUserHandle(e.target.value)}
             onKeyDown={(e) => {
