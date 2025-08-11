@@ -26,13 +26,9 @@ func (t *File) MarshalCBOR(w io.Writer) error {
 	}
 
 	cw := cbg.NewCborWriter(w)
-	fieldCount := 6
+	fieldCount := 5
 
 	if t.Description == nil {
-		fieldCount--
-	}
-
-	if t.Slug == nil {
 		fieldCount--
 	}
 
@@ -61,38 +57,6 @@ func (t *File) MarshalCBOR(w io.Writer) error {
 	}
 	if _, err := cw.WriteString(string(t.Name)); err != nil {
 		return err
-	}
-
-	// t.Slug (string) (string)
-	if t.Slug != nil {
-
-		if len("slug") > 1000000 {
-			return xerrors.Errorf("Value in field \"slug\" was too long")
-		}
-
-		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("slug"))); err != nil {
-			return err
-		}
-		if _, err := cw.WriteString(string("slug")); err != nil {
-			return err
-		}
-
-		if t.Slug == nil {
-			if _, err := cw.Write(cbg.CborNull); err != nil {
-				return err
-			}
-		} else {
-			if len(*t.Slug) > 1000000 {
-				return xerrors.Errorf("Value in field t.Slug was too long")
-			}
-
-			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Slug))); err != nil {
-				return err
-			}
-			if _, err := cw.WriteString(string(*t.Slug)); err != nil {
-				return err
-			}
-		}
 	}
 
 	// t.LexiconTypeID (string) (string)
@@ -238,27 +202,6 @@ func (t *File) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 				t.Name = string(sval)
-			}
-			// t.Slug (string) (string)
-		case "slug":
-
-			{
-				b, err := cr.ReadByte()
-				if err != nil {
-					return err
-				}
-				if b != cbg.CborNull[0] {
-					if err := cr.UnreadByte(); err != nil {
-						return err
-					}
-
-					sval, err := cbg.ReadStringWithMax(cr, 1000000)
-					if err != nil {
-						return err
-					}
-
-					t.Slug = (*string)(&sval)
-				}
 			}
 			// t.LexiconTypeID (string) (string)
 		case "$type":

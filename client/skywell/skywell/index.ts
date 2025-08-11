@@ -3,3 +3,4 @@ export * as DevSkywellFile from "./types/dev/skywell/file.js";
 export * as DevSkywellGetActorFiles from "./types/dev/skywell/getActorFiles.js";
 export * as DevSkywellGetActorProfile from "./types/dev/skywell/getActorProfile.js";
 export * as DevSkywellGetFileFromSlug from "./types/dev/skywell/getFileFromSlug.js";
+export * as DevSkywellIndexActorProfile from "./types/dev/skywell/indexActorProfile.js";
