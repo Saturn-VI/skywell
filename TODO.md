@@ -6,13 +6,14 @@
   - [x] dev.skywell.getActorProfile
   - [x] dev.skywell.getActorFiles
   - [x] dev.skywell.getFileFromSlug
-  - [ ] dev.skywell.indexActorProfile
+  - [x] dev.skywell.indexActorProfile
 
 ## server
 ~~server doesn't need to do any auth for this usecase because PDS does creation/deletion of records~~
 - [x] scan jetstream
 - [x] implement getActorProfile & getActorFiles
 - [x] implement getFileFromSlug
+- [x] implement dev.skywell.indexActorProfile
 - [x] authenticate getActorFiles
 - [x] figure out database
   - go has a built in sql database interface
@@ -30,12 +31,15 @@
 
 ### pages
 - [ ] home
+- [x] sidebar
+- [ ] header
+  - should have upload/login page links
 - [x] upload
 - [x] file
   - [x] file delete button
 - [x] login page
 - [x] profile
-  - [ ] make not broken on mobile
+  - [x] make not broken on mobile
 
 ### functionality
 - [ ] filter handle string for valid characters
