@@ -152,16 +152,6 @@ github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFR
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
-github.com/saturn-vi/skywell/api/skywell v0.1.13 h1:n0PI978GTGywoqKP3MTHTEnQC43Bs8CPbbeWIeBYR6I=
-github.com/saturn-vi/skywell/api/skywell v0.1.13/go.mod h1:hxnUnbjX/ChXDXFR/f3GPNPJxTy6/FnRIZM2JoiW81s=
-github.com/saturn-vi/skywell/api/skywell v0.1.15 h1:qAWwpSOBjQzJNbcBqjUUI3qECynE+iHgwtjjWpJjlp4=
-github.com/saturn-vi/skywell/api/skywell v0.1.15/go.mod h1:hxnUnbjX/ChXDXFR/f3GPNPJxTy6/FnRIZM2JoiW81s=
-github.com/saturn-vi/skywell/api/skywell v0.1.16 h1:9l+aYZHqTq2fvyi4urDpMqHyKctz79mFLZjCfQhWM7k=
-github.com/saturn-vi/skywell/api/skywell v0.1.16/go.mod h1:hxnUnbjX/ChXDXFR/f3GPNPJxTy6/FnRIZM2JoiW81s=
-github.com/saturn-vi/skywell/api/skywell v0.1.17 h1:y7dayg1G+NqIiSt7lfpBKi5JkX8P6gt3AbG21zgAAjk=
-github.com/saturn-vi/skywell/api/skywell v0.1.17/go.mod h1:hxnUnbjX/ChXDXFR/f3GPNPJxTy6/FnRIZM2JoiW81s=
-github.com/saturn-vi/skywell/api/skywell v0.1.18 h1:iuJyu/TnGri5upCTMBd4JGX0pXR7ExBvlVQqUItYAZg=
-github.com/saturn-vi/skywell/api/skywell v0.1.18/go.mod h1:hxnUnbjX/ChXDXFR/f3GPNPJxTy6/FnRIZM2JoiW81s=
 github.com/saturn-vi/skywell/api/skywell v0.1.19 h1:3Lr0lpvEdHyAnIJnhNAy6CZK3ra0V6zYBTnOkmGwIlg=
 github.com/saturn-vi/skywell/api/skywell v0.1.19/go.mod h1:hxnUnbjX/ChXDXFR/f3GPNPJxTy6/FnRIZM2JoiW81s=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=
