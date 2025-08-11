@@ -1,5 +1,6 @@
 import { createEffect, createSignal, type Component } from "solid-js";
 import { isLoggedIn } from "./Auth.tsx";
+import { LoginOutlined, UploadFileOutlined } from "@suid/icons-material";
 
 const Header: Component = () => {
   const [loggedIn, setLoggedIn] = createSignal(false);
@@ -13,11 +14,11 @@ const Header: Component = () => {
       <a href="/">skywell</a>
       {loggedIn() ? (
         <a href="/upload" class="bg-blue-500 px-4 py-2 hover:bg-blue-600">
-          Upload
+          <UploadFileOutlined />
         </a>
       ) : (
         <a href="/login" class="bg-blue-500 px-4 py-2 hover:bg-blue-600">
-          Login
+          <LoginOutlined />
         </a>
       )
       }

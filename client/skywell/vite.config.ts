@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import metadata from "./public/client-metadata.json" with { type: "json" };
 import solidPlugin from "vite-plugin-solid";
 import tailwindcss from "@tailwindcss/vite";
+import suidPlugin from "@suid/vite-plugin";
 
 const SKYWELL_URL = "skywell.dev";
 const SERVER_HOST = "127.0.0.1";
@@ -9,6 +10,7 @@ const SERVER_PORT = 5000;
 
 export default defineConfig({
   plugins: [
+    suidPlugin(),
     tailwindcss(),
     solidPlugin(),
     {
