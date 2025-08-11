@@ -41,7 +41,7 @@ export default defineConfig({
   server: {
     host: SERVER_HOST,
     port: 5000,
-    allowedHosts: [SERVER_HOST, SKYWELL_URL],
+    allowedHosts: [SERVER_HOST],
   },
   build: {
     target: "esnext",
