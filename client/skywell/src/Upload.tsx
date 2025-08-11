@@ -119,6 +119,19 @@ const Upload: Component = () => {
           if (blobres.data.error == "PayloadTooLarge") {
             throw new Error("File is too large");
           }
+          // this is because bsky's PDSs SUCK and try to process uploaded blobs
+          if (blobres.data.error == "InternalServerError") {
+            const tryagain = await c.post(ComAtprotoRepoUploadBlob.mainSchema.nsid, {
+              input: arraybuf,
+              headers: {
+                "Content-Type": "application/octet-stream",
+              },
+            });
+            if (!tryagain.ok) {
+              console.error("Error uploading file:", tryagain);
+              throw new Error(`Error uploading file: ${tryagain.data.error}`);
+            }
+          }
         }
         if (isXRPCErrorPayload(blobres)) {
           console.error("Error uploading file:", blobres);
