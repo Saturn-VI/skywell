@@ -37,7 +37,7 @@ async function runLoginFlow() {
     });
 
     toast.success("Redirecting to login...");
-    await trySignOut();
+    trySignOut();
     await getSkywellClient().post(DevSkywellIndexActorProfile.mainSchema.nsid, {
       input: {
         actor: identity.id
