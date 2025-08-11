@@ -44,3 +44,6 @@
 - [x] delete records
 - [x] upload blobs
 - [x] download files
+- [ ] refactor entire site to use createResource (https://docs.solidjs.com/reference/basic-reactivity/create-resource)
+  - this will be a lot of work
+  - do it after 1.0 is released
