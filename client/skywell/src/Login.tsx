@@ -13,8 +13,8 @@ import { trySignOut } from "./Auth.tsx";
 
 configureOAuth({
   metadata: {
-    client_id: "https://skywell.dev/client-metadata.json",
-    redirect_uri: "https://skywell.dev/login/callback",
+    client_id: import.meta.env.VITE_OAUTH_CLIENT_ID,
+    redirect_uri: import.meta.env.VITE_OAUTH_REDIRECT_URI,
   },
 });
 
@@ -37,7 +37,7 @@ async function runLoginFlow() {
     const authUrl = await createAuthorizationUrl({
       metadata: metadata,
       identity: identity,
-      scope: "atproto transition:generic",
+      scope: import.meta.env.VITE_OAUTH_SCOPE,
     });
 
     toast.success("Redirecting to login...");

@@ -1,5 +1,6 @@
 {
   "client_id": "https://skywell.dev/client-metadata.json",
+  "client_uri": "https://skywell.dev",
   "client_name": "Dev client",
   "application_type": "native",
   "grant_types": ["authorization_code"],
