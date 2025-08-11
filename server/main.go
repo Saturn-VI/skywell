@@ -21,6 +21,7 @@ import (
 	identity "github.com/bluesky-social/indigo/atproto/identity"
 	syntax "github.com/bluesky-social/indigo/atproto/syntax"
 	"github.com/bluesky-social/indigo/lex/util"
+	"github.com/bluesky-social/indigo/xrpc"
 	"github.com/gigatar/ratelimiter"
 	"github.com/ipfs/go-cid"
 	skywell "github.com/saturn-vi/skywell/api/skywell"
@@ -56,7 +57,7 @@ func main() {
 	}
 
 	httpLogger.Info("Initializing HTTP server...")
-	initializeHandleFuncs(db, ctx)
+	initializeHandleFuncs(db, client, ctx)
 
 	httpLogger.Info("Initializing ratelimiter...")
 	limiter := ratelimiter.New(&ratelimiter.Config{
@@ -124,7 +125,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
+func initializeHandleFuncs(db *gorm.DB, client *xrpc.Client, ctx context.Context) {
 	// returns ProfileView
 	http.HandleFunc("/xrpc/dev.skywell.getActorProfile", func(w http.ResponseWriter, r *http.Request) {
 		requestID := r.Context().Value(requestIDKey).(string)
@@ -299,6 +300,40 @@ func initializeHandleFuncs(db *gorm.DB, ctx context.Context) {
 		logger.Debug("Returning actor files response", "did", did.String(), "file_count", len(*files), "response_size", len(b))
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, "%s", b)
+	})
+
+	// returns nothing
+	http.HandleFunc("/xrpc/dev.skywell.indexActorProfile", func(w http.ResponseWriter, r *http.Request) {
+		requestID := r.Context().Value(requestIDKey).(string)
+		logger := httpLogger.With("request_id", requestID)
+
+		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.indexActorProfile", "remote_addr", r.RemoteAddr)
+		actor := r.URL.Query().Get("actor")
+		if actor == "" {
+			logger.Warn("Missing required parameter", "endpoint", "/xrpc/dev.skywell.indexActorProfile", "parameter", "actor")
+			http.Error(w, "Required parameter 'actor' missing", 400)
+			return
+		}
+		atid, err := syntax.ParseAtIdentifier(actor)
+		if err != nil {
+			logger.Error("Failed to parse AtIdentifier", "actor", actor, "error", err, "endpoint", "/xrpc/dev.skywell.indexActorProfile")
+			http.Error(w, "Invalid 'actor' parameter", 400)
+			return
+		}
+		did, err := atid.AsDID()
+		if err != nil {
+			logger.Error("Failed to convert AtIdentifier to DID", "atid", atid.String(), "error", err, "endpoint", "/xrpc/dev.skywell.indexActorProfile")
+			http.Error(w, "Invalid 'actor' parameter", 400)
+			return
+		}
+		err = updateUserProfile(did, db, client, ctx)
+		if err != nil {
+			logger.Error("Failed to update user profile", "did", did.String(), "error", err, "endpoint", "/xrpc/dev.skywell.indexActorProfile")
+			http.Error(w, "Internal Server Error (profile update)", 500)
+			return
+		}
+		logger.Debug("Profile indexed successfully", "did", did.String(), "endpoint", "/xrpc/dev.skywell.indexActorProfile")
+		w.WriteHeader(http.StatusOK)
 	})
 }
 
