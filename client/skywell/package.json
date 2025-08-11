@@ -27,6 +27,7 @@
     "@tailwindcss/vite": "^4.1.11",
     "eslint-plugin-unused-imports": "^4.1.4",
     "filesize": "^11.0.2",
+    "material-icons": "^1.13.14",
     "prettier": "^3.6.2",
     "skywell": "file:skywell",
     "sleep-promise": "^9.1.0",
