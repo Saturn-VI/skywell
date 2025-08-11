@@ -85,7 +85,7 @@ func updateIdentity(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx c
 		return
 	}
 	cacheDir.Purge(ctx, did.AtIdentifier())
-	err = updateUserProfile(did, true, db, client, ctx)
+	err = updateUserProfile(did, false, db, client, ctx)
 	if err != nil {
 		jetstreamLogger.Error("Failed to update user profile", "did", evt.Did, "error", err)
 		return
@@ -321,14 +321,17 @@ func updateUserProfile(did syntax.DID, forceIndex bool, db *gorm.DB, client *xrp
 	user := User{
 		DID: did,
 	}
-	result := db.First(&user, "did = ?", did.String())
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) && !forceIndex {
+	error := db.First(&user, "did = ?", did.String()).Error
+	// if we're forcing an  index, we don't worry about record not found
+	if !forceIndex && errors.Is(error, gorm.ErrRecordNotFound) {
 		// they haven't made any files
 		// we don't care about them
 		return nil
-	} else if result.Error != nil {
-		return result.Error
 	}
+	if error != nil && !errors.Is(error, gorm.ErrRecordNotFound) {
+		return error
+	}
+
 	handle, displayName, avatarURI, err := getUserData(did, client, ctx)
 	if err != nil {
 		return err
