@@ -2,11 +2,11 @@ import { createSignal, onMount, type Component } from "solid-js";
 import { DevSkywellGetFileFromSlug } from "skywell";
 
 import {
-  getEntrywayRpc,
-  getSkywellRpc,
   isLoggedIn,
   getAuthedClient,
   agent,
+  getSkywellClient,
+  getEntrywayClient,
 } from "./Auth.tsx";
 import {
   type Params,
@@ -23,7 +23,7 @@ import {
 import { parseResourceUri } from "@atcute/lexicons";
 
 async function loadData(navigate: Navigator, params: Params) {
-  const rpc = getSkywellRpc();
+  const rpc = getSkywellClient();
   const data = await rpc.get(DevSkywellGetFileFromSlug.mainSchema.nsid, {
     params: {
       slug: params.slug,
@@ -65,7 +65,7 @@ async function loadData(navigate: Navigator, params: Params) {
 }
 
 async function fetchBlob(cid: string, did: `did:${string}:${string}`) {
-  const rpc = getEntrywayRpc();
+  const rpc = getEntrywayClient();
 
   try {
     const data = await rpc.get(ComAtprotoSyncGetBlob.mainSchema.nsid, {
@@ -81,9 +81,7 @@ async function fetchBlob(cid: string, did: `did:${string}:${string}`) {
       toast.error("Failed to load file.");
       return;
     } else {
-      let b = data.data as Blob;
-      console.log(b);
-      setBlob(b);
+      setBlob(data.data as Blob);
     }
   } catch (error) {
     console.error("Error fetching blob:", error);
@@ -92,14 +90,14 @@ async function fetchBlob(cid: string, did: `did:${string}:${string}`) {
 }
 
 async function clickDownloadLink() {
-  let link = document.getElementById("download-link") as HTMLAnchorElement;
+  const link = document.getElementById("download-link") as HTMLAnchorElement;
   if (blob() != null) {
     link.href = URL.createObjectURL(blob()!);
     link.click();
   }
 }
 
-async function deleteFile(uri: string, navigate: any) {
+async function deleteFile(uri: string, navigate: Navigator) {
   const result = parseResourceUri(uri);
   if (result.ok) {
     const c = await getAuthedClient();

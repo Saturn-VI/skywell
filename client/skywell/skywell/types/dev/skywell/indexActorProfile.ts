@@ -2,10 +2,14 @@ import type {} from "@atcute/lexicons";
 import * as v from "@atcute/lexicons/validations";
 import type {} from "@atcute/lexicons/ambient";
 
-const _mainSchema = /*#__PURE__*/ v.query("dev.skywell.indexActorProfile", {
-  params: /*#__PURE__*/ v.object({
-    actor: /*#__PURE__*/ v.actorIdentifierString(),
-  }),
+const _mainSchema = /*#__PURE__*/ v.procedure("dev.skywell.indexActorProfile", {
+  params: null,
+  input: {
+    type: "lex",
+    schema: /*#__PURE__*/ v.object({
+      actor: /*#__PURE__*/ v.actorIdentifierString(),
+    }),
+  },
   output: null,
 });
 
@@ -15,10 +19,11 @@ export interface mainSchema extends main$schematype {}
 
 export const mainSchema = _mainSchema as mainSchema;
 
-export interface $params extends v.InferInput<mainSchema["params"]> {}
+export interface $params {}
+export interface $input extends v.InferXRPCBodyInput<mainSchema["input"]> {}
 
 declare module "@atcute/lexicons/ambient" {
-  interface XRPCQueries {
+  interface XRPCProcedures {
     "dev.skywell.indexActorProfile": mainSchema;
   }
 }

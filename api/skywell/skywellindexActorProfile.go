@@ -10,14 +10,15 @@ import (
 	"github.com/bluesky-social/indigo/lex/util"
 )
 
-// IndexActorProfile calls the XRPC method "dev.skywell.indexActorProfile".
-//
-// actor: Handle or DID of account to index profile of.
-func IndexActorProfile(ctx context.Context, c util.LexClient, actor string) error {
+// IndexActorProfile_Input is the input argument to a dev.skywell.indexActorProfile call.
+type IndexActorProfile_Input struct {
+	// actor: Handle or DID of account to index profile of.
+	Actor string `json:"actor" cborgen:"actor"`
+}
 
-	params := map[string]interface{}{}
-	params["actor"] = actor
-	if err := c.LexDo(ctx, util.Query, "", "dev.skywell.indexActorProfile", params, nil, nil); err != nil {
+// IndexActorProfile calls the XRPC method "dev.skywell.indexActorProfile".
+func IndexActorProfile(ctx context.Context, c util.LexClient, input *IndexActorProfile_Input) error {
+	if err := c.LexDo(ctx, util.Procedure, "application/json", "dev.skywell.indexActorProfile", nil, input, nil); err != nil {
 		return err
 	}
 

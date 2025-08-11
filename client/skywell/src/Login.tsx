@@ -1,15 +1,14 @@
 import type { Component } from "solid-js";
 import { createSignal } from "solid-js";
 import {
-  AuthorizationServerMetadata,
   configureOAuth,
   createAuthorizationUrl,
-  IdentityMetadata,
   resolveFromIdentity,
 } from "@atcute/oauth-browser-client";
 import sleep from "sleep-promise";
 import { toast } from "solid-toast";
-import { trySignOut } from "./Auth.tsx";
+import { getSkywellClient, trySignOut } from "./Auth.tsx";
+import { DevSkywellIndexActorProfile } from "skywell";
 
 configureOAuth({
   metadata: {
@@ -22,17 +21,14 @@ const [userHandle, setUserHandle] = createSignal<string>("");
 
 async function runLoginFlow() {
   try {
-    toast.promise(
-      (async () => {
-        const { identity, metadata } = await resolveFromIdentity(userHandle());
-      })(),
+    const { identity, metadata } = await toast.promise(
+      resolveFromIdentity(userHandle()),
       {
         loading: "Resolving identity...",
         success: "Identity resolved!",
         error: "Failed to resolve identity",
       },
     );
-    const { identity, metadata } = await resolveFromIdentity(userHandle());
 
     const authUrl = await createAuthorizationUrl({
       metadata: metadata,
@@ -42,6 +38,12 @@ async function runLoginFlow() {
 
     toast.success("Redirecting to login...");
     await trySignOut();
+    await getSkywellClient().post(DevSkywellIndexActorProfile.mainSchema.nsid, {
+      input: {
+        actor: identity.id
+      },
+      as: null
+    })
     await sleep(200);
     window.location.assign(authUrl);
 
@@ -57,9 +59,9 @@ async function runLoginFlow() {
 
       window.addEventListener("pageshow", listener, { once: true });
     });
-  } catch {
-    console.log("Invalid handle, probably");
-    toast.error("Invalid handle");
+  } catch (error) {
+    console.log("Login error:", error);
+    toast.error("Invalid handle or login failed");
   }
 }
 
@@ -84,7 +86,7 @@ const Login: Component = () => {
             }}
           />
           <button
-            onClick={(e) => runLoginFlow()}
+            onClick={() => runLoginFlow()}
             class="w-full p-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg"
           >
             Sign In

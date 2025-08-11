@@ -2,10 +2,8 @@ import { createEffect, createSignal, onMount, type Component } from "solid-js";
 import {
   agent,
   did,
-  getAuthedClient,
   getAuthedSkywellClient,
   isLoggedIn,
-  isLoggedInSync,
 } from "./Auth.tsx";
 import { toast } from "solid-toast";
 import { DevSkywellGetActorProfile } from "skywell";

@@ -45,6 +45,12 @@ export default defineConfig({
   },
   build: {
     target: "esnext",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
   },
   preview: {
     host: SERVER_HOST,

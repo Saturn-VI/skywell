@@ -2,7 +2,7 @@ import type { Component } from "solid-js";
 import { createSignal, onMount } from "solid-js";
 import { createDropzone } from "@solid-primitives/upload";
 import { agent, getAuthedClient, isLoggedIn } from "./Auth.tsx";
-import { Navigate, redirect, useNavigate } from "@solidjs/router";
+import { useNavigate } from "@solidjs/router";
 import { toast } from "solid-toast";
 import {
   ComAtprotoRepoCreateRecord,
@@ -21,8 +21,8 @@ const Upload: Component = () => {
   const navigate = useNavigate();
   let fileInputRef: HTMLInputElement;
 
-  const { setRef: dropzoneRef, files: droppedFiles } = createDropzone({
-    onDrop: async (files) => {
+  const { setRef: dropzoneRef } = createDropzone({
+    onDrop: () => {
       setIsDragging(false);
     },
   });
@@ -58,7 +58,7 @@ const Upload: Component = () => {
     }
   };
 
-  const handleDragEnd = (e: DragEvent) => {
+  const handleDragEnd = () => {
     setIsDragging(false);
   };
 
@@ -104,7 +104,11 @@ const Upload: Component = () => {
           toast.error("File name is required");
           return;
         }
-        const arraybuf = await currentFile()?.arrayBuffer()!;
+        const arraybuf = await currentFile()?.arrayBuffer();
+        if (!arraybuf) {
+          toast.error("File data missing");
+          return;
+        }
         const blobres = await c.post(ComAtprotoRepoUploadBlob.mainSchema.nsid, {
           input: arraybuf,
           headers: {
@@ -222,7 +226,7 @@ const Upload: Component = () => {
           <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2 text-white">
             <button
               class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-blue-600 hover:bg-blue-700 text-center lg:text-2xl text-xl"
-              onClick={(e) => uploadFile()}
+              onClick={() => uploadFile()}
             >
               publish
             </button>

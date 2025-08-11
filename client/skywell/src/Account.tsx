@@ -5,24 +5,21 @@ import {
   did,
   getAuthedSkywellClient,
   getAuthedClient,
-  getSkywellRpc,
+  getSkywellClient,
   trySignOut,
 } from "./Auth.tsx";
 import { toast } from "solid-toast";
-import { Navigate, redirect, useNavigate } from "@solidjs/router";
+import { useNavigate } from "@solidjs/router";
 import {
   DevSkywellDefs,
   DevSkywellGetActorFiles,
   DevSkywellGetActorProfile,
 } from "skywell";
-import { Blob, parseResourceUri, ResourceUri } from "@atcute/lexicons";
+import { Blob, parseResourceUri } from "@atcute/lexicons";
 import { isXRPCErrorPayload } from "@atcute/client";
-import { ServiceProxyOptions } from "@atcute/client";
 import {
   ComAtprotoRepoDeleteRecord,
-  ComAtprotoServerGetServiceAuth,
 } from "@atcute/atproto";
-import { SKYWELL_DID } from "./Constants.tsx";
 import { filesize } from "filesize";
 
 const Account: Component = () => {
@@ -45,7 +42,7 @@ const Account: Component = () => {
       const skywellClient = await getAuthedSkywellClient();
       if (!skywellClient) return;
 
-      const params: any = {
+      const params: DevSkywellGetActorFiles.$params = {
         actor: userDid,
         limit: 50,
       };
@@ -82,7 +79,7 @@ const Account: Component = () => {
   };
 
   const loadUserData = async (did: `did:${string}:${string}`) => {
-    const skywellRpc = getSkywellRpc();
+    const skywellRpc = getSkywellClient();
     const res = await skywellRpc.get(
       DevSkywellGetActorProfile.mainSchema.nsid,
       {
@@ -208,7 +205,7 @@ const Account: Component = () => {
         <div class="flex justify-center items-center lg:w-1/4 md:w-1/3 w-full lg:h-full md:h-2/3 h-1/2 p-2">
           <button
             class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-red-600 hover:bg-red-700 text-center lg:text-xl text-lg"
-            onClick={(e) => {
+            onClick={() => {
               trySignOut();
               navigate("/");
             }}
