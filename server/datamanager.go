@@ -85,7 +85,7 @@ func updateIdentity(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx c
 		return
 	}
 	cacheDir.Purge(ctx, did.AtIdentifier())
-	err = updateUserProfile(did, db, client, ctx)
+	err = updateUserProfile(did, true, db, client, ctx)
 	if err != nil {
 		jetstreamLogger.Error("Failed to update user profile", "did", evt.Did, "error", err)
 		return
@@ -267,7 +267,7 @@ func updateRecord(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx con
 			jetstreamLogger.Error("Failed to parse DID for profile update", "did", evt.Did, "error", err)
 			return
 		}
-		err = updateUserProfile(did, db, client, ctx)
+		err = updateUserProfile(did, false, db, client, ctx)
 		if err != nil {
 			jetstreamLogger.Error("Failed to update user profile", "did", evt.Did, "error", err)
 			return
@@ -316,13 +316,13 @@ func generateSlug(db *gorm.DB, cid syntax.CID, uri syntax.URI) (slug string, err
 	}
 }
 
-func updateUserProfile(did syntax.DID, db *gorm.DB, client *xrpc.Client, ctx context.Context) error {
+func updateUserProfile(did syntax.DID, forceIndex bool, db *gorm.DB, client *xrpc.Client, ctx context.Context) error {
 
 	user := User{
 		DID: did,
 	}
 	result := db.First(&user, "did = ?", did.String())
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) && !forceIndex {
 		// they haven't made any files
 		// we don't care about them
 		return nil

@@ -337,7 +337,7 @@ func initializeHandleFuncs(db *gorm.DB, client *xrpc.Client, ctx context.Context
 			http.Error(w, "Invalid 'actor' parameter", 400)
 			return
 		}
-		err = updateUserProfile(did, db, client, ctx)
+		err = updateUserProfile(did, true, db, client, ctx)
 		if err != nil {
 			logger.Error("Failed to update user profile", "did", did.String(), "error", err, "endpoint", "/xrpc/dev.skywell.indexActorProfile")
 			http.Error(w, "Internal Server Error (profile update)", 500)
