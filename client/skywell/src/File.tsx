@@ -2,11 +2,11 @@ import { createSignal, onMount, type Component } from "solid-js";
 import { DevSkywellGetFileFromSlug } from "skywell";
 
 import {
+  getEntrywayClient,
   isLoggedIn,
   getAuthedClient,
   agent,
   getSkywellClient,
-  getEntrywayClient,
 } from "./Auth.tsx";
 import {
   type Params,
@@ -23,8 +23,8 @@ import {
 import { parseResourceUri } from "@atcute/lexicons";
 
 async function loadData(navigate: Navigator, params: Params) {
-  const rpc = getSkywellClient();
-  const data = await rpc.get(DevSkywellGetFileFromSlug.mainSchema.nsid, {
+  const client = getSkywellClient();
+  const data = await client.get(DevSkywellGetFileFromSlug.mainSchema.nsid, {
     params: {
       slug: params.slug,
     },
@@ -65,10 +65,10 @@ async function loadData(navigate: Navigator, params: Params) {
 }
 
 async function fetchBlob(cid: string, did: `did:${string}:${string}`) {
-  const rpc = getEntrywayClient();
+  const client = getEntrywayClient();
 
   try {
-    const data = await rpc.get(ComAtprotoSyncGetBlob.mainSchema.nsid, {
+    const data = await client.get(ComAtprotoSyncGetBlob.mainSchema.nsid, {
       params: {
         cid: cid,
         did: did,
@@ -81,7 +81,9 @@ async function fetchBlob(cid: string, did: `did:${string}:${string}`) {
       toast.error("Failed to load file.");
       return;
     } else {
-      setBlob(data.data as Blob);
+      const b = data.data as Blob;
+      console.log(b);
+      setBlob(b);
     }
   } catch (error) {
     console.error("Error fetching blob:", error);

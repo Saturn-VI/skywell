@@ -1,21 +1,15 @@
 import {
-  deleteStoredSession,
   getSession,
   OAuthUserAgent,
-  TokenRefreshError,
 } from "@atcute/oauth-browser-client";
 import { createSignal, onMount } from "solid-js";
 import { makePersisted } from "@solid-primitives/storage";
 import type { Did } from "@atcute/lexicons";
 import {
   Client,
-  FetchHandler,
-  FetchHandlerObject,
-  ServiceProxyOptions,
   simpleFetchHandler,
 } from "@atcute/client";
 import { toast } from "solid-toast";
-import sleep from "sleep-promise";
 import { XRPCProcedures, XRPCQueries } from "@atcute/lexicons/ambient";
 import {
   ENTRYWAY_URL,
@@ -23,7 +17,6 @@ import {
   SKYWELL_SERVICE_ID,
   SKYWELL_URL,
 } from "./Constants.tsx";
-import { Navigate, redirect } from "@solidjs/router";
 
 export const [did, setDid] = makePersisted(createSignal<Did | null>(null));
 export const [agent, setAgent] = createSignal<OAuthUserAgent | null>(null);

@@ -17,9 +17,8 @@ import {
 } from "skywell";
 import { Blob, parseResourceUri } from "@atcute/lexicons";
 import { isXRPCErrorPayload } from "@atcute/client";
-import {
-  ComAtprotoRepoDeleteRecord,
-} from "@atcute/atproto";
+
+import { ComAtprotoRepoDeleteRecord } from "@atcute/atproto";
 import { filesize } from "filesize";
 
 const Account: Component = () => {
@@ -79,8 +78,8 @@ const Account: Component = () => {
   };
 
   const loadUserData = async (did: `did:${string}:${string}`) => {
-    const skywellRpc = getSkywellClient();
-    const res = await skywellRpc.get(
+    const skywellClient = getSkywellClient();
+    const res = await skywellClient.get(
       DevSkywellGetActorProfile.mainSchema.nsid,
       {
         params: { actor: did },
