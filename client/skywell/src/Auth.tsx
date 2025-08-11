@@ -1,15 +1,21 @@
 import {
+  deleteStoredSession,
   getSession,
   OAuthUserAgent,
+  TokenRefreshError,
 } from "@atcute/oauth-browser-client";
 import { createSignal, onMount } from "solid-js";
 import { makePersisted } from "@solid-primitives/storage";
 import type { Did } from "@atcute/lexicons";
 import {
   Client,
+  FetchHandler,
+  FetchHandlerObject,
+  ServiceProxyOptions,
   simpleFetchHandler,
 } from "@atcute/client";
 import { toast } from "solid-toast";
+import sleep from "sleep-promise";
 import { XRPCProcedures, XRPCQueries } from "@atcute/lexicons/ambient";
 import {
   ENTRYWAY_URL,
@@ -17,6 +23,7 @@ import {
   SKYWELL_SERVICE_ID,
   SKYWELL_URL,
 } from "./Constants.tsx";
+import { Navigate, redirect } from "@solidjs/router";
 
 export const [did, setDid] = makePersisted(createSignal<Did | null>(null));
 export const [agent, setAgent] = createSignal<OAuthUserAgent | null>(null);
@@ -40,11 +47,11 @@ export async function runAuthChecks() {
   }
 }
 
-export async function trySignOut() {
+export function trySignOut() {
   if (did() == null || agent() == null) {
     return;
   }
-  await toast.promise(
+  toast.promise(
     (async () => {
       await agent()?.signOut();
 
@@ -64,11 +71,6 @@ export async function trySignOut() {
 
 export async function isLoggedIn(): Promise<boolean> {
   await runAuthChecks();
-  return did() != null && agent() != null;
-}
-
-export function isLoggedInSync(): boolean {
-  runAuthChecks();
   return did() != null && agent() != null;
 }
 
