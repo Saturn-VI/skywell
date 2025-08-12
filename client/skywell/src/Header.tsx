@@ -1,16 +1,26 @@
-import { createEffect, createSignal, type Component } from "solid-js";
-import { isLoggedIn } from "./Auth.tsx";
+import { Component, createSignal, onMount } from "solid-js";
 import { LoginOutlined, UploadFileOutlined } from "@suid/icons-material";
+import { loggedIn, pfpUri } from "./Sidebar.tsx";
 
 const Header: Component = () => {
-  const [loggedIn, setLoggedIn] = createSignal(false);
+  const [width, setWidth] = createSignal(window.innerWidth);
 
-  createEffect(async () => {
-    setLoggedIn(await isLoggedIn());
+  const handleResize = () => {
+    setWidth(window.innerWidth);
+  };
+
+  onMount(() => {
+    window.addEventListener("resize", handleResize)
   })
 
   return (
     <div class="w-full h-16 bg-gray-900 text-white p-4 items-center flex justify-between">
+      {/* 768 == tailwind sm: (48rem) */}
+      {width() <= 768 && loggedIn() &&
+        <div class="flex items-center">
+          <img src={pfpUri()!} alt="Logo" class="h-8 mr-4" />
+        </div>
+      }
       <a href="/">skywell</a>
       {loggedIn() ? (
         <a href="/upload" class="bg-blue-500 px-4 py-2 hover:bg-blue-600">

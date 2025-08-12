@@ -8,12 +8,12 @@ import {
 import { toast } from "solid-toast";
 import { DevSkywellGetActorProfile } from "skywell";
 
-const Sidebar: Component = () => {
-  const [pfpUri, setPfpUri] = createSignal<string | null>(null);
-  const [displayName, setDisplayName] = createSignal<string | null>(null);
-  const [loggedIn, setLoggedIn] = createSignal<boolean>(false);
-  const [loading, setLoading] = createSignal<boolean>(true);
+export const [pfpUri, setPfpUri] = createSignal<string | null>(null);
+export const [displayName, setDisplayName] = createSignal<string | null>(null);
+export const [loggedIn, setLoggedIn] = createSignal<boolean>(false);
+export const [loading, setLoading] = createSignal<boolean>(true);
 
+const Sidebar: Component = () => {
   createEffect(async () => {
     if (await isLoggedIn()) {
       if (!loggedIn()) {
@@ -72,7 +72,7 @@ const Sidebar: Component = () => {
   });
 
   return (
-    <div class="sm:w-1/12 items-center flex flex-col sm:visible invisible w-0 h-full bg-gray-800 text-white sm:p-4 p-0">
+    <div class="md:w-1/12 items-center flex flex-col md:visible invisible w-0 h-full bg-gray-800 text-white md:p-4 p-0">
       {loading() ? (
         <div class="flex items-center justify-center h-full">
           <span class="text-gray-400">Loading...</span>
