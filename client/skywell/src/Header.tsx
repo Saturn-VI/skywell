@@ -21,7 +21,7 @@ const Header: Component = () => {
           <img src={pfpUri()!} alt="Logo" class="h-8 mr-4" />
         </div>
       }
-      <a href="/">skywell</a>
+      <a href="/" style="font-family: 'Fredoka', sans-serif; font-weight: 400; font-stretch: 125%;" class="text-xl">skywell</a>
       {loggedIn() ? (
         <a href="/upload" class="bg-blue-500 px-4 py-2 hover:bg-blue-600">
           <UploadFileOutlined />
