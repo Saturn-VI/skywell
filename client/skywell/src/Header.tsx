@@ -1,25 +1,14 @@
-import { Component, createSignal, onMount } from "solid-js";
+import { Component } from "solid-js";
 import { LoginOutlined, UploadFileOutlined } from "@suid/icons-material";
 import { loggedIn, pfpUri } from "./Sidebar.tsx";
 
 const Header: Component = () => {
-  const [width, setWidth] = createSignal(window.innerWidth);
-
-  const handleResize = () => {
-    setWidth(window.innerWidth);
-  };
-
-  onMount(() => {
-    window.addEventListener("resize", handleResize)
-  })
-
   return (
     <div class="w-full h-16 bg-gray-900 text-white p-4 items-center flex justify-between">
-      {/* 768 == tailwind sm: (48rem) */}
-      {width() <= 768 && loggedIn() &&
-        <div class="flex items-center">
-          <img src={pfpUri()!} alt="Logo" class="h-8 mr-4" />
-        </div>
+      {loggedIn() &&
+        <a href="/account" class="flex items-center">
+          <img  src={pfpUri()!} alt="Logo" class="h-8 mr-4" />
+        </a>
       }
       <a href="/" style="font-family: 'Fredoka', sans-serif; font-weight: 400; font-stretch: 125%;" class="text-xl">skywell</a>
       {loggedIn() ? (
