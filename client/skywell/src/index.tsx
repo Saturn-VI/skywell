@@ -11,7 +11,6 @@ import Login from "./Login.tsx";
 import Account from "./Account.tsx";
 import Callback from "./Callback.tsx";
 import Header from "./Header.tsx";
-import Sidebar from "./Sidebar.tsx";
 
 const root = document.getElementById("root");
 
@@ -24,10 +23,9 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 render(
   () => (
     <>
-      <div class="flex flex-col h-screen">
+      <div class="flex flex-col h-auto min-h-screen bg-gray-700 items-center">
         <Header></Header>
-        <div class="flex flex-row flex-1">
-          <Sidebar></Sidebar>
+        <div class="flex flex-row flex-1 w-full md:w-11/12 lg:w-3/4 xl:w-2/3 2xl:w-1/2">
           <Router>
             <Route path="/" component={Home} />
             <Route path="/file/:slug" component={File} />
