@@ -37,7 +37,7 @@ async function loadData(navigate: Navigator, params: Params) {
     if (isXRPCErrorPayload(data.data)) {
       toast.error("File not found.");
       navigate("/", { replace: true });
-      throw new Error("File not found");
+      return;
     }
     const fileData = data.data;
     toast.promise(fetchBlob(fileData.file.blob.ref.$link, fileData.actor.did), {
@@ -152,17 +152,7 @@ const File: Component = () => {
   const navigate = useNavigate();
 
   onMount(() => {
-    toast.promise(
-      loadData(navigate, params),
-      {
-        loading: "Loading file data...",
-        success: "Loaded file data!",
-        error: "Failed to load file data.",
-      },
-      {
-        position: "top-center",
-      },
-    );
+    loadData(navigate, params)
   });
 
   return (

@@ -34,8 +34,12 @@ export async function runAuthChecks() {
       const newAgent = new OAuthUserAgent(session);
       setAgent(newAgent);
     } catch (error) {
-      toast.error(`Failed while creating session: ${error}`);
-      trySignOut();
+      if (error instanceof Error) {
+        if (!(error.name == "TokenRefreshError")) {
+          toast.error(`Failed while creating session: ${error}`);
+          trySignOut();
+        }
+      }
     }
   }
 }

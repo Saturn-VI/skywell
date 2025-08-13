@@ -7,6 +7,7 @@
   - [x] dev.skywell.getActorFiles
   - [x] dev.skywell.getFileFromSlug
   - [x] dev.skywell.indexActorProfile
+- [ ] make it a confidential client
 
 ## server
 ~~server doesn't need to do any auth for this usecase because PDS does creation/deletion of records~~
