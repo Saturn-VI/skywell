@@ -78,7 +78,11 @@ const Login: Component = () => {
             name="handle"
             autocomplete="handle"
             value={userHandle()}
-            onInput={(e) => setUserHandle(e.target.value)}
+            onInput={(e) => {
+              const value = e.target.value;
+              const filteredValue = value.replace(/[^a-zA-Z0-9.-]/g, '');
+              setUserHandle(filteredValue);
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 runLoginFlow();

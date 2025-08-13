@@ -20,6 +20,8 @@
   - ended up using [gorm](https://gorm.io/) for database access
 - [x] rate limiter
 - [x] translation between slug and atproto uri (uris too long)
+- [ ] do the confidential client thing
+  - https://pkg.go.dev/github.com/bluesky-social/indigo/atproto/auth/oauth
 
 ## client
 
@@ -32,7 +34,7 @@
 ### pages
 - [ ] home
 - [x] sidebar
-- [ ] header
+- [x] header
   - should have upload/login page links
 - [x] upload
 - [x] file
