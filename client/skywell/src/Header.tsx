@@ -68,7 +68,7 @@ const Header: Component = () => {
   });
 
   return (
-    <div class="w-full h-14 bg-gray-900 text-white p-4 items-center flex justify-between">
+    <div class=" w-full md:w-11/12 lg:w-3/4 xl:w-2/3 2xl:w-1/2 h-14 bg-gray-900 text-white p-4 items-center flex justify-between md:rounded-b-md">
       {loggedIn() &&
         <a href="/account" class="flex items-center">
           <img  src={pfpUri()!} alt="Logo" class="h-8 mr-4" />
