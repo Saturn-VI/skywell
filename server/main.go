@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -109,6 +110,36 @@ func requestCorrelationMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("X-Request-ID", requestID)
 		next.ServeHTTP(w, r)
 	})
+}
+
+func getRealIPAddress(r *http.Request) string {
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		// X-Forwarded-For can contain multiple IPs, take the first one
+		if ips := strings.Split(xff, ","); len(ips) > 0 {
+			return strings.TrimSpace(ips[0])
+		}
+	}
+
+	// X-Real-IP (nginx)
+	if xri := r.Header.Get("X-Real-IP"); xri != "" {
+		return strings.TrimSpace(xri)
+	}
+
+	// CF-Connecting-IP (Cloudflare)
+	if cfip := r.Header.Get("CF-Connecting-IP"); cfip != "" {
+		return strings.TrimSpace(cfip)
+	}
+
+	// True-Client-IP (Akamai, Cloudflare)
+	if tcip := r.Header.Get("True-Client-IP"); tcip != "" {
+		return strings.TrimSpace(tcip)
+	}
+
+	if xcip := r.Header.Get("X-Client-IP"); xcip != "" {
+		return strings.TrimSpace(xcip)
+	}
+
+	return r.RemoteAddr
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
