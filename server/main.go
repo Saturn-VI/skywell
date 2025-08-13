@@ -28,7 +28,7 @@ import (
 )
 
 const PORT string = ":4999"
-const SkywellDid syntax.DID = "did:plc:tsar4ffwyj5z6rjqaxmg5cp4"
+const SkywellDid syntax.DID = "did:plc:tsaj4ffwyj5z6rjqaxmg5cp4"
 const UserAgent string = "Skywell AppView v0.1.12"
 const requestIDKey string = "requestID"
 
@@ -132,7 +132,7 @@ func initializeHandleFuncs(db *gorm.DB, client *xrpc.Client, ctx context.Context
 		requestID := r.Context().Value(requestIDKey).(string)
 		logger := httpLogger.With("request_id", requestID)
 
-		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.getActorProfile", "remote_addr", r.RemoteAddr)
+		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.getActorProfile", "remote_addr", getRealIPAddress(r))
 		actor := r.URL.Query().Get("actor")
 		if actor == "" {
 			logger.Warn("Missing required parameter", "endpoint", "/xrpc/dev.skywell.getActorProfile", "parameter", "actor")
@@ -174,7 +174,7 @@ func initializeHandleFuncs(db *gorm.DB, client *xrpc.Client, ctx context.Context
 
 		// based on slug, get:
 		// URI, CID, and DID
-		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.getFileFromSlug", "remote_addr", r.RemoteAddr)
+		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.getFileFromSlug", "remote_addr", getRealIPAddress(r))
 		slug := r.URL.Query().Get("slug")
 		if slug == "" {
 			logger.Warn("Missing required parameter", "endpoint", "/xrpc/dev.skywell.getFileFromSlug", "parameter", "slug")
@@ -257,10 +257,10 @@ func initializeHandleFuncs(db *gorm.DB, client *xrpc.Client, ctx context.Context
 		requestID := r.Context().Value(requestIDKey).(string)
 		logger := httpLogger.With("request_id", requestID)
 
-		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.getActorFiles", "remote_addr", r.RemoteAddr)
+		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.getActorFiles", "remote_addr", getRealIPAddress(r))
 		did, err := verifyJWT(ctx, r)
 		if err != nil {
-			logger.Error("Failed to verify JWT", "error", err, "remote_addr", r.RemoteAddr)
+			logger.Error("Failed to verify JWT", "error", err, "remote_addr", getRealIPAddress(r))
 			http.Error(w, "Internal Server Error (JWT verification)", 500)
 			return
 		}
@@ -327,7 +327,7 @@ func initializeHandleFuncs(db *gorm.DB, client *xrpc.Client, ctx context.Context
 		requestID := r.Context().Value(requestIDKey).(string)
 		logger := httpLogger.With("request_id", requestID)
 
-		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.indexActorProfile", "remote_addr", r.RemoteAddr)
+		logger.Debug("Received request", "endpoint", "/xrpc/dev.skywell.indexActorProfile", "remote_addr", getRealIPAddress(r))
 		decoder := json.NewDecoder(r.Body)
 		var body IapBody
 		err := decoder.Decode(&body)
