@@ -44,7 +44,7 @@
   - [x] make not broken on mobile
 
 ### functionality
-- [ ] filter handle string for valid characters
+- [x] filter handle string for valid characters
 - [x] oauth
 - [x] create records
 - [x] delete records
