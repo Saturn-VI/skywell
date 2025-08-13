@@ -9,16 +9,16 @@ import (
 	"net/http"
 
 	b58 "github.com/mr-tron/base58"
-	skywell "github.com/saturn-vi/skywell/api/skywell"
+	"github.com/saturn-vi/skywell/api/skywell"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 
-	bsky "github.com/bluesky-social/indigo/api/bsky"
-	syntax "github.com/bluesky-social/indigo/atproto/syntax"
-	xrpc "github.com/bluesky-social/indigo/xrpc"
+	"github.com/bluesky-social/indigo/api/bsky"
+	"github.com/bluesky-social/indigo/atproto/syntax"
+	"github.com/bluesky-social/indigo/xrpc"
 	jetstream "github.com/bluesky-social/jetstream/pkg/models"
 )
 
@@ -52,7 +52,7 @@ type File struct {
 	Size        int64
 }
 
-const SLUG_LENGTH int = 6 // enough entropy for anyone
+const SlugLength int = 6 // enough entropy for anyone
 
 func initializeDB() (db *gorm.DB, client *xrpc.Client, err error) {
 	db, err = gorm.Open(sqlite.Open("database.db"), &gorm.Config{
@@ -61,9 +61,18 @@ func initializeDB() (db *gorm.DB, client *xrpc.Client, err error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	db.AutoMigrate(&File{})
-	db.AutoMigrate(&User{})
-	db.AutoMigrate(&FileKey{})
+	err = db.AutoMigrate(&File{})
+	if err != nil {
+		return nil, nil, err
+	}
+	err = db.AutoMigrate(&User{})
+	if err != nil {
+		return nil, nil, err
+	}
+	err = db.AutoMigrate(&FileKey{})
+	if err != nil {
+		return nil, nil, err
+	}
 
 	client = &xrpc.Client{
 		Client:    &http.Client{},
@@ -84,7 +93,11 @@ func updateIdentity(evt jetstream.Event, db *gorm.DB, client *xrpc.Client, ctx c
 		jetstreamLogger.Error("Failed to parse DID", "did", evt.Did, "error", err)
 		return
 	}
-	cacheDir.Purge(ctx, did.AtIdentifier())
+	err = cacheDir.Purge(ctx, did.AtIdentifier())
+	if err != nil {
+		jetstreamLogger.Error("Failed to purge cache entry", "did", did.AtIdentifier(), "error", err)
+		return
+	}
 	err = updateUserProfile(did, false, db, client, ctx)
 	if err != nil {
 		jetstreamLogger.Error("Failed to update user profile", "did", evt.Did, "error", err)
@@ -293,7 +306,7 @@ func generateSlug(db *gorm.DB, cid syntax.CID, uri syntax.URI) (slug string, err
 	hasher.Write([]byte(uri.String()))
 
 	b := b58.Encode(hasher.Sum(nil))
-	tb := b[:SLUG_LENGTH]
+	tb := b[:SlugLength]
 
 	counter := 0
 	cb := tb
@@ -301,10 +314,10 @@ func generateSlug(db *gorm.DB, cid syntax.CID, uri syntax.URI) (slug string, err
 	fk := FileKey{}
 
 	for {
-		err := db.First(&fk, "key = ?", string(cb)).Error
+		err := db.First(&fk, "key = ?", cb).Error
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return string(cb), nil // found a unique slug
+			return cb, nil // found a unique slug
 		}
 
 		if err != nil {
@@ -312,7 +325,7 @@ func generateSlug(db *gorm.DB, cid syntax.CID, uri syntax.URI) (slug string, err
 		}
 
 		counter++
-		cb = fmt.Sprintf("%s%d", string(tb), counter)
+		cb = fmt.Sprintf("%s%d", tb, counter)
 	}
 }
 
@@ -321,15 +334,15 @@ func updateUserProfile(did syntax.DID, forceIndex bool, db *gorm.DB, client *xrp
 	user := User{
 		DID: did,
 	}
-	error := db.First(&user, "did = ?", did.String()).Error
+	err := db.First(&user, "did = ?", did.String()).Error
 	// if we're forcing an  index, we don't worry about record not found
-	if !forceIndex && errors.Is(error, gorm.ErrRecordNotFound) {
+	if !forceIndex && errors.Is(err, gorm.ErrRecordNotFound) {
 		// they haven't made any files
 		// we don't care about them
 		return nil
 	}
-	if error != nil && !errors.Is(error, gorm.ErrRecordNotFound) {
-		return error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
 	}
 
 	handle, displayName, avatarURI, err := getUserData(did, client, ctx)

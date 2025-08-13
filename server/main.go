@@ -18,23 +18,21 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/bluesky-social/indigo/atproto/auth"
-	identity "github.com/bluesky-social/indigo/atproto/identity"
-	syntax "github.com/bluesky-social/indigo/atproto/syntax"
+	"github.com/bluesky-social/indigo/atproto/identity"
+	"github.com/bluesky-social/indigo/atproto/syntax"
 	"github.com/bluesky-social/indigo/lex/util"
 	"github.com/bluesky-social/indigo/xrpc"
 	"github.com/gigatar/ratelimiter"
 	"github.com/ipfs/go-cid"
-	skywell "github.com/saturn-vi/skywell/api/skywell"
+	"github.com/saturn-vi/skywell/api/skywell"
 )
 
 const PORT string = ":4999"
-const SKYWELL_DID syntax.DID = "did:plc:tsaj4ffwyj5z6rjqaxmg5cp4"
-const SKYWELL_SERVICE_ID string = "#skywell_server"
-const USER_AGENT string = "Skywell AppView v0.1.12"
-const REQUEST_ID_BYTE_LENGTH int = 8
+const SkywellDid syntax.DID = "did:plc:tsar4ffwyj5z6rjqaxmg5cp4"
+const UserAgent string = "Skywell AppView v0.1.12"
 const requestIDKey string = "requestID"
 
-var cacheDir identity.CacheDirectory = identity.NewCacheDirectory(identity.DefaultDirectory(), 0, 0, 0, 0)
+var cacheDir = identity.NewCacheDirectory(identity.DefaultDirectory(), 0, 0, 0, 0)
 
 var (
 	httpLogger      = slog.With("component", "http")
@@ -59,7 +57,7 @@ func main() {
 	httpLogger.Info("Initializing HTTP server...")
 	initializeHandleFuncs(db, client, ctx)
 
-	httpLogger.Info("Initializing ratelimiter...")
+	httpLogger.Info("Initializing rate limiter...")
 	limiter := ratelimiter.New(&ratelimiter.Config{
 		RequestsPerSecond: 10,
 		Burst:             30,
@@ -75,7 +73,7 @@ func main() {
 
 	go func() {
 		httpLogger.Info("Server started!", "port", PORT)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			httpLogger.Error("Server error", "error", err, "port", PORT)
 		}
 	}()
@@ -95,7 +93,10 @@ func main() {
 
 func generateRequestID() string {
 	bytes := make([]byte, 8)
-	rand.Read(bytes)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return ""
+	}
 	return hex.EncodeToString(bytes)
 }
 
@@ -158,7 +159,12 @@ func initializeHandleFuncs(db *gorm.DB, client *xrpc.Client, ctx context.Context
 		}
 		logger.Debug("Returning profile response", "actor", actor, "did", did.String(), "response_size", len(b))
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", b)
+		_, err = fmt.Fprintf(w, "%s", b)
+		if err != nil {
+			logger.Error("Failed to write response", "did", did.String(), "error", err)
+			http.Error(w, "Internal Server Error", 500)
+			return
+		}
 	})
 
 	// returns GetFileFromSlug_Output
@@ -238,7 +244,12 @@ func initializeHandleFuncs(db *gorm.DB, client *xrpc.Client, ctx context.Context
 		}
 		w.Header().Set("Content-Type", "application/json")
 		logger.Debug("Returning file response", "slug", slug, "file_id", fi.ID, "response_size", len(b))
-		fmt.Fprintf(w, "%s", b)
+		_, err = fmt.Fprintf(w, "%s", b)
+		if err != nil {
+			logger.Error("Failed to write response", "slug", slug, "error", err)
+			http.Error(w, "Internal Server Error", 500)
+			return
+		}
 	})
 
 	// returns GetActorFiles_Output
@@ -270,7 +281,7 @@ func initializeHandleFuncs(db *gorm.DB, client *xrpc.Client, ctx context.Context
 			http.Error(w, "Internal Server Error (profile view generation)", stat)
 			return
 		}
-		var limit int = 50 // default limit
+		var limit = 50 // default limit
 		if l := r.URL.Query().Get("limit"); l != "" {
 			limit, err = strconv.Atoi(l)
 			if err != nil {
@@ -299,7 +310,12 @@ func initializeHandleFuncs(db *gorm.DB, client *xrpc.Client, ctx context.Context
 		}
 		logger.Debug("Returning actor files response", "did", did.String(), "file_count", len(*files), "response_size", len(b))
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", b)
+		_, err = fmt.Fprintf(w, "%s", b)
+		if err != nil {
+			logger.Error("Failed to write response", "error", err)
+			http.Error(w, "Internal Server Error", 500)
+			return
+		}
 	})
 
 	type IapBody struct {
@@ -351,11 +367,11 @@ func initializeHandleFuncs(db *gorm.DB, client *xrpc.Client, ctx context.Context
 func verifyJWT(ctx context.Context, r *http.Request) (did syntax.DID, err error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
-		return "", fmt.Errorf("Authorization header missing")
+		return "", fmt.Errorf("authorization header missing")
 	}
 
 	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
-		return "", fmt.Errorf("Invalid Authorization header format")
+		return "", fmt.Errorf("invalid Authorization header format")
 	}
 
 	tokStr := authHeader[7:]
@@ -363,7 +379,7 @@ func verifyJWT(ctx context.Context, r *http.Request) (did syntax.DID, err error)
 	authLogger.Debug("Processing JWT token", "token", tokStr, "token_length", len(tokStr))
 
 	validator := &auth.ServiceAuthValidator{
-		Audience:        SKYWELL_DID.String(),
+		Audience:        SkywellDid.String(),
 		Dir:             &cacheDir,
 		TimestampLeeway: 10 * time.Second,
 	}
@@ -374,7 +390,7 @@ func verifyJWT(ctx context.Context, r *http.Request) (did syntax.DID, err error)
 		return "", fmt.Errorf("JWT validation failed: %w", err)
 	}
 
-	authLogger.Debug("JWT validated successfully", "issuer", issuerDID, "audience", SKYWELL_DID)
+	authLogger.Debug("JWT validated successfully", "issuer", issuerDID, "audience", SkywellDid)
 	return issuerDID, nil
 }
 
@@ -382,14 +398,14 @@ func generateFileView(fileID uint, db *gorm.DB) (fileView *skywell.Defs_FileView
 	file := File{}
 	result := db.First(&file, "id = ?", fileID)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, 404, fmt.Errorf("File not found")
+		return nil, 404, fmt.Errorf("file not found")
 	} else if result.Error != nil {
-		return nil, 500, fmt.Errorf("Failed to find file: %w", result.Error)
+		return nil, 500, fmt.Errorf("failed to find file: %w", result.Error)
 	}
 
 	c, err := cid.Decode(file.BlobRef.String())
 	if err != nil {
-		return nil, 500, fmt.Errorf("Failed to decode blob CID: %w", err)
+		return nil, 500, fmt.Errorf("failed to decode blob CID: %w", err)
 	}
 
 	fileView = &skywell.Defs_FileView{
@@ -412,18 +428,18 @@ func generateProfileView(did syntax.DID, db *gorm.DB, ctx context.Context) (prof
 	id, err := cacheDir.Lookup(ctx, did.AtIdentifier())
 	if err != nil {
 		slog.Error("Failed to lookup DID in cache", "did", did.String(), "error", err)
-		return nil, 500, fmt.Errorf("Failed to lookup DID in cache: %w", err)
+		return nil, 500, fmt.Errorf("failed to lookup DID in cache: %w", err)
 	}
 	user := User{}
 	result := db.First(&user, "did = ?", id.DID.String())
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, 404, fmt.Errorf("Actor not found")
+		return nil, 404, fmt.Errorf("actor not found")
 	} else if result.Error != nil {
-		return nil, 500, fmt.Errorf("Failed to find actor: %w", result.Error)
+		return nil, 500, fmt.Errorf("failed to find actor: %w", result.Error)
 	}
 	afc, err := getActorFileCount(id.DID, db)
 	if err != nil {
-		return nil, 500, fmt.Errorf("Failed to get actor file count: %w", err)
+		return nil, 500, fmt.Errorf("failed to get actor file count: %w", err)
 	}
 	profileView = &skywell.Defs_ProfileView{
 		Avatar:      (*string)(&user.Avatar),
@@ -441,9 +457,9 @@ func generateFileList(c string, limit int, a syntax.DID, db *gorm.DB) (cursor st
 	user := User{}
 	result := db.First(&user, "did = ?", a.String())
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return "", nil, 404, fmt.Errorf("Actor not found")
+		return "", nil, 404, fmt.Errorf("actor not found")
 	} else if result.Error != nil {
-		return "", nil, 500, fmt.Errorf("Failed to find actor: %w", result.Error)
+		return "", nil, 500, fmt.Errorf("failed to find actor: %w", result.Error)
 	}
 	fileviews = &[]*skywell.Defs_FileView{}
 	files := &[]File{} // so we can use Last() to get the cursor
@@ -451,14 +467,14 @@ func generateFileList(c string, limit int, a syntax.DID, db *gorm.DB) (cursor st
 	if c != "" {
 		pint, err := strconv.ParseInt(c, 10, 64)
 		if err != nil {
-			return "", nil, 400, fmt.Errorf("Invalid 'cursor' parameter: %w", err)
+			return "", nil, 400, fmt.Errorf("invalid 'cursor' parameter: %w", err)
 		}
 		dt := time.Unix(0, pint) // cursor is a nanosecond timestamp
 		query = query.Where("indexed_at < ?", dt)
 	}
 	result = query.Find(files)
 	if result.Error != nil {
-		return "", nil, 500, fmt.Errorf("Failed to query files: %w", result.Error)
+		return "", nil, 500, fmt.Errorf("failed to query files: %w", result.Error)
 	}
 	for _, f := range *files {
 		fk := FileKey{}
@@ -467,11 +483,11 @@ func generateFileList(c string, limit int, a syntax.DID, db *gorm.DB) (cursor st
 				slog.Debug("No file key found", "file_id", f.ID)
 				continue
 			}
-			return "", nil, 500, fmt.Errorf("Failed to find file key: %w", err)
+			return "", nil, 500, fmt.Errorf("failed to find file key: %w", err)
 		}
 		c, err := cid.Decode(f.BlobRef.String())
 		if err != nil {
-			return "", nil, 500, fmt.Errorf("Failed to decode blob CID: %w", err)
+			return "", nil, 500, fmt.Errorf("failed to decode blob CID: %w", err)
 		}
 		*fileviews = append(*fileviews, &skywell.Defs_FileView{
 			Uri: f.Uri.String(),
@@ -490,11 +506,11 @@ func generateFileList(c string, limit int, a syntax.DID, db *gorm.DB) (cursor st
 	if len(*files) == 0 {
 		return "", fileviews, 200, nil
 	}
-	cursor = strconv.FormatInt(((*files)[len(*files)-1].IndexedAt), 10)
+	cursor = strconv.FormatInt((*files)[len(*files)-1].IndexedAt, 10)
 	return cursor, fileviews, 200, nil
 }
 
 func userAgent() *string {
-	str := USER_AGENT
+	str := UserAgent
 	return &str
 }
