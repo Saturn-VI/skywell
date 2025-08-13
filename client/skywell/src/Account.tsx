@@ -135,6 +135,7 @@ const Account: Component = () => {
             );
             console.log(res);
             setFiles(files().filter((f) => f.uri !== uri));
+            setFileCount(fileCount() - 1);
           })(),
           {
             loading: "Deleting file...",
