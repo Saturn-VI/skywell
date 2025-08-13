@@ -78,6 +78,11 @@ const Login: Component = () => {
             name="handle"
             autocomplete="handle"
             value={userHandle()}
+            onBeforeInput={(e) => {
+              if (e.data && e.data.length === 1 && !/^[a-zA-Z0-9.-]$/.test(e.data)) {
+                e.preventDefault();
+              }
+            }}
             onInput={(e) => {
               const value = e.target.value;
               const filteredValue = value.replace(/[^a-zA-Z0-9.-]/g, '');
