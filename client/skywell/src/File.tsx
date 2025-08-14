@@ -131,8 +131,8 @@ const File: Component = () => {
       <div class="max-w-4xl mx-auto w-full">
         <div class="bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
           <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-            <div class="flex-1">
-              <h1 class="text-3xl md:text-4xl font-bold mb-3 break-words">
+            <div class="flex-1 min-w-0 max-w-full">
+              <h1 class="text-3xl md:text-4xl font-bold mb-3 break-words truncate">
                 {filename()}
               </h1>
               <div class="space-y-2 text-gray-300">
@@ -150,7 +150,7 @@ const File: Component = () => {
               </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            <div class="flex flex-col gap-3 w-full lg:w-auto">
               <button
                 onclick={copyFileUrl}
                 class="cursor-pointer bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
