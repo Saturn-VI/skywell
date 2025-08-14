@@ -4,7 +4,7 @@ const Footer: Component = () => {
   return (
     <footer class="w-full px-6 py-8 bg-gray-900 text-center text-gray-400">
       <p class="mb-2">
-        skywell - decentralized file sharing
+        <span class="font-normal" style="font-family: 'Fredoka', sans-serif;">skywell</span> - decentralized file sharing
       </p>
       <p class="text-sm">
         built with ❤️ by <a
