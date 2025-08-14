@@ -175,7 +175,6 @@ const File: Component = () => {
       <a id="download-link" download={filename()} class="hidden w-0 h-0" />
 
       <div class="max-w-4xl mx-auto w-full">
-        {/* File Header Section */}
         <div class="bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
           <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div class="flex-1">
@@ -187,7 +186,7 @@ const File: Component = () => {
                   uploaded {creationDate().toLocaleDateString()} at {creationDate().toLocaleTimeString()}
                 </p>
                 <p class="text-lg">
-                  created by <span class="font-medium text-white">{author()}</span>
+                  created by <span class="font-bold text-white">{author()}</span>
                 </p>
                 <p class="text-gray-400">
                   <code>@{authorHandle()}</code>
