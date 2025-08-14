@@ -200,9 +200,9 @@ const Account: Component = () => {
   });
 
   return (
-    <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
-      <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between mb-4">
-        <div class="flex flex-col md:w-2/3 w-full h-full p-4 justify-center">
+    <div class="flex flex-col w-full h-full bg-gray-700 text-white p-6">
+      <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between mb-6 rounded-lg shadow-lg">
+        <div class="flex flex-col md:w-2/3 w-full h-full p-6 justify-center">
           <div class="sm:text-4xl text-3xl font-semibold mb-2">
             {displayName()}
           </div>
@@ -213,9 +213,9 @@ const Account: Component = () => {
             {fileCount()} file{fileCount() != 1 ? "s" : ""} uploaded
           </div>
         </div>
-        <div class="flex justify-center items-center lg:w-1/4 md:w-1/3 w-full lg:h-full md:h-2/3 h-1/2 p-2">
+        <div class="flex justify-center items-center lg:w-1/4 md:w-1/3 w-full lg:h-full md:h-2/3 h-1/2 p-4">
           <button
-            class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-red-600 hover:bg-red-700 text-center lg:text-xl text-lg"
+            class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-red-600 hover:bg-red-700 text-center lg:text-xl text-lg rounded-md transition-colors duration-200"
             onClick={() => {
               trySignOut();
               navigate("/");
@@ -227,29 +227,29 @@ const Account: Component = () => {
       </div>
 
       <div class="flex flex-col w-full h-full">
-        <div class="text-2xl font-semibold mb-4">Your Files</div>
+        <div class="text-2xl font-semibold mb-6">Your Files</div>
 
         {loading() ? (
-          <div class="flex items-center justify-center h-32">
+          <div class="flex items-center justify-center h-32 bg-gray-800 rounded-lg">
             <p class="text-xl text-gray-400">Loading files...</p>
           </div>
         ) : files().length === 0 ? (
-          <div class="flex flex-col items-center justify-center h-32">
+          <div class="flex flex-col items-center justify-center h-32 bg-gray-800 rounded-lg">
             <p class="text-xl text-gray-400 mb-4">No files uploaded yet</p>
             <a
               href="/upload"
-              class="bg-blue-600 hover:bg-blue-700 px-4 py-2 font-semibold"
+              class="bg-blue-600 hover:bg-blue-700 px-4 py-2 font-semibold rounded-md transition-colors duration-200"
             >
               upload a file
             </a>
           </div>
         ) : (
           <div
-            class="bg-gray-800 w-full overflow-y-auto max-h-full"
+            class="bg-gray-800 w-full overflow-y-auto max-h-full rounded-lg shadow-lg"
             onScroll={handleScroll}
           >
             {/* Files Header */}
-            <div class="grid grid-cols-4 gap-4 p-4 border-b border-gray-600 font-semibold sticky top-0 bg-gray-800">
+            <div class="grid grid-cols-4 gap-4 p-4 border-b border-gray-600 font-semibold sticky top-0 bg-gray-800 text-gray-300">
               <div>Name</div>
               <div>Date Uploaded</div>
               <div>Size</div>
@@ -258,7 +258,7 @@ const Account: Component = () => {
 
             {/* Files List */}
             {files().map((file) => (
-              <div class="grid grid-cols-4 gap-4 p-4 border-b border-gray-700 hover:bg-gray-700">
+              <div class="grid grid-cols-4 gap-4 p-4 border-b border-gray-700 hover:bg-gray-700 transition-colors duration-150 items-center">
                 <div class="font-medium md:text-base sm:text-sm text-xs wrap-anywhere">
                   {file.name}
                 </div>
@@ -268,9 +268,9 @@ const Account: Component = () => {
                 <div class="text-gray-300 md:text-base sm:text-sm text-xs wrap-anywhere">
                   {filesize((file.blob as Blob).size)}
                 </div>
-                <div class="flex sm:space-x-2 sm:flex-row flex-col items-start justify-items-center space-y-1">
+                <div class="flex sm:space-x-2 sm:flex-row flex-col items-center justify-items-center space-y-1">
                   <button
-                    class="cursor-pointer bg-green-600 hover:bg-green-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere"
+                    class="bg-green-600 hover:bg-green-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                     onclick={() => {
                       copyFileUrl(file.slug);
                     }}
@@ -279,12 +279,12 @@ const Account: Component = () => {
                   </button>
                   <a
                     href={`/file/${file.slug}`}
-                    class="bg-blue-600 hover:bg-blue-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere"
+                    class="bg-blue-600 hover:bg-blue-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                   >
                     View
                   </a>
                   <button
-                    class="cursor-pointer bg-red-600 hover:bg-red-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere"
+                    class="bg-red-600 hover:bg-red-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                     onclick={() => {
                       if (confirm(`are you sure you want to delete ${file.name}?`)) {
                         deleteFile(file.uri);
