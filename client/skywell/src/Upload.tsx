@@ -12,11 +12,7 @@ import { ClientResponse, isXRPCErrorPayload } from "@atcute/client";
 import { Blob } from "@atcute/lexicons";
 import { DevSkywellFile } from "skywell";
 import mime from "mime";
-import {
-  fileCount,
-  loadFiles,
-  setFileCount,
-} from "./Account.tsx";
+import { fileCount, loadFiles, setFileCount } from "./Account.tsx";
 import { filesize } from "filesize";
 
 const Upload: Component = () => {
@@ -241,9 +237,7 @@ const Upload: Component = () => {
         <div class="grid lg:grid-cols-2 gap-8">
           <div class="space-y-6">
             <div class="lg:hidden">
-              <label class="block text-lg font-medium mb-2">
-                select file
-              </label>
+              <label class="block text-lg font-medium mb-2">select file</label>
               <input
                 ref={fileInputRef!}
                 type="file"
@@ -267,9 +261,7 @@ const Upload: Component = () => {
             </div>
 
             <div>
-              <label class="block text-lg font-medium mb-2">
-                file name
-              </label>
+              <label class="block text-lg font-medium mb-2">file name</label>
               <input
                 maxlength="80"
                 type="text"
@@ -282,9 +274,7 @@ const Upload: Component = () => {
             </div>
 
             <div>
-              <label class="block text-lg font-medium mb-2">
-                description
-              </label>
+              <label class="block text-lg font-medium mb-2">description</label>
               <textarea
                 maxlength="500"
                 id="description"
@@ -313,9 +303,10 @@ const Upload: Component = () => {
               ref={dropzoneRef}
               class={`
                 border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200
-                ${isDragging()
-                  ? 'border-blue-500 bg-blue-900/20'
-                  : 'border-gray-600 bg-gray-800 hover:bg-gray-750 hover:border-gray-500'
+                ${
+                  isDragging()
+                    ? "border-blue-500 bg-blue-900/20"
+                    : "border-gray-600 bg-gray-800 hover:bg-gray-750 hover:border-gray-500"
                 }
               `}
               onDragEnter={handleDragEnter}
@@ -352,7 +343,9 @@ const Upload: Component = () => {
                   <div class="text-4xl text-gray-500">📁</div>
                   <div>
                     <p class="text-lg font-medium">
-                      {isDragging() ? "drop your file here!" : "choose a file to upload"}
+                      {isDragging()
+                        ? "drop your file here!"
+                        : "choose a file to upload"}
                     </p>
                     <p class="text-gray-400 text-sm">
                       drag and drop or click to browse

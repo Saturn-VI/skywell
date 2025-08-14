@@ -4,7 +4,6 @@ import { DevSkywellGetFileFromSlug } from "skywell";
 import {
   getEntrywayClient,
   isLoggedIn,
-  getAuthedClient,
   agent,
   getSkywellClient,
 } from "./Auth.tsx";
@@ -16,11 +15,8 @@ import {
 } from "@solidjs/router";
 import { toast } from "solid-toast";
 import { isXRPCErrorPayload } from "@atcute/client";
-import {
-  ComAtprotoSyncGetBlob,
-  ComAtprotoRepoDeleteRecord,
-} from "@atcute/atproto";
-import { parseResourceUri } from "@atcute/lexicons";
+import { ComAtprotoSyncGetBlob } from "@atcute/atproto";
+import { deleteFile } from "./Account.tsx";
 
 async function loadData(navigate: Navigator, params: Params) {
   const client = getSkywellClient();
@@ -110,48 +106,6 @@ async function clickDownloadLink() {
   }
 }
 
-async function deleteFile(uri: string, navigate: Navigator) {
-  if (!confirm(`are you sure you want to delete ${filename()}?`)) {
-    return;
-  }
-
-  const result = parseResourceUri(uri);
-  if (result.ok) {
-    const c = await getAuthedClient();
-    if (!c) {
-      toast.error("Not authenticated, please log in");
-      navigate("/login", { replace: true });
-      return;
-    }
-    if (result.value.collection && result.value.rkey) {
-      try {
-        await toast.promise(
-          c.post(ComAtprotoRepoDeleteRecord.mainSchema.nsid, {
-            input: {
-              repo: result.value.repo,
-              collection: result.value.collection!,
-              rkey: result.value.rkey!,
-            },
-          }),
-          {
-            loading: "Deleting file...",
-            success: "File deleted successfully!",
-            error: "Failed to delete file",
-          },
-        );
-        navigate("/account", { replace: true });
-      } catch (error) {
-        console.error("Failed to delete file:", error);
-        toast.error("Failed to delete file");
-      }
-    }
-  } else {
-    console.error("Invalid resource URI:", uri);
-    toast.error("Invalid file URI");
-    return;
-  }
-}
-
 const [filename, setFilename] = createSignal<string>("Loading...");
 const [creationDate, setCreationDate] = createSignal<Date>(new Date(0));
 const [author, setAuthor] = createSignal<string>("Loading...");
@@ -183,10 +137,12 @@ const File: Component = () => {
               </h1>
               <div class="space-y-2 text-gray-300">
                 <p class="text-lg">
-                  uploaded {creationDate().toLocaleDateString()} at {creationDate().toLocaleTimeString()}
+                  uploaded {creationDate().toLocaleDateString()} at{" "}
+                  {creationDate().toLocaleTimeString()}
                 </p>
                 <p class="text-lg">
-                  created by <span class="font-bold text-white">{author()}</span>
+                  created by{" "}
+                  <span class="font-bold text-white">{author()}</span>
                 </p>
                 <p class="text-gray-400">
                   <code>@{authorHandle()}</code>
@@ -209,7 +165,10 @@ const File: Component = () => {
               </button>
               {userLoggedIn() && isOwner() && (
                 <button
-                  onclick={() => deleteFile(fileUri(), navigate)}
+                  onclick={() => {
+                    navigate("/account");
+                    deleteFile(fileUri(), navigate);
+                  }}
                   class="cursor-pointer bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
                 >
                   delete

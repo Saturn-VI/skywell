@@ -9,7 +9,7 @@ import {
   trySignOut,
 } from "./Auth.tsx";
 import { toast } from "solid-toast";
-import { useNavigate } from "@solidjs/router";
+import { Navigator, useNavigate } from "@solidjs/router";
 import {
   DevSkywellDefs,
   DevSkywellGetActorFiles,
@@ -108,6 +108,44 @@ const handleScroll = (e: Event) => {
   }
 };
 
+export const deleteFile = async (uri: string, navigate: Navigator) => {
+  const result = parseResourceUri(uri);
+  if (result.ok) {
+    const c = await getAuthedClient();
+    if (!c) {
+      // this shouldn't happen but whatever
+      toast.error("Not authenticated, please log in");
+      navigate("/login", { replace: true });
+      return;
+    }
+    if (result.value.collection && result.value.rkey) {
+      await toast.promise(
+        (async () => {
+          const res = await c.post(ComAtprotoRepoDeleteRecord.mainSchema.nsid, {
+            input: {
+              repo: result.value.repo,
+              collection: result.value.collection!,
+              rkey: result.value.rkey!,
+            },
+          });
+          console.log(res);
+          setFileCount(fileCount() - 1);
+          setFiles(files().filter((f) => f.uri !== uri));
+        })(),
+        {
+          loading: "Deleting file...",
+          success: "File deleted successfully!",
+          error: "Failed to delete file",
+        },
+      );
+    }
+  } else {
+    console.error("Invalid resource URI:", uri);
+    toast.error("Invalid file URI");
+    return;
+  }
+};
+
 const Account: Component = () => {
   const navigate = useNavigate();
 
@@ -119,47 +157,6 @@ const Account: Component = () => {
     } catch (error) {
       console.error("Failed to copy to clipboard:", error);
       toast.error("Failed to copy URL");
-    }
-  };
-
-  const deleteFile = async (uri: string) => {
-    const result = parseResourceUri(uri);
-    if (result.ok) {
-      const c = await getAuthedClient();
-      if (!c) {
-        // this shouldn't happen but whatever
-        toast.error("Not authenticated, please log in");
-        navigate("/login", { replace: true });
-        return;
-      }
-      if (result.value.collection && result.value.rkey) {
-        await toast.promise(
-          (async () => {
-            const res = await c.post(
-              ComAtprotoRepoDeleteRecord.mainSchema.nsid,
-              {
-                input: {
-                  repo: result.value.repo,
-                  collection: result.value.collection!,
-                  rkey: result.value.rkey!,
-                },
-              },
-            );
-            console.log(res);
-            setFiles(files().filter((f) => f.uri !== uri));
-            setFileCount(fileCount() - 1);
-          })(),
-          {
-            loading: "Deleting file...",
-            success: "File deleted successfully!",
-            error: "Failed to delete file",
-          },
-        );
-      }
-    } else {
-      console.error("Invalid resource URI:", uri);
-      toast.error("Invalid file URI");
-      return;
     }
   };
 
@@ -284,8 +281,10 @@ const Account: Component = () => {
                   <button
                     class="cursor-pointer bg-red-600 hover:bg-red-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                     onclick={() => {
-                      if (confirm(`are you sure you want to delete ${file.name}?`)) {
-                        deleteFile(file.uri);
+                      if (
+                        confirm(`are you sure you want to delete ${file.name}?`)
+                      ) {
+                        deleteFile(file.uri, navigate);
                       }
                     }}
                   >

@@ -9,7 +9,10 @@ const Home: Component = () => {
       <div class="flex flex-col items-center justify-center px-6 py-16 lg:py-24 text-center animate-fade-in">
         <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-slide-up">
           welcome to{" "}
-          <span class="font-normal align-top inline-block" style="font-family: 'Fredoka', sans-serif;">
+          <span
+            class="font-normal align-top inline-block"
+            style="font-family: 'Fredoka', sans-serif;"
+          >
             skywell
           </span>
         </h1>
@@ -125,8 +128,8 @@ const Home: Component = () => {
         <div class="px-6 py-16 text-center bg-gray-800">
           <h2 class="text-3xl md:text-4xl font-bold mb-6">interested?</h2>
           <p class="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
-            experience the future of the web and start sharing files with Skywell
-            today.
+            experience the future of the web and start sharing files with
+            Skywell today.
           </p>
 
           <a
