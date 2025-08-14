@@ -40,10 +40,10 @@ async function runLoginFlow() {
     trySignOut();
     await getSkywellClient().post(DevSkywellIndexActorProfile.mainSchema.nsid, {
       input: {
-        actor: identity.id
+        actor: identity.id,
       },
-      as: null
-    })
+      as: null,
+    });
     await sleep(200);
     window.location.assign(authUrl);
 
@@ -79,13 +79,17 @@ const Login: Component = () => {
             autocomplete="handle"
             value={userHandle()}
             onBeforeInput={(e) => {
-              if (e.data && e.data.length === 1 && !/^[a-zA-Z0-9.-]$/.test(e.data)) {
+              if (
+                e.data &&
+                e.data.length === 1 &&
+                !/^[a-zA-Z0-9.-]$/.test(e.data)
+              ) {
                 e.preventDefault();
               }
             }}
             onInput={(e) => {
               const value = e.target.value;
-              const filteredValue = value.replace(/[^a-zA-Z0-9.-]/g, '');
+              const filteredValue = value.replace(/[^a-zA-Z0-9.-]/g, "");
               setUserHandle(filteredValue);
             }}
             onKeyDown={(e) => {

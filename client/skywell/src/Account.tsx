@@ -21,94 +21,95 @@ import { isXRPCErrorPayload } from "@atcute/client";
 import { ComAtprotoRepoDeleteRecord } from "@atcute/atproto";
 import { filesize } from "filesize";
 
-const Account: Component = () => {
-  const [handle, setHandle] = createSignal<string>("Loading...");
-  const [displayName, setDisplayName] = createSignal<string>("Loading...");
-  const [files, setFiles] = createSignal<DevSkywellDefs.FileView[]>([]);
-  const [fileCount, setFileCount] = createSignal<number>(0);
-  const [loading, setLoading] = createSignal(true);
-  const [loadingMore, setLoadingMore] = createSignal(false);
-  const [cursor, setCursor] = createSignal<string | undefined>(undefined);
-  const [hasMore, setHasMore] = createSignal(true);
-  const navigate = useNavigate();
+const [handle, setHandle] = createSignal<string>("Loading...");
+const [displayName, setDisplayName] = createSignal<string>("Loading...");
+const [files, setFiles] = createSignal<DevSkywellDefs.FileView[]>([]);
+export const [fileCount, setFileCount] = createSignal<number>(0);
+const [loading, setLoading] = createSignal(true);
+const [loadingMore, setLoadingMore] = createSignal(false);
+const [cursor, setCursor] = createSignal<string | undefined>(undefined);
+const [hasMore, setHasMore] = createSignal(true);
 
-  const loadFiles = async (loadMore = false) => {
-    try {
-      const currentAgent = agent();
-      if (!currentAgent?.session) return;
+export const loadFiles = async (loadMore = false) => {
+  try {
+    const currentAgent = agent();
+    if (!currentAgent?.session) return;
 
-      const userDid = currentAgent.session.info.sub;
-      const skywellClient = await getAuthedSkywellClient();
-      if (!skywellClient) return;
+    const userDid = currentAgent.session.info.sub;
+    const skywellClient = await getAuthedSkywellClient();
+    if (!skywellClient) return;
 
-      const params: DevSkywellGetActorFiles.$params = {
-        actor: userDid,
-        limit: 50,
-      };
+    const params: DevSkywellGetActorFiles.$params = {
+      actor: userDid,
+      limit: 50,
+    };
 
-      if (loadMore && cursor()) {
-        params.cursor = cursor();
-      }
-
-      const flist = await skywellClient.get(
-        DevSkywellGetActorFiles.mainSchema.nsid,
-        { params },
-      );
-
-      if (isXRPCErrorPayload(flist.data)) {
-        throw new Error("Failed to fetch user files");
-      }
-
-      const newFiles = (flist.data.files || []) as DevSkywellDefs.FileView[];
-
-      if (loadMore) {
-        setFiles((prev) => [...prev, ...newFiles]);
-      } else {
-        setFiles(newFiles);
-      }
-
-      setCursor(flist.data.cursor);
-      setHasMore(newFiles.length >= 50);
-    } catch (error) {
-      console.error("Failed to load files:", error);
-      if (!loadMore) {
-        toast.error("Failed to load files");
-      }
+    if (loadMore && cursor()) {
+      params.cursor = cursor();
     }
-  };
 
-  const loadUserData = async (did: `did:${string}:${string}`) => {
-    const skywellClient = getSkywellClient();
-    const res = await skywellClient.get(
-      DevSkywellGetActorProfile.mainSchema.nsid,
-      {
-        params: { actor: did },
-      },
+    const flist = await skywellClient.get(
+      DevSkywellGetActorFiles.mainSchema.nsid,
+      { params },
     );
-    if (isXRPCErrorPayload(res.data)) {
-      throw new Error("Failed to fetch user profile");
-    }
-    setHandle(res.data.handle);
-    setDisplayName(res.data.displayName || handle());
-    setFileCount(res.data.fileCount || 0);
-  };
 
-  const handleScroll = (e: Event) => {
-    const target = e.target as HTMLElement;
-    const { scrollTop, scrollHeight, clientHeight } = target;
-
-    // Load more when user scrolls to within 200px of the bottom
-    if (
-      scrollHeight - scrollTop - clientHeight < 200 &&
-      hasMore() &&
-      !loadingMore()
-    ) {
-      setLoadingMore(true);
-      Promise.all([loadUserData(did()!), loadFiles()]).finally(() => {
-        setLoadingMore(false);
-      });
+    if (isXRPCErrorPayload(flist.data)) {
+      throw new Error("Failed to fetch user files");
     }
-  };
+
+    const newFiles = (flist.data.files || []) as DevSkywellDefs.FileView[];
+
+    if (loadMore) {
+      setFiles((prev) => [...prev, ...newFiles]);
+    } else {
+      setFiles(newFiles);
+    }
+
+    setCursor(flist.data.cursor);
+    setHasMore(newFiles.length >= 50);
+  } catch (error) {
+    console.error("Failed to load files:", error);
+    if (!loadMore) {
+      toast.error("Failed to load files");
+    }
+  }
+};
+
+export const loadUserData = async (did: `did:${string}:${string}`) => {
+  const skywellClient = getSkywellClient();
+  const res = await skywellClient.get(
+    DevSkywellGetActorProfile.mainSchema.nsid,
+    {
+      params: { actor: did },
+    },
+  );
+  if (isXRPCErrorPayload(res.data)) {
+    throw new Error("Failed to fetch user profile");
+  }
+  setHandle(res.data.handle);
+  setDisplayName(res.data.displayName || handle());
+  setFileCount(res.data.fileCount || 0);
+};
+
+const handleScroll = (e: Event) => {
+  const target = e.target as HTMLElement;
+  const { scrollTop, scrollHeight, clientHeight } = target;
+
+  // Load more when user scrolls to within 200px of the bottom
+  if (
+    scrollHeight - scrollTop - clientHeight < 200 &&
+    hasMore() &&
+    !loadingMore()
+  ) {
+    setLoadingMore(true);
+    Promise.all([loadUserData(did()!), loadFiles()]).finally(() => {
+      setLoadingMore(false);
+    });
+  }
+};
+
+const Account: Component = () => {
+  const navigate = useNavigate();
 
   const deleteFile = async (uri: string) => {
     const result = parseResourceUri(uri);

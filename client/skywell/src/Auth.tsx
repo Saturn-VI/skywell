@@ -1,14 +1,8 @@
-import {
-  getSession,
-  OAuthUserAgent,
-} from "@atcute/oauth-browser-client";
+import { getSession, OAuthUserAgent } from "@atcute/oauth-browser-client";
 import { createSignal, onMount } from "solid-js";
 import { makePersisted } from "@solid-primitives/storage";
 import type { Did } from "@atcute/lexicons";
-import {
-  Client,
-  simpleFetchHandler,
-} from "@atcute/client";
+import { Client, simpleFetchHandler } from "@atcute/client";
 import { toast } from "solid-toast";
 import { XRPCProcedures, XRPCQueries } from "@atcute/lexicons/ambient";
 import {

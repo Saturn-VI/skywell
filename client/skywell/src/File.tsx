@@ -152,7 +152,7 @@ const File: Component = () => {
   const navigate = useNavigate();
 
   onMount(() => {
-    loadData(navigate, params)
+    loadData(navigate, params);
   });
 
   return (
@@ -162,7 +162,9 @@ const File: Component = () => {
         {/* filename, author info, download button */}
         <div class="flex flex-col md:w-1/3 w-full h-full p-4 justify-center">
           {/* filename + author info */}
-          <div class="sm:text-4xl text-3xl font-semibold truncate">{filename()}</div>
+          <div class="sm:text-4xl text-3xl font-semibold truncate">
+            {filename()}
+          </div>
           <div class="sm:text-xl text-lg font-medium">
             uploaded {creationDate().toLocaleString()}
           </div>

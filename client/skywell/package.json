@@ -11,7 +11,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@types/mime-types": "^3.0.1",
+    "@types/mime": "^3.0.4",
     "@types/node": "^24.2.1",
     "typescript": "^5.7.2",
     "vite": "^6.0.0",
@@ -32,7 +32,7 @@
     "eslint-plugin-unused-imports": "^4.1.4",
     "filesize": "^11.0.2",
     "material-icons": "^1.13.14",
-    "mime-types": "^3.0.1",
+    "mime": "^4.0.7",
     "prettier": "^3.6.2",
     "skywell": "file:skywell",
     "sleep-promise": "^9.1.0",

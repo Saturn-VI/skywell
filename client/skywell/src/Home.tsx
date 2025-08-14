@@ -8,27 +8,40 @@ const Home: Component = () => {
     <div class="flex flex-col w-full min-h-full bg-gray-700 text-white">
       <div class="flex flex-col items-center justify-center px-6 py-16 lg:py-24 text-center animate-fade-in">
         <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-slide-up">
-          welcome to <span class="font-normal" style="font-family: 'Fredoka', sans-serif;">skywell</span>
+          welcome to{" "}
+          <span class="font-normal" style="font-family: 'Fredoka', sans-serif;">
+            skywell
+          </span>
         </h1>
-        <p class="text-xl md:text-2xl lg:text-3xl text-gray-300 mb-8 max-w-4xl animate-slide-up" style="animation-delay: 0.2s;">
-          a decentralized file sharing service built on{' '}
+        <p
+          class="text-xl md:text-2xl lg:text-3xl text-gray-300 mb-8 max-w-4xl animate-slide-up"
+          style="animation-delay: 0.2s;"
+        >
+          a decentralized file sharing service built on{" "}
           <a
             href="https://atproto.com/guides/faq"
             target="_blank"
-            rel="noopener external help">
-              atproto
+            rel="noopener external help"
+          >
+            atproto
           </a>
         </p>
 
-        <div class="flex flex-col sm:flex-row gap-4 animate-slide-up" style="animation-delay: 0.6s;">
-          <Show when={loggedIn()} fallback={
-            <a
-              href="/login"
-              class="bg-blue-600 hover:bg-blue-700 hover:scale-105 px-8 py-3 lg:px-10 lg:py-4 rounded-lg font-semibold text-lg lg:text-xl transition-all duration-300 transform"
-            >
-              Get Started
-            </a>
-          }>
+        <div
+          class="flex flex-col sm:flex-row gap-4 animate-slide-up"
+          style="animation-delay: 0.6s;"
+        >
+          <Show
+            when={loggedIn()}
+            fallback={
+              <a
+                href="/login"
+                class="bg-blue-600 hover:bg-blue-700 hover:scale-105 px-8 py-3 lg:px-10 lg:py-4 rounded-lg font-semibold text-lg lg:text-xl transition-all duration-300 transform"
+              >
+                Get Started
+              </a>
+            }
+          >
             <a
               href="/upload"
               class="bg-blue-600 hover:bg-blue-700 hover:scale-105 px-8 py-3 lg:px-10 lg:py-4 rounded-lg font-semibold text-lg lg:text-xl transition-all duration-300 transform"
@@ -44,8 +57,6 @@ const Home: Component = () => {
           </Show>
         </div>
       </div>
-
-
 
       <div class="px-6 py-16 bg-gray-800">
         <div class="max-w-4xl mx-auto">
@@ -92,13 +103,12 @@ const Home: Component = () => {
 
       <div class="px-6 py-16">
         <div class="max-w-4xl mx-auto text-center">
-          <h2 class="text-3xl md:text-4xl font-bold mb-8">
-            built on atproto
-          </h2>
+          <h2 class="text-3xl md:text-4xl font-bold mb-8">built on atproto</h2>
           <p class="text-lg text-gray-300 mb-6">
-            skywell is made with the Authenticated Transfer Protocol (AT Protocol), the same technology
-            that powers Bluesky. this means that your files are stored on your own personal data server
-            (PDS) so you keep all of your files (even if skywell shuts down).
+            skywell is made with the Authenticated Transfer Protocol (AT
+            Protocol), the same technology that powers Bluesky. this means that
+            your files are stored on your own personal data server (PDS) so you
+            keep all of your files (even if skywell shuts down).
           </p>
           <a
             href="https://atproto.com/guides/faq"
@@ -113,12 +123,11 @@ const Home: Component = () => {
 
       <Show when={!loggedIn()}>
         <div class="px-6 py-16 text-center bg-gray-800">
-        <h2 class="text-3xl md:text-4xl font-bold mb-6">
-          interested?
-        </h2>
-        <p class="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
-          discover the future of the web and start sharing files with Skywell today.
-        </p>
+          <h2 class="text-3xl md:text-4xl font-bold mb-6">interested?</h2>
+          <p class="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
+            discover the future of the web and start sharing files with Skywell
+            today.
+          </p>
 
           <a
             href="/login"

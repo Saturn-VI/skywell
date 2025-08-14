@@ -8,10 +8,15 @@ import {
   ComAtprotoRepoCreateRecord,
   ComAtprotoRepoUploadBlob,
 } from "@atcute/atproto";
-import { isXRPCErrorPayload } from "@atcute/client";
+import { ClientResponse, isXRPCErrorPayload } from "@atcute/client";
 import { Blob } from "@atcute/lexicons";
 import { DevSkywellFile } from "skywell";
-import { contentType } from 'mime-types';
+import mime from "mime";
+import {
+  fileCount,
+  loadFiles,
+  setFileCount,
+} from "./Account.tsx";
 
 const Upload: Component = () => {
   const [isDragging, setIsDragging] = createSignal(false);
@@ -88,61 +93,113 @@ const Upload: Component = () => {
       toast.error("Already uploading a file (just give it time)");
       return;
     }
-    toast.promise(
-      (async () => {
-        setIsUploading(true);
-        const c = await getAuthedClient();
-        if (!c) {
-          toast.error("Not authenticated, please log in");
-          navigate("/login", { replace: true });
-          return;
-        }
-        let cfile
-        if (!currentFile()) {
-          toast.error("No file selected");
-          return;
-        } else {
-          cfile = currentFile()!;
-        }
-        if (!fileName()) {
-          toast.error("File name is required");
-          return;
-        }
-        const arraybuf = await cfile.arrayBuffer();
-        if (!arraybuf) {
-          toast.error("File data missing");
-          return;
-        }
-        const blobres = await c.post(ComAtprotoRepoUploadBlob.mainSchema.nsid, {
-          input: arraybuf,
-          headers: {
-            "Content-Type": contentType(cfile.name) || "application/octet-stream",
-          },
-        });
-        if (!blobres.ok) {
-          if (blobres.data.error == "PayloadTooLarge") {
-            throw new Error("File is too large");
+    setIsUploading(true);
+    const c = await getAuthedClient();
+    if (!c) {
+      toast.error("Not authenticated, please log in");
+      setIsUploading(false);
+      navigate("/login", { replace: true });
+      return;
+    }
+    let cfile;
+    if (!currentFile()) {
+      toast.error("No file selected");
+      setIsUploading(false);
+      return;
+    } else {
+      cfile = currentFile()!;
+    }
+    if (!fileName()) {
+      toast.error("File name is required");
+      setIsUploading(false);
+      return;
+    }
+    const arraybuf = await cfile.arrayBuffer();
+    if (!arraybuf) {
+      toast.error("File data missing");
+      setIsUploading(false);
+      return;
+    }
+    // const [blobRes, setBlobRes] = createSignal<ClientResponse<ComAtprotoRepoUploadBlob.mainSchema, {
+    //   input: ArrayBuffer;
+    //   headers: {
+    //     "Content-Type": string;
+    //   };
+    // }>>();
+    let blobRes:
+      | ClientResponse<
+          ComAtprotoRepoUploadBlob.mainSchema,
+          {
+            input: ArrayBuffer;
+            headers: {
+              "Content-Type": string;
+            };
           }
-          // this is because bsky's PDSs SUCK and try to process uploaded blobs
-          if (blobres.data.error == "InternalServerError") {
-            const tryagain = await c.post(ComAtprotoRepoUploadBlob.mainSchema.nsid, {
-              input: arraybuf,
-              headers: {
-                "Content-Type": "application/octet-stream",
-              },
-            });
-            if (!tryagain.ok) {
-              console.error("Error uploading file:", tryagain);
-              throw new Error(`Error uploading file: ${tryagain.data.error}`);
+        >
+      | undefined;
+
+    try {
+      await toast.promise(
+        (async () => {
+          blobRes = await c.post(ComAtprotoRepoUploadBlob.mainSchema.nsid, {
+            input: arraybuf,
+            headers: {
+              "Content-Type":
+                mime.getType(cfile.name) || "application/octet-stream",
+            },
+          });
+          if (!blobRes.ok) {
+            if (blobRes.data.error == "PayloadTooLarge") {
+              setIsUploading(false);
+              throw new Error("File is too large");
+            }
+            // this is because bsky's PDSs SUCK and try to process uploaded blobs
+            if (blobRes.data.error == "InternalServerError") {
+              blobRes = await c.post(ComAtprotoRepoUploadBlob.mainSchema.nsid, {
+                input: arraybuf,
+                headers: {
+                  "Content-Type": "application/octet-stream",
+                },
+              });
+              if (!blobRes.ok) {
+                if (blobRes.data.error == "InvalidMimeType") {
+                  toast.error("MimeType error. Maybe the file already exists?");
+                }
+                console.error("Error uploading file:", blobRes);
+                setIsUploading(false);
+                throw new Error(`Error uploading file: ${blobRes.data.error}`);
+              }
             }
           }
-        }
-        if (isXRPCErrorPayload(blobres)) {
-          console.error("Error uploading file:", blobres);
-          toast.error("Error uploading file: " + blobres.message);
-          return;
-        }
-        const blobRef = blobres.data as { blob: Blob<string> };
+        })(),
+        {
+          success: "Blob uploaded!",
+          error: "Blob failed to upload",
+          loading: "Blob uploading...",
+        },
+      );
+    } catch (error) {
+      console.error("Error during blob upload:", error);
+      setIsUploading(false);
+      return;
+    }
+
+    if (!blobRes) {
+      console.error("blobRes is null or undefined");
+      toast.error("blob response is null");
+      setIsUploading(false);
+      return;
+    }
+
+    if (isXRPCErrorPayload(blobRes)) {
+      console.error("Error uploading file:", blobRes);
+      toast.error("Error uploading file");
+      setIsUploading(false);
+      return;
+    }
+    const blobRef = blobRes.data as { blob: Blob<string> };
+    await toast.promise(
+      (async () => {
         // todo figure out how to not hardcode the collection
         // NOTE: THIS NEEDS TO MATCH THE LEXICON EXACTLY
         // BECAUSE IT ISN'T TYPE CHECKED
@@ -165,16 +222,23 @@ const Upload: Component = () => {
         );
         if (!recordres.ok) {
           console.error("Error creating record:", recordres);
+          if ((recordres.data.error = "InvalidMimeType")) {
+            toast.error("Invalid mime type. Does the file already exist?");
+          }
+          setIsUploading(false);
           throw new Error(`Error creating record: ${recordres.data.error}`);
         }
-        navigate("/account", { replace: true });
       })(),
       {
-        loading: "Uploading file...",
-        success: "File uploaded successfully!",
-        error: (err) => `Error uploading file: ${err.message}`,
+        success: "Record created!",
+        error: "Failed to create record",
+        loading: "Record uploading...",
       },
     );
+    setIsUploading(false);
+    loadFiles();
+    setFileCount(fileCount() + 1);
+    navigate("/account", { replace: true });
   };
 
   const handleWindowBlur = () => {

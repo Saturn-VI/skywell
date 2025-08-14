@@ -1,6 +1,6 @@
 import { Component, createEffect, createSignal, onMount } from "solid-js";
 import { LoginOutlined, UploadFileOutlined } from "@suid/icons-material";
-import {toast} from "solid-toast";
+import { toast } from "solid-toast";
 import { agent, did, getAuthedSkywellClient, isLoggedIn } from "./Auth.tsx";
 import { DevSkywellGetActorProfile } from "skywell";
 
@@ -69,24 +69,35 @@ const Header: Component = () => {
 
   return (
     <div class="w-full md:w-11/12 lg:w-3/4 xl:w-2/3 2xl:w-1/2 h-14 bg-gray-900 text-white p-4 items-center flex justify-between md:rounded-b-md">
-      {loggedIn() &&
+      {loggedIn() && (
         <a href="/account" class="flex items-center w-1/3">
           <img src={pfpUri()!} alt="Logo" class="h-8 mr-4" />
           <div class="truncate">{displayName()}</div>
         </a>
-      }
-      <a href="/" style="font-family: 'Fredoka', sans-serif; font-weight: 400; font-stretch: 125%;" class={`text-xl self-center ${loggedIn() ? 'w-1/3 text-center' : 'text-left'}`}>skywell</a>
+      )}
+      <a
+        href="/"
+        style="font-family: 'Fredoka', sans-serif; font-weight: 400; font-stretch: 125%;"
+        class={`text-xl self-center ${loggedIn() ? "w-1/3 text-center" : "text-left"}`}
+      >
+        skywell
+      </a>
       <div class="w-1/3 text-right">
         {loggedIn() ? (
-          <a href="/upload" class="bg-blue-500 px-4 py-2 hover:bg-blue-600 rounded">
+          <a
+            href="/upload"
+            class="bg-blue-500 px-4 py-2 hover:bg-blue-600 rounded"
+          >
             <UploadFileOutlined />
           </a>
         ) : (
-          <a href="/login" class="bg-blue-500 px-4 py-2 hover:bg-blue-600 rounded">
+          <a
+            href="/login"
+            class="bg-blue-500 px-4 py-2 hover:bg-blue-600 rounded"
+          >
             <LoginOutlined />
           </a>
-        )
-        }
+        )}
       </div>
     </div>
   );
