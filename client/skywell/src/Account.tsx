@@ -201,7 +201,6 @@ const Account: Component = () => {
 
   return (
     <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
-      {/* User Info Section */}
       <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between mb-4">
         <div class="flex flex-col md:w-2/3 w-full h-full p-4 justify-center">
           <div class="sm:text-4xl text-3xl font-semibold mb-2">
@@ -227,7 +226,6 @@ const Account: Component = () => {
         </div>
       </div>
 
-      {/* Files Section */}
       <div class="flex flex-col w-full h-full">
         <div class="text-2xl font-semibold mb-4">Your Files</div>
 
@@ -299,14 +297,12 @@ const Account: Component = () => {
               </div>
             ))}
 
-            {/* Loading More Indicator */}
             {loadingMore() && (
               <div class="flex items-center justify-center p-4">
                 <p class="text-gray-400">Loading more files...</p>
               </div>
             )}
 
-            {/* End of List Indicator */}
             {!hasMore() && files().length > 0 && (
               <div class="flex items-center justify-center p-4">
                 <p class="text-gray-500 text-sm">No more files to load</p>
