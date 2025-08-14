@@ -218,8 +218,8 @@ const Upload: Component = () => {
       },
     );
     setIsUploading(false);
-    loadFiles();
     setFileCount(fileCount() + 1);
+    await loadFiles();
     navigate("/account", { replace: true });
   };
 
@@ -297,7 +297,7 @@ const Upload: Component = () => {
             </div>
 
             <button
-              class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="cursor-pointer w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => uploadFile()}
               disabled={isUploading() || !currentFile() || !fileName()}
             >

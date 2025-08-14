@@ -91,6 +91,17 @@ async function fetchBlob(cid: string, did: `did:${string}:${string}`) {
   }
 }
 
+async function copyFileUrl() {
+  const url = window.location.href;
+  try {
+    await navigator.clipboard.writeText(url);
+    toast.success("File URL copied to clipboard!");
+  } catch (error) {
+    console.error("Failed to copy to clipboard:", error);
+    toast.error("Failed to copy URL");
+  }
+}
+
 async function clickDownloadLink() {
   const link = document.getElementById("download-link") as HTMLAnchorElement;
   if (blob() != null) {
@@ -100,6 +111,10 @@ async function clickDownloadLink() {
 }
 
 async function deleteFile(uri: string, navigate: Navigator) {
+  if (!confirm(`are you sure you want to delete ${filename()}?`)) {
+    return;
+  }
+
   const result = parseResourceUri(uri);
   if (result.ok) {
     const c = await getAuthedClient();
@@ -156,58 +171,69 @@ const File: Component = () => {
   });
 
   return (
-    <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
+    <div class="flex flex-col w-full min-h-full bg-gray-700 text-white p-6">
       <a id="download-link" download={filename()} class="hidden w-0 h-0" />
-      <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between mb-4">
-        {/* filename, author info, download button */}
-        <div class="flex flex-col md:w-1/2 lg:w-1/2 xl:w-3/4 w-full h-full p-4 justify-center">
-          {/* filename + author info */}
-          <div class="sm:text-4xl text-3xl font-semibold truncate">
-            {filename()}
-          </div>
-          <div class="sm:text-xl text-lg font-medium">
-            uploaded {creationDate().toLocaleString()}
-          </div>
-          <div class="sm:text-xl text-lg font-medium">
-            created by {author()}
-          </div>
-          <div class="sm:text-xl text-lg font-light">@{authorHandle()}</div>
-        </div>
-        <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2 text-white">
-          {/* download and delete buttons */}
-          <div class="flex flex-col lg:w-2/3 w-1/2 h-full gap-2">
-            <button
-              onclick={clickDownloadLink}
-              class="font-bold w-full flex-1 p-2 bg-blue-600 hover:bg-blue-700 text-center lg:text-xl text-lg"
-            >
-              download
-            </button>
-            {userLoggedIn() && isOwner() && (
+
+      <div class="max-w-4xl mx-auto w-full">
+        {/* File Header Section */}
+        <div class="bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+            <div class="flex-1">
+              <h1 class="text-3xl md:text-4xl font-bold mb-3 break-words">
+                {filename()}
+              </h1>
+              <div class="space-y-2 text-gray-300">
+                <p class="text-lg">
+                  uploaded {creationDate().toLocaleDateString()} at {creationDate().toLocaleTimeString()}
+                </p>
+                <p class="text-lg">
+                  created by <span class="font-medium text-white">{author()}</span>
+                </p>
+                <p class="text-gray-400">
+                  <code>@{authorHandle()}</code>
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
               <button
-                onclick={() => deleteFile(fileUri(), navigate)}
-                class="font-bold w-full flex-1 p-2 bg-red-600 hover:bg-red-700 text-center lg:text-xl text-lg"
+                onclick={copyFileUrl}
+                class="cursor-pointer bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
               >
-                delete
+                copy link
               </button>
-            )}
+              <button
+                onclick={clickDownloadLink}
+                class="cursor-pointer bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
+              >
+                download
+              </button>
+              {userLoggedIn() && isOwner() && (
+                <button
+                  onclick={() => deleteFile(fileUri(), navigate)}
+                  class="cursor-pointer bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
+                >
+                  delete
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="flex w-full h-full">
-        {/* description */}
-        <div class="flex flex-col w-full h-full">
-          <div class="mb-4">
-            {/* description */}
-            <textarea
-              id="description"
-              rows="6"
-              class="lg:w-3/4 w-full p-2 bg-gray-800 text-white border border-gray-600 cursor-text"
-              readonly
-              disabled
-            >
-              {description()}
-            </textarea>
-          </div>
+
+          {description() ? (
+            <div class="bg-gray-800 rounded-lg">
+              <div class="bg-gray-900 rounded-lg mt-4 p-4">
+                <p class="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                  {description()}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div class="bg-gray-800 rounded-lg">
+              <p class="text-gray-400 text-center mt-4 italic">
+                no description provided
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

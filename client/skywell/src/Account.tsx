@@ -215,7 +215,7 @@ const Account: Component = () => {
         </div>
         <div class="flex justify-center items-center lg:w-1/4 md:w-1/3 w-full lg:h-full md:h-2/3 h-1/2 p-4">
           <button
-            class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-red-600 hover:bg-red-700 text-center lg:text-xl text-lg rounded-md transition-colors duration-200"
+            class="cursor-pointer font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-red-600 hover:bg-red-700 text-center lg:text-xl text-lg rounded-md transition-colors duration-200"
             onClick={() => {
               trySignOut();
               navigate("/");
@@ -268,7 +268,7 @@ const Account: Component = () => {
                 </div>
                 <div class="col-span-4 flex sm:space-x-2 sm:flex-row flex-col items-center justify-items-center sm:space-y-0 space-y-1">
                   <button
-                    class="bg-green-600 hover:bg-green-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
+                    class="cursor-pointer bg-green-600 hover:bg-green-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                     onclick={() => {
                       copyFileUrl(file.slug);
                     }}
@@ -277,12 +277,12 @@ const Account: Component = () => {
                   </button>
                   <a
                     href={`/file/${file.slug}`}
-                    class="bg-blue-600 hover:bg-blue-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
+                    class="cursor-pointer bg-blue-600 hover:bg-blue-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                   >
                     View
                   </a>
                   <button
-                    class="bg-red-600 hover:bg-red-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
+                    class="cursor-pointer bg-red-600 hover:bg-red-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                     onclick={() => {
                       if (confirm(`are you sure you want to delete ${file.name}?`)) {
                         deleteFile(file.uri);
