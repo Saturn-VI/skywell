@@ -160,7 +160,7 @@ const File: Component = () => {
       <a id="download-link" download={filename()} class="hidden w-0 h-0" />
       <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between mb-4">
         {/* filename, author info, download button */}
-        <div class="flex flex-col md:w-1/3 w-full h-full p-4 justify-center">
+        <div class="flex flex-col md:w-1/2 lg:w-1/2 xl:w-3/4 w-full h-full p-4 justify-center">
           {/* filename + author info */}
           <div class="sm:text-4xl text-3xl font-semibold truncate">
             {filename()}

@@ -111,6 +111,17 @@ const handleScroll = (e: Event) => {
 const Account: Component = () => {
   const navigate = useNavigate();
 
+  const copyFileUrl = async (slug: string) => {
+    const url = `${window.location.origin}/file/${slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("File URL copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+      toast.error("Failed to copy URL");
+    }
+  };
+
   const deleteFile = async (uri: string) => {
     const result = parseResourceUri(uri);
     if (result.ok) {
@@ -260,6 +271,14 @@ const Account: Component = () => {
                   {filesize((file.blob as Blob).size)}
                 </div>
                 <div class="flex sm:space-x-2 sm:flex-row flex-col items-start justify-items-center space-y-1">
+                  <button
+                    class="cursor-pointer bg-green-600 hover:bg-green-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere"
+                    onclick={() => {
+                      copyFileUrl(file.slug);
+                    }}
+                  >
+                    Copy
+                  </button>
                   <a
                     href={`/file/${file.slug}`}
                     class="bg-blue-600 hover:bg-blue-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere"
@@ -267,9 +286,11 @@ const Account: Component = () => {
                     View
                   </a>
                   <button
-                    class="bg-red-600 hover:bg-red-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere"
+                    class="cursor-pointer bg-red-600 hover:bg-red-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere"
                     onclick={() => {
-                      deleteFile(file.uri);
+                      if (confirm(`are you sure you want to delete ${file.name}?`)) {
+                        deleteFile(file.uri);
+                      }
                     }}
                   >
                     Delete
