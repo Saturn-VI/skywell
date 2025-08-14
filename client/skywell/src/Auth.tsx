@@ -17,6 +17,7 @@ import {
   SKYWELL_SERVICE_ID,
   SKYWELL_URL,
 } from "./Constants.tsx";
+import { setLoggedIn } from "./Header.tsx";
 
 export const [did, setDid] = makePersisted(createSignal<Did | null>(null));
 export const [agent, setAgent] = createSignal<OAuthUserAgent | null>(null);
@@ -50,6 +51,7 @@ export function trySignOut() {
   }
   toast.promise(
     (async () => {
+      setLoggedIn(false);
       await agent()?.signOut();
 
       setDid(null);

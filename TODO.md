@@ -29,8 +29,8 @@
 ### general
 - [ ] make an actually good color theme (catpuccin macchiato? that's boring though)
   - [ ] really just make the site prettier
-- [ ] make a logo/icon
-- [ ] do mobile testing on every page (once entire thing is done)
+- [x] make a logo/icon
+- [x] do mobile testing on every page (once entire thing is done)
 
 ### pages
 - [ ] home

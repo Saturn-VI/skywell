@@ -11,6 +11,7 @@ import Login from "./Login.tsx";
 import Account from "./Account.tsx";
 import Callback from "./Callback.tsx";
 import Header from "./Header.tsx";
+import Footer from "./Footer.tsx";
 
 const root = document.getElementById("root");
 
@@ -35,6 +36,7 @@ render(
             <Route path="/login/callback" component={Callback} />
           </Router>
         </div>
+        <Footer />
         <Toaster position="top-center" gutter={32} />
       </div>
     </>

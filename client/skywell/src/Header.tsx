@@ -78,11 +78,11 @@ const Header: Component = () => {
       <a href="/" style="font-family: 'Fredoka', sans-serif; font-weight: 400; font-stretch: 125%;" class={`text-xl self-center ${loggedIn() ? 'w-1/3 text-center' : 'text-left'}`}>skywell</a>
       <div class="w-1/3 text-right">
         {loggedIn() ? (
-          <a href="/upload" class="bg-blue-500 px-4 py-2 hover:bg-blue-600">
+          <a href="/upload" class="bg-blue-500 px-4 py-2 hover:bg-blue-600 rounded">
             <UploadFileOutlined />
           </a>
         ) : (
-          <a href="/login" class="bg-blue-500 px-4 py-2 hover:bg-blue-600">
+          <a href="/login" class="bg-blue-500 px-4 py-2 hover:bg-blue-600 rounded">
             <LoginOutlined />
           </a>
         )
