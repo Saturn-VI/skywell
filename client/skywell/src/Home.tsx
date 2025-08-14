@@ -125,7 +125,7 @@ const Home: Component = () => {
         <div class="px-6 py-16 text-center bg-gray-800">
           <h2 class="text-3xl md:text-4xl font-bold mb-6">interested?</h2>
           <p class="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
-            discover the future of the web and start sharing files with Skywell
+            experience the future of the web and start sharing files with Skywell
             today.
           </p>
 
