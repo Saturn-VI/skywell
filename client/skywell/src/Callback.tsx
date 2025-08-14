@@ -6,6 +6,7 @@ import { type Component } from "solid-js";
 import { setAgent, setDid } from "./Auth.tsx";
 import { toast } from "solid-toast";
 import sleep from "sleep-promise";
+import { doTheLoginThing } from "./Header.tsx";
 
 async function runAuth() {
   const params = new URLSearchParams(location.hash.slice(1));
@@ -19,6 +20,7 @@ async function runAuth() {
     const newAgent = new OAuthUserAgent(session);
     setAgent(newAgent);
     setDid(newAgent.session.info.sub);
+    doTheLoginThing();
 
     toast.success("Successfully logged in, redirecting to home...");
     await sleep(1000);

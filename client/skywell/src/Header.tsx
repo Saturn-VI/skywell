@@ -9,6 +9,33 @@ export const [displayName, setDisplayName] = createSignal<string | null>(null);
 export const [loggedIn, setLoggedIn] = createSignal<boolean>(false);
 export const [loading, setLoading] = createSignal<boolean>(true);
 
+export const doTheLoginThing = async () => {
+  try {
+    const currentAgent = agent();
+    if (currentAgent && currentAgent.session) {
+      const c = await getAuthedSkywellClient();
+      if (!c || !did()) {
+        return;
+      }
+      const res = await c.get(DevSkywellGetActorProfile.mainSchema.nsid, {
+        params: {
+          actor: did()!,
+        },
+      });
+      if (res.ok) {
+        setPfpUri(res.data.avatar || null);
+        setDisplayName(res.data.displayName || res.data.handle);
+        setLoggedIn(true);
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load user data:", error);
+    toast.error("Failed to load user data");
+  } finally {
+    setLoading(false);
+  }
+};
+
 const Header: Component = () => {
   createEffect(async () => {
     if (await isLoggedIn()) {
@@ -30,33 +57,6 @@ const Header: Component = () => {
       setLoading(false);
     }
   });
-
-  const doTheLoginThing = async () => {
-    try {
-      const currentAgent = agent();
-      if (currentAgent && currentAgent.session) {
-        const c = await getAuthedSkywellClient();
-        if (!c || !did()) {
-          return;
-        }
-        const res = await c.get(DevSkywellGetActorProfile.mainSchema.nsid, {
-          params: {
-            actor: did()!,
-          },
-        });
-        if (res.ok) {
-          setPfpUri(res.data.avatar || null);
-          setDisplayName(res.data.displayName || res.data.handle);
-          setLoggedIn(true);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load user data:", error);
-      toast.error("Failed to load user data");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   onMount(async () => {
     if (!(await isLoggedIn())) {

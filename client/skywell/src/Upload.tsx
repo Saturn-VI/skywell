@@ -11,6 +11,7 @@ import {
 import { isXRPCErrorPayload } from "@atcute/client";
 import { Blob } from "@atcute/lexicons";
 import { DevSkywellFile } from "skywell";
+import { contentType } from 'mime-types';
 
 const Upload: Component = () => {
   const [isDragging, setIsDragging] = createSignal(false);
@@ -96,15 +97,18 @@ const Upload: Component = () => {
           navigate("/login", { replace: true });
           return;
         }
+        let cfile
         if (!currentFile()) {
           toast.error("No file selected");
           return;
+        } else {
+          cfile = currentFile()!;
         }
         if (!fileName()) {
           toast.error("File name is required");
           return;
         }
-        const arraybuf = await currentFile()?.arrayBuffer();
+        const arraybuf = await cfile.arrayBuffer();
         if (!arraybuf) {
           toast.error("File data missing");
           return;
@@ -112,7 +116,7 @@ const Upload: Component = () => {
         const blobres = await c.post(ComAtprotoRepoUploadBlob.mainSchema.nsid, {
           input: arraybuf,
           headers: {
-            "Content-Type": currentFile()?.type || "application/octet-stream",
+            "Content-Type": contentType(cfile.name) || "application/octet-stream",
           },
         });
         if (!blobres.ok) {
