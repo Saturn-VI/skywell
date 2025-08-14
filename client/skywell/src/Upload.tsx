@@ -17,6 +17,7 @@ import {
   loadFiles,
   setFileCount,
 } from "./Account.tsx";
+import { filesize } from "filesize";
 
 const Upload: Component = () => {
   const [isDragging, setIsDragging] = createSignal(false);
@@ -40,9 +41,13 @@ const Upload: Component = () => {
 
   const handleDragLeave = (e: DragEvent) => {
     e.preventDefault();
-    if (!(e.currentTarget == (e.relatedTarget as Node))) {
-      setIsDragging(true);
-    } else {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    if (
+      e.clientX <= rect.left ||
+      e.clientX >= rect.right ||
+      e.clientY <= rect.top ||
+      e.clientY >= rect.bottom
+    ) {
       setIsDragging(false);
     }
   };
@@ -55,22 +60,10 @@ const Upload: Component = () => {
     e.preventDefault();
     setIsDragging(false);
     const files = Array.from(e.dataTransfer?.files || []);
-    files.forEach((f) => console.log("dropped", f));
     if (files.length > 0) {
       setCurrentFile(files[0]);
       setFileName(files[0].name);
-    } else {
-      setCurrentFile(null);
     }
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-  };
-
-  const handleDragExit = (e: DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
   };
 
   const openFileBrowser = () => {
@@ -83,8 +76,6 @@ const Upload: Component = () => {
     if (files.length > 0) {
       setCurrentFile(files[0]);
       setFileName(files[0].name);
-    } else {
-      setCurrentFile(null);
     }
   };
 
@@ -120,12 +111,7 @@ const Upload: Component = () => {
       setIsUploading(false);
       return;
     }
-    // const [blobRes, setBlobRes] = createSignal<ClientResponse<ComAtprotoRepoUploadBlob.mainSchema, {
-    //   input: ArrayBuffer;
-    //   headers: {
-    //     "Content-Type": string;
-    //   };
-    // }>>();
+
     let blobRes:
       | ClientResponse<
           ComAtprotoRepoUploadBlob.mainSchema,
@@ -153,7 +139,6 @@ const Upload: Component = () => {
               setIsUploading(false);
               throw new Error("File is too large");
             }
-            // this is because bsky's PDSs SUCK and try to process uploaded blobs
             if (blobRes.data.error == "InternalServerError") {
               blobRes = await c.post(ComAtprotoRepoUploadBlob.mainSchema.nsid, {
                 input: arraybuf,
@@ -200,9 +185,6 @@ const Upload: Component = () => {
     const blobRef = blobRes.data as { blob: Blob<string> };
     await toast.promise(
       (async () => {
-        // todo figure out how to not hardcode the collection
-        // NOTE: THIS NEEDS TO MATCH THE LEXICON EXACTLY
-        // BECAUSE IT ISN'T TYPE CHECKED
         const record: DevSkywellFile.Main = {
           $type: "dev.skywell.file",
           name: fileName(),
@@ -232,7 +214,7 @@ const Upload: Component = () => {
       {
         success: "Record created!",
         error: "Failed to create record",
-        loading: "Record uploading...",
+        loading: "Creating record...",
       },
     );
     setIsUploading(false);
@@ -241,87 +223,27 @@ const Upload: Component = () => {
     navigate("/account", { replace: true });
   };
 
-  const handleWindowBlur = () => {
-    if (isDragging()) {
-      setIsDragging(false);
-    }
-  };
-
-  const handleDocumentDragLeave = (e: DragEvent) => {
-    if (
-      e.clientX <= 0 ||
-      e.clientY <= 0 ||
-      e.clientX >= window.innerWidth ||
-      e.clientY >= window.innerHeight
-    ) {
-      setIsDragging(false);
-    }
-  };
-
   onMount(async () => {
     if (!(await isLoggedIn())) {
       console.log("Not logged in");
       toast.error("Not logged in, redirecting...");
       navigate("/login", { replace: true });
     }
-
-    // Prevent default browser drag and drop behavior
-    const preventDefaults = (e: Event) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    // buttload of event listeners
-    document.addEventListener("dragenter", preventDefaults);
-    document.addEventListener("dragover", preventDefaults);
-    document.addEventListener("drop", preventDefaults);
-    window.addEventListener("dragend", handleDragEnd);
-    window.addEventListener("blur", handleWindowBlur);
-    document.addEventListener("dragleave", handleDocumentDragLeave);
-
-    return () => {
-      document.removeEventListener("dragenter", preventDefaults);
-      document.removeEventListener("dragover", preventDefaults);
-      document.removeEventListener("drop", preventDefaults);
-      window.removeEventListener("dragend", handleDragEnd);
-      window.removeEventListener("blur", handleWindowBlur);
-      document.removeEventListener("dragleave", handleDocumentDragLeave);
-    };
   });
 
   return (
-    <div
-      class="relative flex flex-col h-screen w-full"
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDragEnd={handleDragEnd}
-      onDragExit={handleDragExit}
-    >
-      <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
-        <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between">
-          {/* text, upload button */}
-          <button class="flex flex-col md:w-1/3 w-full h-full p-4 text-4xl font-semibold justify-center text-center md:text-left">
-            upload file
-          </button>
-          <div class="flex justify-center items-center lg:w-1/4 md:w-5/8 w-full lg:h-full md:h-5/8 h-1/2 p-2 text-white">
-            <button
-              class="font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-blue-600 hover:bg-blue-700 text-center lg:text-2xl text-xl"
-              onClick={() => uploadFile()}
-            >
-              publish
-            </button>
-          </div>
-        </div>
-        <div class="flex w-full h-full">
-          {/* all the text inputs */}
-          <div class="flex flex-col w-full h-full mt-4">
-            <div class="mb-4">
-              {/* file */}
-              <label class="block text-lg w-fit font-medium mb-2 cursor-text">
-                Upload File
+    <div class="flex flex-col w-full min-h-full bg-gray-700 text-white p-6">
+      <div class="max-w-6xl mx-auto w-full">
+        <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center">
+          upload file
+        </h1>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+          <div class="space-y-6">
+            <div class="lg:hidden">
+              <label class="block text-lg font-medium mb-2">
+                select file
               </label>
-              {/* hidden file input */}
               <input
                 ref={fileInputRef!}
                 type="file"
@@ -329,70 +251,118 @@ const Upload: Component = () => {
                 class="hidden"
                 onChange={handleFileSelect}
               />
-              {/* file browser button */}
               <button
                 onClick={openFileBrowser}
-                class="block w-fit text-sm text-white bg-gray-800 hover:bg-gray-700 border border-gray-600 py-2 px-4 font-semibold"
+                class="w-full text-sm text-white bg-gray-800 hover:bg-gray-700 border border-gray-600 py-2 px-4 font-semibold rounded transition-colors duration-200"
               >
-                Choose File
+                choose file
               </button>
-              <div>
-                {currentFile() ? (
-                  <p class="mt-2 text-gray-300">
-                    Selected file: {currentFile()?.name}
-                  </p>
-                ) : (
-                  <p class="mt-2 text-gray-500">No file selected</p>
-                )}
-              </div>
+              {currentFile() ? (
+                <p class="mt-2 text-gray-300 text-sm">
+                  selected: {currentFile()?.name}
+                </p>
+              ) : (
+                <p class="mt-2 text-gray-500 text-sm">no file selected</p>
+              )}
             </div>
-            <div class="mb-4">
-              {/* file name */}
-              <label class="block text-lg w-fit font-medium mb-2 cursor-text">
-                File Name
+
+            <div>
+              <label class="block text-lg font-medium mb-2">
+                file name
               </label>
               <input
                 maxlength="80"
                 type="text"
                 id="fileName"
-                class="lg:w-1/2 w-full p-2 bg-gray-800 text-white border border-gray-600"
+                class="w-full p-3 bg-gray-800 text-white border border-gray-600 rounded focus:border-blue-500 transition-colors duration-200"
                 value={fileName()}
                 onInput={(e) => setFileName(e.target.value)}
+                placeholder="enter file name..."
               />
             </div>
-            <div class="mb-4">
-              {/* description */}
-              <label class="block text-lg w-fit font-medium mb-2 cursor-text">
-                Description
+
+            <div>
+              <label class="block text-lg font-medium mb-2">
+                description
               </label>
               <textarea
                 maxlength="500"
                 id="description"
                 rows="6"
-                class="lg:w-3/4 w-full p-2 bg-gray-800 text-white border border-gray-600"
+                class="w-full p-3 bg-gray-800 text-white border border-gray-600 rounded focus:border-blue-500 transition-colors duration-200"
                 value={description()}
                 onInput={(e) => setDescription(e.target.value)}
+                placeholder="optional description..."
               ></textarea>
+            </div>
+
+            <button
+              class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => uploadFile()}
+              disabled={isUploading() || !currentFile() || !fileName()}
+            >
+              {isUploading() ? "uploading..." : "publish file"}
+            </button>
+          </div>
+
+          <div class="hidden lg:block">
+            <label class="block text-lg font-medium mb-2">
+              drag & drop or click to select
+            </label>
+            <div
+              ref={dropzoneRef}
+              class={`
+                border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200
+                ${isDragging()
+                  ? 'border-blue-500 bg-blue-900/20'
+                  : 'border-gray-600 bg-gray-800 hover:bg-gray-750 hover:border-gray-500'
+                }
+              `}
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={openFileBrowser}
+            >
+              <input
+                ref={fileInputRef!}
+                type="file"
+                id="fileUpload"
+                class="hidden"
+                onChange={handleFileSelect}
+              />
+
+              {currentFile() ? (
+                <div class="space-y-4">
+                  <div class="text-4xl">📄</div>
+                  <div>
+                    <p class="text-lg font-medium text-white">
+                      {currentFile()?.name}
+                    </p>
+                    <p class="text-gray-400 text-sm">
+                      {filesize(currentFile()?.size || 0)}
+                    </p>
+                  </div>
+                  <p class="text-sm text-gray-400">
+                    click to choose a different file
+                  </p>
+                </div>
+              ) : (
+                <div class="space-y-4">
+                  <div class="text-4xl text-gray-500">📁</div>
+                  <div>
+                    <p class="text-lg font-medium">
+                      {isDragging() ? "drop your file here!" : "choose a file to upload"}
+                    </p>
+                    <p class="text-gray-400 text-sm">
+                      drag and drop or click to browse
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
-        {/* appears when dragging files - positioned at root level */}
-        {isDragging() && (
-          <div
-            ref={dropzoneRef}
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
-            onDragEnter={handleDragEnter}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDragEnd={handleDragEnd}
-            onDrop={handleDrop}
-          >
-            <div class="text-center opacity-100">
-              <p class="text-white text-4xl font-bold mb-2">Drop files here</p>
-              <p class="text-gray-300 text-xl">Release to upload</p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

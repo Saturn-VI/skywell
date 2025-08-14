@@ -248,29 +248,27 @@ const Account: Component = () => {
             class="bg-gray-800 w-full overflow-y-auto max-h-full rounded-lg shadow-lg"
             onScroll={handleScroll}
           >
-            {/* Files Header */}
-            <div class="grid grid-cols-4 gap-4 p-4 border-b border-gray-600 font-semibold sticky top-0 bg-gray-800 text-gray-300">
-              <div>Name</div>
-              <div>Date Uploaded</div>
-              <div>Size</div>
-              <div>Actions</div>
+            <div class="grid grid-cols-12 gap-4 p-4 border-b border-gray-600 font-semibold sticky top-0 bg-gray-800 text-gray-300">
+              <div class="col-span-3">Name</div>
+              <div class="col-span-3">Date Uploaded</div>
+              <div class="col-span-2">Size</div>
+              <div class="col-span-4">Actions</div>
             </div>
 
-            {/* Files List */}
             {files().map((file) => (
-              <div class="grid grid-cols-4 gap-4 p-4 border-b border-gray-700 hover:bg-gray-700 transition-colors duration-150 items-center">
-                <div class="font-medium md:text-base sm:text-sm text-xs wrap-anywhere">
+              <div class="grid grid-cols-12 gap-4 p-4 border-b border-gray-700 hover:bg-gray-700 transition-colors duration-150 items-center">
+                <div class="col-span-3 font-medium md:text-base sm:text-sm text-xs wrap-anywhere">
                   {file.name}
                 </div>
-                <div class="text-gray-300 md:text-base sm:text-sm text-xs wrap-anywhere">
+                <div class="col-span-3 text-gray-300 md:text-base sm:text-sm text-xs wrap-anywhere">
                   {new Date(file.createdAt).toLocaleDateString()}
                 </div>
-                <div class="text-gray-300 md:text-base sm:text-sm text-xs wrap-anywhere">
+                <div class="col-span-2 text-gray-300 md:text-base sm:text-sm text-xs wrap-anywhere">
                   {filesize((file.blob as Blob).size)}
                 </div>
-                <div class="flex sm:space-x-2 sm:flex-row flex-col items-center justify-items-center space-y-1">
+                <div class="col-span-4 flex sm:space-x-2 sm:flex-row flex-col items-center justify-items-center sm:space-y-0 space-y-1">
                   <button
-                    class="bg-green-600 hover:bg-green-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
+                    class="bg-green-600 hover:bg-green-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                     onclick={() => {
                       copyFileUrl(file.slug);
                     }}
@@ -279,12 +277,12 @@ const Account: Component = () => {
                   </button>
                   <a
                     href={`/file/${file.slug}`}
-                    class="bg-blue-600 hover:bg-blue-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
+                    class="bg-blue-600 hover:bg-blue-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                   >
                     View
                   </a>
                   <button
-                    class="bg-red-600 hover:bg-red-700 px-3 py-1 md:text-base sm:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
+                    class="bg-red-600 hover:bg-red-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                     onclick={() => {
                       if (confirm(`are you sure you want to delete ${file.name}?`)) {
                         deleteFile(file.uri);
