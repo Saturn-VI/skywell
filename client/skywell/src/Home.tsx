@@ -114,7 +114,7 @@ const Home: Component = () => {
             keep all of your files (even if skywell shuts down).
           </p>
           <a
-            href="https://atproto.com/guides/faq"
+            href="https://atproto.com/"
             target="_blank"
             rel="noopener external help"
             class="inline-block bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors"
