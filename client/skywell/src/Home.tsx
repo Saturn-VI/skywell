@@ -38,7 +38,7 @@ const Home: Component = () => {
                 href="/login"
                 class="bg-blue-600 hover:bg-blue-700 hover:scale-105 px-8 py-3 lg:px-10 lg:py-4 rounded-lg font-semibold text-lg lg:text-xl transition-all duration-300 transform"
               >
-                Get Started
+                get started
               </a>
             }
           >
@@ -46,13 +46,13 @@ const Home: Component = () => {
               href="/upload"
               class="bg-blue-600 hover:bg-blue-700 hover:scale-105 px-8 py-3 lg:px-10 lg:py-4 rounded-lg font-semibold text-lg lg:text-xl transition-all duration-300 transform"
             >
-              Upload Files
+              upload file
             </a>
             <a
               href="/account"
               class="bg-gray-600 hover:bg-gray-700 hover:scale-105 px-8 py-3 lg:px-10 lg:py-4 rounded-lg font-semibold text-lg lg:text-xl transition-all duration-300 transform"
             >
-              My Files
+              my account
             </a>
           </Show>
         </div>
