@@ -4,7 +4,7 @@
   "client_name": "Dev client",
   "application_type": "native",
   "grant_types": ["authorization_code"],
-  "scope": "atproto transition:generic repo:dev.skywell.file rpc:dev.skywell.getActorFiles?aud=did:plc:tsaj4ffwyj5z6rjqaxmg5cp4 rpc:dev.skywell.getActorProfile?aud=did:plc:tsaj4ffwyj5z6rjqaxmg5cp4 blob",
+  "scope": "atproto transition:generic repo:dev.skywell.file rpc:dev.skywell.getActorFiles?aud=did:plc:tsaj4ffwyj5z6rjqaxmg5cp4 rpc:dev.skywell.getActorProfile?aud=did:plc:tsaj4ffwyj5z6rjqaxmg5cp4 blob:*/*",
   "response_types": ["code"],
   "redirect_uris": ["https://skywell.dev/login/callback"],
   "token_endpoint_auth_method": "none",
