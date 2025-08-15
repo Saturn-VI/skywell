@@ -228,7 +228,7 @@ const Upload: Component = () => {
   });
 
   return (
-    <div class="flex flex-col w-full min-h-full bg-gray-700 text-white p-6">
+    <div class="flex flex-col w-full min-h-full text-ctp-text p-6">
       <div class="max-w-6xl mx-auto w-full">
         <h1 class="text-3xl md:text-4xl font-bold mb-8 text-center">
           upload file
@@ -247,26 +247,28 @@ const Upload: Component = () => {
               />
               <button
                 onClick={openFileBrowser}
-                class="w-full text-sm text-white bg-gray-800 hover:bg-gray-700 border border-gray-600 py-2 px-4 font-semibold rounded transition-colors duration-200"
+                class="w-full text-sm border-2 border-dashed border-ctp-overlay1 bg-ctp-surface0 hover:bg-ctp-blue-900/20 hover:border-ctp-blue py-2 px-4 font-semibold rounded-md transition-colors duration-200"
               >
                 choose file
               </button>
               {currentFile() ? (
-                <p class="mt-2 text-gray-300 text-sm">
+                <p class="mt-2 text-ctp-overlay2 text-sm">
                   selected: {currentFile()?.name}
                 </p>
               ) : (
-                <p class="mt-2 text-gray-500 text-sm">no file selected</p>
+                <p class="mt-2 text-ctp-overlay0 text-sm">no file selected</p>
               )}
             </div>
 
             <div>
-              <label class="block text-lg font-medium mb-2">file name</label>
+              <label class="block text-lg font-medium mb-2">file name
+                <span class={`text-sm transition-all duration-200 ${fileName().length > 75 ? "text-ctp-red" : "text-ctp-subtext0"}`}> ({fileName().length}/80)</span>
+              </label>
               <input
                 maxlength="80"
                 type="text"
                 id="fileName"
-                class="w-full p-3 bg-gray-800 text-white border-2 border-transparent rounded focus:border-blue-500 transition-colors duration-300 outline-hidden"
+                class="w-full p-3 bg-ctp-surface0 text-ctp-text border-2 border-dashed border-ctp-overlay1 rounded-lg focus:border-ctp-blue transition-all duration-200 outline-hidden"
                 value={fileName()}
                 onInput={(e) => setFileName(e.target.value)}
                 placeholder="enter file name..."
@@ -274,12 +276,13 @@ const Upload: Component = () => {
             </div>
 
             <div>
-              <label class="block text-lg font-medium mb-2">description</label>
+              <label class="block text-lg font-medium mb-2">description
+                <span class={`text-sm transition-all duration-200 ${description().length > 485 ? "text-ctp-red" : "text-ctp-subtext0"}`}> ({description().length}/500)</span></label>
               <textarea
                 maxlength="500"
                 id="description"
                 rows="6"
-                class="w-full p-3 bg-gray-800 text-white border-2 border-transparent rounded focus:border-blue-500 transition-colors duration-300 outline-hidden"
+                class="w-full p-3 bg-ctp-surface0 text-ctp-text border-2 border-dotted border-ctp-overlay1 rounded-lg focus:border-ctp-blue transition-all duration-200 outline-hidden"
                 value={description()}
                 onInput={(e) => setDescription(e.target.value)}
                 placeholder="optional description..."
@@ -287,7 +290,7 @@ const Upload: Component = () => {
             </div>
 
             <button
-              class="cursor-pointer w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="cursor-pointer w-full py-3 px-6 bg-ctp-blue hover:bg-ctp-blue-700 text-ctp-base font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => uploadFile()}
               disabled={isUploading() || !currentFile() || !fileName()}
             >
@@ -302,11 +305,11 @@ const Upload: Component = () => {
             <div
               ref={dropzoneRef}
               class={`
-                border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200
+                border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-300
                 ${
                   isDragging()
-                    ? "border-blue-500 bg-blue-900/20"
-                    : "border-gray-600 bg-gray-800 hover:bg-gray-750 hover:border-gray-500"
+                    ? "border-ctp-blue bg-ctp-blue-900/20"
+                    : "border-ctp-overlay1 bg-ctp-surface0 hover:bg-ctp-blue-900/20 hover:border-ctp-blue"
                 }
               `}
               onDragEnter={handleDragEnter}
@@ -325,29 +328,31 @@ const Upload: Component = () => {
 
               {currentFile() ? (
                 <div class="space-y-4">
+                  {/* if you can't render this, this is a document icon */}
                   <div class="text-4xl">📄</div>
                   <div>
-                    <p class="text-lg font-medium text-white">
+                    <p class="text-lg font-medium text-ctp-text">
                       {currentFile()?.name}
                     </p>
-                    <p class="text-gray-400 text-sm">
+                    <p class="text-ctp-subtext0 text-sm">
                       {filesize(currentFile()?.size || 0)}
                     </p>
                   </div>
-                  <p class="text-sm text-gray-400">
+                  <p class="text-ctp-subtext0 text-sm">
                     click to choose a different file
                   </p>
                 </div>
               ) : (
                 <div class="space-y-4">
-                  <div class="text-4xl text-gray-500">📁</div>
+                  {/* if you can't render this, this is a folder icon */}
+                  <div class="text-4xl text-ctp-subtext1">📁</div>
                   <div>
                     <p class="text-lg font-medium">
                       {isDragging()
                         ? "drop your file here!"
                         : "choose a file to upload"}
                     </p>
-                    <p class="text-gray-400 text-sm">
+                    <p class="text-ctp-subtext0 text-sm">
                       drag and drop or click to browse
                     </p>
                   </div>
