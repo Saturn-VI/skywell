@@ -156,7 +156,7 @@ const Upload: Component = () => {
         {
           success: "Blob uploaded!",
           error: "Blob failed to upload",
-          loading: "Blob uploading...",
+          loading: "Blob uploading... (this can take a while)",
         },
       );
     } catch (error) {
