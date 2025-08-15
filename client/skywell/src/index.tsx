@@ -37,7 +37,17 @@ render(
           </Router>
         </div>
         <Footer />
-        <Toaster position="top-center" gutter={32} />
+        <Toaster
+          position="top-center"
+          gutter={32}
+          toastOptions={{
+            className: "bg-gray-800 text-white br-8 p-2 text-lg",
+            style: {
+              background: "rgb(31, 41, 55)",
+              color: "white",
+            }
+          }}
+        />
       </div>
     </>
   ),
