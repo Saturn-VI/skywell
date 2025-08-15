@@ -11,6 +11,7 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@catppuccin/tailwindcss": "^1.0.0",
     "@types/mime": "^3.0.4",
     "@types/node": "^24.2.1",
     "typescript": "^5.7.2",
