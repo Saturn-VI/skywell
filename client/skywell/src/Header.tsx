@@ -68,10 +68,10 @@ const Header: Component = () => {
   });
 
   return (
-    <div class="w-full md:w-11/12 lg:w-3/4 xl:w-2/3 2xl:w-1/2 h-14 bg-gray-900 text-white p-4 items-center flex justify-between md:rounded-b-md">
+    <div class="w-full md:w-11/12 lg:w-3/4 xl:w-2/3 2xl:w-1/2 h-14 bg-ctp-crust text-ctp-text p-4 items-center flex justify-between md:rounded-b-md">
       {loggedIn() && (
         <a href="/account" class="flex items-center w-1/3">
-          <img src={pfpUri()!} alt="Logo" class="h-8 mr-4" />
+          <img src={pfpUri()!} alt="Logo" class="h-8 mr-4 rounded-full" />
           <div class="truncate">{displayName()}</div>
         </a>
       )}
@@ -86,16 +86,16 @@ const Header: Component = () => {
         {loggedIn() ? (
           <a
             href="/upload"
-            class="bg-blue-500 px-4 py-2 hover:bg-blue-600 rounded"
+            class="bg-ctp-blue px-4 py-2 hover:bg-ctp-blue-700 rounded transition-colors duration-200"
           >
-            <UploadFileOutlined />
+            <UploadFileOutlined class="text-ctp-base align-top" />
           </a>
         ) : (
           <a
             href="/login"
-            class="bg-blue-500 px-4 py-2 hover:bg-blue-600 rounded"
+            class="bg-ctp-blue px-4 py-2 hover:bg-ctp-blue-700 rounded transition-colors duration-200"
           >
-            <LoginOutlined />
+            <LoginOutlined class="text-ctp-base align-top" />
           </a>
         )}
       </div>

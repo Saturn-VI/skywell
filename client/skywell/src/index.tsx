@@ -24,7 +24,7 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 render(
   () => (
     <>
-      <div class="flex flex-col h-auto min-h-screen bg-gray-700 items-center">
+      <div class="flex flex-col h-auto min-h-screen bg-ctp-base items-center">
         <Header></Header>
         <div class="flex flex-row flex-1 w-full md:w-11/12 lg:w-3/4 xl:w-2/3 2xl:w-1/2">
           <Router>
@@ -41,7 +41,7 @@ render(
           position="top-center"
           gutter={32}
           toastOptions={{
-            className: "bg-gray-800 text-white br-8 p-2 text-lg",
+            className: "bg-gray-800 text-ctp-text br-8 p-2 text-lg",
             style: {
               background: "rgb(31, 41, 55)",
               color: "white",
