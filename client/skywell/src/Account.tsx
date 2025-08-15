@@ -129,8 +129,11 @@ export const deleteFile = async (uri: string, navigate: Navigator) => {
             },
           });
           console.log(res);
-          setFileCount(fileCount() - 1);
-          setFiles(files().filter((f) => f.uri !== uri));
+          // allow deletion to propagate to server
+          setTimeout(() => {
+            loadFiles(false);
+            loadUserData(did()!);
+          }, 250);
         })(),
         {
           loading: "Deleting file...",
@@ -180,7 +183,7 @@ const Account: Component = () => {
           })(),
           {
             loading: "Loading account data...",
-            success: "Account data loaded successfully",
+            success: "Account data loaded successfully!",
             error: "Failed to load account data",
           },
           {
@@ -253,7 +256,7 @@ const Account: Component = () => {
             </div>
 
             {files().map((file) => (
-              <div class="grid grid-cols-12 gap-4 p-4 border-b border-gray-700 hover:bg-gray-700 transition-colors duration-150 items-center">
+              <div class="grid grid-cols-12 gap-4 p-4 border-b sm:border-0 border-gray-700 hover:bg-gray-700 transition-colors duration-150 items-center">
                 <div class="col-span-3 font-medium md:text-base sm:text-sm text-xs wrap-anywhere">
                   {file.name}
                 </div>

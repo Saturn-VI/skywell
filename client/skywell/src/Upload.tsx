@@ -266,7 +266,7 @@ const Upload: Component = () => {
                 maxlength="80"
                 type="text"
                 id="fileName"
-                class="w-full p-3 bg-gray-800 text-white border border-gray-600 rounded focus:border-blue-500 transition-colors duration-200"
+                class="w-full p-3 bg-gray-800 text-white border-2 border-transparent rounded focus:border-blue-500 transition-colors duration-300 outline-hidden"
                 value={fileName()}
                 onInput={(e) => setFileName(e.target.value)}
                 placeholder="enter file name..."
@@ -279,7 +279,7 @@ const Upload: Component = () => {
                 maxlength="500"
                 id="description"
                 rows="6"
-                class="w-full p-3 bg-gray-800 text-white border border-gray-600 rounded focus:border-blue-500 transition-colors duration-200"
+                class="w-full p-3 bg-gray-800 text-white border-2 border-transparent rounded focus:border-blue-500 transition-colors duration-300 outline-hidden"
                 value={description()}
                 onInput={(e) => setDescription(e.target.value)}
                 placeholder="optional description..."

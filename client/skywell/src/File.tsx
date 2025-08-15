@@ -48,7 +48,6 @@ async function loadData(navigate: Navigator, params: Params) {
     setDescription(fileData.file.description || "");
     setFileUri(fileData.file.uri);
 
-    // Check if current user created the file
     const loggedIn = await isLoggedIn();
     setUserLoggedIn(loggedIn);
     if (loggedIn) {
@@ -167,7 +166,11 @@ const File: Component = () => {
                 <button
                   onclick={() => {
                     navigate("/account");
-                    deleteFile(fileUri(), navigate);
+                    if (
+                      confirm(`are you sure you want to delete ${filename()}?`)
+                    ) {
+                      deleteFile(fileUri(), navigate);
+                    }
                   }}
                   class="cursor-pointer bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
                 >
