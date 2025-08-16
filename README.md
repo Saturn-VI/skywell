@@ -8,6 +8,12 @@ The client runs on port 4999 and the server runs on port 5000.
 The compiled files are going to go into `/skywell`, and then the `server` and `dist` subdirectories.
 If you cannot create these directories, you'll need to update some paths in the nginx config.
 
+#### Requirements
+- [nginx](https://www.nginx.com/) for serving the client + server
+- [Go](https://go.dev/) for building the server
+- [Node.js](https://nodejs.org/) for building the client
+- [npm](https://www.npmjs.com/) also for building the client
+
 Setup
 ```bash
 # create relevant directories
@@ -60,8 +66,6 @@ $ cp running/skywell.service /etc/systemd/system/skywell.service
 $ systemctl daemon-reload
 
 # enable and start the service
-# DO THIS AFTER YOU'VE COPIED THE SERVER BINARY TO /skywell/server/skywell
-# otherwise it will fail to start
 $ systemctl enable skywell.service
 $ systemctl start skywell.service
 ```
@@ -72,7 +76,12 @@ If you want make changes to the appview, you're mostly going to want to touch Co
 
 Making any changes to the lexicons is a much more involved process. Create an issue if you're interested in that.
 
-### Client
+### Requirements
+- [Go](https://go.dev/) for building the server
+- [Node.js](https://nodejs.org/) for building the client
+- [npm](https://www.npmjs.com/) also for building the client
+
+Client
 ```bash
 # cd into directory
 $ cd client/skywell
@@ -84,7 +93,7 @@ $ npm install
 $ npm run dev
 ```
 
-### AppView (aka server)
+Server
 ```bash
 # cd into directory
 $ cd server
