@@ -1,47 +1,65 @@
 # Skywell
 an atproto-based file sharing service
 
-[Basic concept design](https://www.tldraw.com/p/Phl3cnqDD3YdLVleH8O6r?d=v230.51.2695.1036.page)
+## Running (production)
 
-Config notes for nginx:
-Go server (xrpc routes) should be on port 4999
-Website should be on port 5000
+### General
+The client runs on port 4999 and the server runs on port 5000.
+The compiled files are going to go into `/skywell`, and then the `server` and `dist` subdirectories.
+If, for some reason, you cannot make a directory in the root (how are you running nginx?), you'll need to update some paths in the nginx config.
 
-```nginx
-server {
-	listen 80;
-	server_name skywell.dev;
+### Client
+```bash
+# cd into directory
+$ cd client/skywell
 
-	return 301 https://$host$request_uri;
-}
+# install dependencies
+$ npm install
 
-server {
-	listen 443 ssl http2;
-	server_name skywell.dev;
+# build the client
+$ npm run build
 
-	ssl_certificate /keys/fullchain.pem;
-	ssl_certificate_key /keys/privkey.pem;
+# copy the built files to the root directory
+$ cp -r dist/* /skywell/dist/
+```
 
-	ssl_protocols TLSv1.2 TLSv1.3;
-	ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384';
+### AppView (aka server)
+Requirements:
+- Go
+```bash
+# cd into directory
+$ cd server
 
-	location / {
-		proxy_pass http://127.0.0.1:5000;
-		proxy_http_version 1.1;
-		proxy_set_header Upgrade $http_upgrade;
-		proxy_set_header Connection "upgrade";
-		proxy_set_header Host $host;
-		proxy_set_header X-Real-IP $remote_addr;
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		proxy_set_header X-Forwarded-Proto $scheme;
-	}
+# run the server
+$ go build .
+```
 
-	location /xrpc/ {
-		proxy_pass http://127.0.0.1:4999/xrpc/;
-		proxy_set_header Host $host;
-		proxy_set_header X-Real-IP $remote_addr;
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		proxy_set_header X-Forwarded-Proto $scheme;
-	}
-}
+### Client
+The client runs on port
+
+## Running (development)
+Right now the client has the server + the did as hardcoded (PRs open!), so it's going to be more annoying to test your own appview.
+If you want make changes to the appview, you're mostly going to want to touch Constants.tsx and Auth.tsx in the client.
+
+If you want to update the lexicon, that's a whole other can of worms. Create an issue if you're interested in that.
+
+### Client
+```bash
+# cd into directory
+$ cd client/skywell
+
+# install dependencies
+$ npm install
+
+# run the client
+$ npm run dev
+```
+
+### AppView (aka server)
+```bash
+# cd into directory
+$ cd server
+
+# run server (automatically installs dependencies)
+$ go run .
 ```
