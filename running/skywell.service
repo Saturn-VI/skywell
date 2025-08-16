@@ -1,0 +1,14 @@
+[Unit]
+Description=Skywell Server Service
+After=network.target
+
+[Service]
+WorkingDirectory=/skywell/server
+ExecStart=/skywell/server/skywell
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

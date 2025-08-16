@@ -33,3 +33,6 @@ go.work.sum
 
 # Database
 database.db
+
+# Built executable
+skywell
