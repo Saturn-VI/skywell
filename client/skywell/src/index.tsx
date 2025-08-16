@@ -2,7 +2,7 @@
 import { render } from "solid-js/web";
 import { Router, Route } from "@solidjs/router";
 import { Toaster } from "solid-toast";
-import { createResource, onMount } from "solid-js";
+import { createResource } from "solid-js";
 
 import "./index.css";
 import File from "./File.tsx";

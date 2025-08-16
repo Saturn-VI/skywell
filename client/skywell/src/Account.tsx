@@ -20,6 +20,7 @@ import { isXRPCErrorPayload } from "@atcute/client";
 
 import { ComAtprotoRepoDeleteRecord } from "@atcute/atproto";
 import { filesize } from "filesize";
+import { pfpUri } from "./Header.tsx";
 
 const [handle, setHandle] = createSignal<string>("Loading...");
 const [displayName, setDisplayName] = createSignal<string>("Loading...");
@@ -200,22 +201,23 @@ const Account: Component = () => {
   });
 
   return (
-    <div class="flex flex-col w-full h-full bg-gray-700 text-white p-6">
-      <div class="flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 bg-gray-800 justify-between mb-6 rounded-lg shadow-lg">
+    <div class="flex flex-col w-full h-full bg-ctp-base text-ctp-text p-6">
+      <div class="bg-ctp-surface0 text-ctp-text flex items-center md:flex-row flex-col w-full md:h-1/3 h-1/2 justify-between mb-6 rounded-lg shadow-lg">
+        <img src={pfpUri()!} alt="Profile picture" class="rounded-full w-24 h-24 md:w-32 md:h-32 m-6 mr-0 mb-0 md:mb-6" />
         <div class="flex flex-col md:w-2/3 w-full h-full p-6 justify-center">
           <div class="sm:text-4xl text-3xl font-semibold mb-2">
             {displayName()}
           </div>
-          <div class="sm:text-xl text-lg font-medium text-gray-300">
+          <div class="sm:text-xl text-lg font-medium">
             @{handle()}
           </div>
-          <div class="sm:text-lg text-base font-light text-gray-400 mt-2">
+          <div class="sm:text-lg text-base font-normal mt-2">
             {fileCount()} file{fileCount() != 1 ? "s" : ""} uploaded
           </div>
         </div>
         <div class="flex justify-center items-center lg:w-1/4 md:w-1/3 w-full lg:h-full md:h-2/3 h-1/2 p-4">
           <button
-            class="cursor-pointer font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-red-600 hover:bg-red-700 text-center lg:text-xl text-lg rounded-md transition-colors duration-200"
+            class="cursor-pointer text-ctp-surface0 font-bold lg:w-2/3 w-1/2 md:h-2/3 h-full p-2 bg-ctp-red hover:bg-ctp-red-700 text-center lg:text-xl text-lg rounded-md transition-colors duration-200"
             onClick={() => {
               trySignOut();
               navigate("/");
@@ -230,12 +232,12 @@ const Account: Component = () => {
         <div class="text-2xl font-semibold mb-6">Your Files</div>
 
         {loading() ? (
-          <div class="flex items-center justify-center h-32 bg-gray-800 rounded-lg">
-            <p class="text-xl text-gray-400">Loading files...</p>
+          <div class="bg-ctp-surface0 text-ctp-text flex items-center justify-center h-32 rounded-lg">
+            <p class="text-xl text-ctp-text">Loading files...</p>
           </div>
         ) : files().length === 0 ? (
-          <div class="flex flex-col items-center justify-center h-32 bg-gray-800 rounded-lg">
-            <p class="text-xl text-gray-400 mb-4">No files uploaded yet</p>
+          <div class="bg-ctp-surface0 text-ctp-text flex flex-col items-center justify-center h-32 rounded-lg">
+            <p class="text-xl text-ctp-text mb-4">No files uploaded yet</p>
             <a
               href="/upload"
               class="bg-blue-600 hover:bg-blue-700 px-4 py-2 font-semibold rounded-md transition-colors duration-200"
@@ -245,10 +247,10 @@ const Account: Component = () => {
           </div>
         ) : (
           <div
-            class="bg-gray-800 w-full overflow-y-auto max-h-full rounded-lg shadow-lg"
+            class="bg-ctp-surface0 text-ctp-text w-full overflow-y-auto max-h-full rounded-lg shadow-lg"
             onScroll={handleScroll}
           >
-            <div class="grid grid-cols-12 gap-4 p-4 border-b border-gray-600 font-semibold sticky top-0 bg-gray-800 text-gray-300">
+            <div class="grid grid-cols-12 gap-4 p-4 border-b border-gray-600 font-semibold sticky top-0">
               <div class="col-span-3">Name</div>
               <div class="col-span-3">Date Uploaded</div>
               <div class="col-span-2">Size</div>
@@ -256,19 +258,19 @@ const Account: Component = () => {
             </div>
 
             {files().map((file) => (
-              <div class="grid grid-cols-12 gap-4 p-4 border-b sm:border-0 border-gray-700 hover:bg-gray-700 transition-colors duration-150 items-center">
+              <div class="grid grid-cols-12 gap-4 p-4 border-b sm:border-0 border-ctp-text hover:bg-ctp-surface2 transition-colors duration-150 items-center">
                 <div class="col-span-3 font-medium md:text-base sm:text-sm text-xs wrap-anywhere">
                   {file.name}
                 </div>
-                <div class="col-span-3 text-gray-300 md:text-base sm:text-sm text-xs wrap-anywhere">
+                <div class="col-span-3 md:text-base sm:text-sm text-xs wrap-anywhere">
                   {new Date(file.createdAt).toLocaleDateString()}
                 </div>
-                <div class="col-span-2 text-gray-300 md:text-base sm:text-sm text-xs wrap-anywhere">
+                <div class="col-span-2 md:text-base sm:text-sm text-xs wrap-anywhere">
                   {filesize((file.blob as Blob).size)}
                 </div>
-                <div class="col-span-4 flex sm:space-x-2 sm:flex-row flex-col items-center justify-items-center sm:space-y-0 space-y-1">
+                <div class="text-ctp-base col-span-4 flex sm:space-x-2 sm:flex-row flex-col items-center justify-items-center sm:space-y-0 space-y-1">
                   <button
-                    class="cursor-pointer bg-green-600 hover:bg-green-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
+                    class="cursor-pointer bg-ctp-green hover:bg-ctp-green-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                     onclick={() => {
                       copyFileUrl(file.slug);
                     }}
@@ -277,12 +279,12 @@ const Account: Component = () => {
                   </button>
                   <a
                     href={`/file/${file.slug}`}
-                    class="cursor-pointer bg-blue-600 hover:bg-blue-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
+                    class="cursor-pointer bg-ctp-blue hover:bg-ctp-blue-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                   >
                     View
                   </a>
                   <button
-                    class="cursor-pointer bg-red-600 hover:bg-red-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
+                    class="cursor-pointer bg-ctp-red hover:bg-ctp-red-700 px-3 py-1 xl:text-base md:text-sm text-xs font-medium wrap-anywhere rounded transition-colors duration-200"
                     onclick={() => {
                       if (
                         confirm(`are you sure you want to delete ${file.name}?`)

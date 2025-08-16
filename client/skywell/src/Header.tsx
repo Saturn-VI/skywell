@@ -68,7 +68,7 @@ const Header: Component = () => {
   });
 
   return (
-    <div class="w-full md:w-11/12 lg:w-3/4 xl:w-2/3 2xl:w-1/2 h-14 bg-ctp-crust text-ctp-text p-4 items-center flex justify-between md:rounded-b-md">
+    <div class="w-full md:w-11/12 lg:w-3/4 xl:w-2/3 2xl:w-1/2 h-14 bg-ctp-crust text-ctp-text p-4 items-center flex align-baseline justify-between md:rounded-b-md">
       {loggedIn() && (
         <a href="/account" class="flex items-center w-1/3">
           <img src={pfpUri()!} alt="Logo" class="h-8 mr-4 rounded-full" />
