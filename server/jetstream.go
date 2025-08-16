@@ -15,7 +15,15 @@ import (
 
 // todo maybe change to using real firehose in the future
 
-var jetstreamUri = "wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=dev.skywell.file&wantedCollections=app.bsky.actor.profile"
+// NOTE
+// switched from jetstream east to jetstream west aug 15
+// this is to prevent 1006 errors that were happening a lot
+// see https://github.com/bluesky-social/jetstream/issues/27#issuecomment-2794507032
+// i'm not 100% on why this was happening since we're only getting two collections
+// `uniphil` mentioned that it could happen due to "very sparse output", but
+// app.bsky.actor.profile is pretty frequent, to the tune of at least one per second
+// - saturn-vi
+var jetstreamUri = "wss://jetstream2.us-west.bsky.network/subscribe?wantedCollections=dev.skywell.file&wantedCollections=app.bsky.actor.profile"
 
 func read(db *gorm.DB, client *xrpc.Client, ctx context.Context) {
 	conn, res, err := websocket.DefaultDialer.Dial(jetstreamUri, http.Header{})
