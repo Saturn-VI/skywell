@@ -237,10 +237,10 @@ const Account: Component = () => {
           </div>
         ) : files().length === 0 ? (
           <div class="bg-ctp-surface0 text-ctp-text flex flex-col items-center justify-center h-32 rounded-lg">
-            <p class="text-xl text-ctp-text mb-4">No files uploaded yet</p>
+            <p class="text-xl text-ctp-base mb-4">No files uploaded yet</p>
             <a
               href="/upload"
-              class="bg-blue-600 hover:bg-blue-700 px-4 py-2 font-semibold rounded-md transition-colors duration-200"
+              class="bg-ctp-blue hover:bg-ctp-blue-700 px-4 py-2 font-semibold rounded-md transition-colors duration-200"
             >
               upload a file
             </a>
@@ -250,7 +250,7 @@ const Account: Component = () => {
             class="bg-ctp-surface0 text-ctp-text w-full overflow-y-auto max-h-full rounded-lg shadow-lg"
             onScroll={handleScroll}
           >
-            <div class="grid grid-cols-12 gap-4 p-4 border-b border-gray-600 font-semibold sticky top-0">
+            <div class="grid grid-cols-12 gap-4 p-4 border-b border-ctp-overlay2 font-semibold sticky top-0">
               <div class="col-span-3">Name</div>
               <div class="col-span-3">Date Uploaded</div>
               <div class="col-span-2">Size</div>

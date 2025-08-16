@@ -124,41 +124,41 @@ const File: Component = () => {
   });
 
   return (
-    <div class="flex flex-col w-full min-h-full bg-gray-700 text-white p-6">
+    <div class="flex flex-col w-full min-h-full bg-ctp-base text-ctp-text p-6">
       <a id="download-link" download={filename()} class="hidden w-0 h-0" />
 
       <div class="max-w-4xl mx-auto w-full">
-        <div class="bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+        <div class="bg-ctp-surface0 rounded-lg shadow-lg p-6 mb-6">
           <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div class="flex-1 min-w-0 max-w-full">
               <h1 class="text-3xl md:text-4xl font-bold mb-3 break-words truncate">
                 {filename()}
               </h1>
-              <div class="space-y-2 text-gray-300">
+              <div class="space-y-2 text-ctp-subtext1">
                 <p class="text-lg">
                   uploaded {creationDate().toLocaleDateString()} at{" "}
                   {creationDate().toLocaleTimeString()}
                 </p>
                 <p class="text-lg">
                   created by{" "}
-                  <span class="font-bold text-white">{author()}</span>
+                  <span class="font-bold text-ctp-subtext1">{author()}</span>
                 </p>
-                <p class="text-gray-400">
+                <p class="text-ctp-subtext0">
                   <code>@{authorHandle()}</code>
                 </p>
               </div>
             </div>
 
-            <div class="flex flex-col gap-3 w-full lg:w-auto">
+            <div class="text-ctp-base flex flex-col gap-3 w-full lg:w-auto">
               <button
                 onclick={copyFileUrl}
-                class="cursor-pointer bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
+                class="cursor-pointer bg-ctp-green hover:bg-ctp-green-700 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
               >
                 copy link
               </button>
               <button
                 onclick={clickDownloadLink}
-                class="cursor-pointer bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
+                class="cursor-pointer bg-ctp-blue hover:bg-ctp-blue-700 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
               >
                 download
               </button>
@@ -172,7 +172,7 @@ const File: Component = () => {
                       deleteFile(fileUri(), navigate);
                     }
                   }}
-                  class="cursor-pointer bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
+                  class="cursor-pointer bg-ctp-red hover:bg-ctp-red-700 px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
                 >
                   delete
                 </button>
@@ -181,16 +181,16 @@ const File: Component = () => {
           </div>
 
           {description() ? (
-            <div class="bg-gray-800 rounded-lg">
-              <div class="bg-gray-900 rounded-lg mt-4 p-4">
-                <p class="text-gray-300 whitespace-pre-wrap leading-relaxed">
+            <div class="rounded-lg">
+              <div class="bg-ctp-surface1 rounded-lg mt-4 p-4">
+                <p class="text-ctp-text whitespace-pre-wrap leading-relaxed">
                   {description()}
                 </p>
               </div>
             </div>
           ) : (
-            <div class="bg-gray-800 rounded-lg">
-              <p class="text-gray-400 text-center mt-4 italic">
+            <div class="rounded-lg">
+              <p class="text-ctp-overlay1 text-center mt-4 italic">
                 no description provided
               </p>
             </div>

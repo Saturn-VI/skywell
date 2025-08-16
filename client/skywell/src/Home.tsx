@@ -61,7 +61,7 @@ const Home: Component = () => {
         </div>
       </div>
 
-      <div class="px-6 py-16 bg-ctp-mantle">
+      <div class="px-6 py-16 bg-ctp-mantle md:rounded-lg">
         <div class="max-w-4xl mx-auto">
           <h2 class="text-3xl md:text-4xl font-bold text-center mb-3">
             how it works
@@ -125,7 +125,7 @@ const Home: Component = () => {
       </div>
 
       <Show when={!loggedIn()}>
-        <div class="px-6 py-16 text-center bg-ctp-mantle">
+        <div class="px-6 py-16 text-center bg-ctp-mantle md:rounded-lg">
           <h2 class="text-3xl md:text-4xl font-bold mb-6">interested?</h2>
           <p class="text-lg text-ctp-subtext1 mb-8 max-w-2xl mx-auto">
             experience the future of the web and start sharing files with
