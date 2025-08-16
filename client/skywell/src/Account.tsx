@@ -301,13 +301,13 @@ const Account: Component = () => {
 
             {loadingMore() && (
               <div class="flex items-center justify-center p-4">
-                <p class="text-gray-400">Loading more files...</p>
+                <p class="text-ctp-subtext1">Loading more files...</p>
               </div>
             )}
 
             {!hasMore() && files().length > 0 && (
-              <div class="flex items-center justify-center p-4">
-                <p class="text-gray-500 text-sm">No more files to load</p>
+              <div class="border-t border-ctp-overlay2 flex items-center justify-center p-4">
+                <p class="text-ctp-overlay2 text-sm">No more files to load</p>
               </div>
             )}
           </div>
