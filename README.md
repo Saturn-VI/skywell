@@ -43,7 +43,7 @@ Server
 $ cd server
 
 # build server
-$ go build . -o skywell
+$ go build . -o skywell -buildvcs=false
 
 # copy the built server to the root directory
 $ cp skywell /skywell/server/
