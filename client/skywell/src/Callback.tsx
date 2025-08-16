@@ -41,8 +41,8 @@ const Callback: Component = () => {
   return (
     <div class="flex flex-col h-screen w-full">
       <div class="flex flex-row h-full">
-        <div class="flex flex-col w-full h-full bg-gray-700 text-white p-4">
-          <div>Callback page. You should be redirected momentarily.</div>
+        <div class="flex flex-col w-full h-full p-4 text-ctp-text">
+          Callback page. You should be redirected momentarily.
         </div>
       </div>
     </div>
