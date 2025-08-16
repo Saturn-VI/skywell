@@ -233,14 +233,14 @@ const Account: Component = () => {
 
         {loading() ? (
           <div class="bg-ctp-surface0 text-ctp-text flex items-center justify-center h-32 rounded-lg">
-            <p class="text-xl text-ctp-text">Loading files...</p>
+            <p class="text-xl">Loading files...</p>
           </div>
         ) : files().length === 0 ? (
           <div class="bg-ctp-surface0 text-ctp-text flex flex-col items-center justify-center h-32 rounded-lg">
-            <p class="text-xl text-ctp-base mb-4">No files uploaded yet</p>
+            <p class="text-xl mb-4">No files uploaded yet</p>
             <a
               href="/upload"
-              class="bg-ctp-blue hover:bg-ctp-blue-700 px-4 py-2 font-semibold rounded-md transition-colors duration-200"
+              class="text-ctp-base bg-ctp-blue hover:bg-ctp-blue-700 px-4 py-2 font-semibold rounded-md transition-colors duration-200"
             >
               upload a file
             </a>
