@@ -8,6 +8,7 @@
   - [x] dev.skywell.getFileFromSlug
   - [x] dev.skywell.indexActorProfile
 - [ ] make it a confidential client
+  - https://pkg.go.dev/github.com/bluesky-social/indigo/atproto/auth/oauth
 
 ## server
 ~~server doesn't need to do any auth for this usecase because PDS does creation/deletion of records~~
@@ -21,19 +22,17 @@
   - ended up using [gorm](https://gorm.io/) for database access
 - [x] rate limiter
 - [x] translation between slug and atproto uri (uris too long)
-- [ ] do the confidential client thing
-  - https://pkg.go.dev/github.com/bluesky-social/indigo/atproto/auth/oauth
 
 ## client
 
 ### general
-- [ ] make an actually good color theme (catpuccin macchiato? that's boring though)
-  - [ ] really just make the site prettier
+- [x] make an actually good color theme (catpuccin macchiato? that's boring though)
+  - [x] really just make the site prettier
 - [x] make a logo/icon
 - [x] do mobile testing on every page (once entire thing is done)
 
 ### pages
-- [ ] home
+- [x] home
 - [x] sidebar
 - [x] header
   - should have upload/login page links
