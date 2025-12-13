@@ -6,7 +6,6 @@ import { Client, simpleFetchHandler } from "@atcute/client";
 import { toast } from "solid-toast";
 import { XRPCProcedures, XRPCQueries } from "@atcute/lexicons/ambient";
 import {
-  ENTRYWAY_URL,
   SKYWELL_DID,
   SKYWELL_SERVICE_ID,
   SKYWELL_URL,
@@ -108,14 +107,6 @@ export function getSkywellClient(): Client {
   return new Client({
     handler: simpleFetchHandler({
       service: SKYWELL_URL,
-    }),
-  });
-}
-
-export function getEntrywayClient(): Client {
-  return new Client({
-    handler: simpleFetchHandler({
-      service: ENTRYWAY_URL,
     }),
   });
 }

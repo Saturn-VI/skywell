@@ -2,7 +2,6 @@ import { createSignal, onMount, type Component } from "solid-js";
 import { DevSkywellGetFileFromSlug } from "skywell";
 
 import {
-  getEntrywayClient,
   isLoggedIn,
   agent,
   getSkywellClient,
@@ -14,9 +13,22 @@ import {
   Navigator,
 } from "@solidjs/router";
 import { toast } from "solid-toast";
-import { isXRPCErrorPayload } from "@atcute/client";
+import { Client, isXRPCErrorPayload, simpleFetchHandler } from "@atcute/client";
 import { ComAtprotoSyncGetBlob } from "@atcute/atproto";
+import {
+	CompositeDidDocumentResolver,
+	PlcDidDocumentResolver,
+	WebDidDocumentResolver,
+} from '@atcute/identity-resolver';
 import { deleteFile } from "./Account.tsx";
+import { DidDocument } from "@atcute/identity";
+
+const didResolver = new CompositeDidDocumentResolver({
+	methods: {
+		plc: new PlcDidDocumentResolver(),
+		web: new WebDidDocumentResolver(),
+	},
+});
 
 async function loadData(navigate: Navigator, params: Params) {
   const client = getSkywellClient();
@@ -36,7 +48,9 @@ async function loadData(navigate: Navigator, params: Params) {
       return;
     }
     const fileData = data.data;
-    toast.promise(fetchBlob(fileData.file.blob.ref.$link, fileData.actor.did), {
+    // assume that the API is doing as it should and that the DID is valid
+    const did = didResolver.resolve(fileData.actor.did as `did:plc:${string}` | `did:web:${string}`);
+    toast.promise(fetchBlob(fileData.file.blob.ref.$link, await did), {
       loading: "Loading blob data...",
       success: "Loaded blob data!",
       error: "Failed to load blob data.",
@@ -59,14 +73,27 @@ async function loadData(navigate: Navigator, params: Params) {
   }
 }
 
-async function fetchBlob(cid: string, did: `did:${string}:${string}`) {
-  const client = getEntrywayClient();
-
+async function fetchBlob(cid: string, did: DidDocument) {
+  if (!did.service) {
+    toast.error("DID has no PDS");
+    return;
+  }
+  const pds = did.service.find((s) => s.type === "AtprotoPersonalDataServer");
+  if (!pds) {
+    toast.error("DID has no PDS");
+    return;
+  }
+  // lowkey just assume it's a string.
+  const client = new Client({
+    handler: simpleFetchHandler({
+      service: pds.serviceEndpoint as string,
+    }),
+  });
   try {
     const data = await client.get(ComAtprotoSyncGetBlob.mainSchema.nsid, {
       params: {
         cid: cid,
-        did: did,
+        did: did.id,
       },
       as: "blob",
     });
